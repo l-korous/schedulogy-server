@@ -1,0 +1,9 @@
+org.ringojs.engine
+org.ringojs.jsgi
+org.ringojs.repository
+org.ringojs.security
+org.ringojs.test
+org.ringojs.tools
+org.ringojs.tools.launcher
+org.ringojs.util
+org.ringojs.wrappers

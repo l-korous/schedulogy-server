@@ -1,0 +1,32 @@
+<ivy-module version="2.0">
+
+    <info organisation="org.ringojs" module="ringojs"/>
+
+    <configurations>
+        <conf name="default" description="the default jar libraries"/>
+    </configurations>
+
+    <dependencies>
+        <dependency org="org.mozilla" name="rhino" rev="1.7.7" />
+
+        <!-- standard jetty libs -->
+        <dependency org="org.eclipse.jetty" name="jetty-server" rev="9.3.8.v20160314"/>
+        <dependency org="org.eclipse.jetty" name="jetty-servlet" rev="9.3.8.v20160314"/>
+        <dependency org="org.eclipse.jetty.websocket" name="websocket-server" rev="9.3.8.v20160314"/>
+        <dependency org="org.eclipse.jetty.websocket" name="websocket-client" rev="9.3.8.v20160314"/>
+        <dependency org="org.eclipse.jetty" name="jetty-servlets" rev="9.3.8.v20160314"/>
+        <dependency org="org.eclipse.jetty" name="jetty-xml" rev="9.3.8.v20160314"/>
+
+        <!-- logging -->
+        <dependency org="org.slf4j" name="slf4j-api" rev="1.6.+"/>
+        <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.6.+">
+            <exclude org="log4j"/>
+        </dependency>
+        <dependency org="log4j" name="log4j" rev="1.2.14"/>
+
+        <!-- junit -->
+        <dependency org="junit" name="junit" rev="3.8.+"/>
+        <!-- jline -->
+        <dependency org="jline" name="jline" rev="2.12.1"/>
+    </dependencies>
+</ivy-module>

@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<project name="Stick" default="usage" basedir=".">
+    <property file="build.properties"/>
+
+    <target name="usage">
+        <echo message=""/>
+        <echo message="Stick build targets"/>
+        <echo message=""/>
+        <echo message=" test       --> run JUnit and RingoJS tests"/>
+        <echo message=" debug      --> run JUnit and RingoJS tests in the Rhino debugger"/>
+        <echo message=" docs       --> generates the API docs"/>
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Initializes some variables                                          -->
+    <!-- =================================================================== -->
+    <target name="init">
+        <property name="home" value="."/>
+        <property name="version" value="0.5"/>
+        <property name="src" value="${home}/lib"/>
+        <property name="docs" value="${home}/docs"/>
+        <condition property="commandSuffix" value=".cmd" else="">
+            <os family="windows" />
+        </condition>
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Runs the JUnit and RingoJS test cases                               -->
+    <!-- =================================================================== -->
+    <target name="test" depends="init" description="run the tests on the command-line">
+        <exec executable="${RINGO}ringo${commandSuffix}">
+        	<arg value="${home}/test/stick_test.js" />
+        </exec>
+    </target>
+
+    <target name="debug" depends="init" description="run the tests in the Rhino debugger">
+        <exec executable="${RINGO}ringo${commandSuffix}">
+        	<arg value="-d"/>
+            <arg value="${home}/test/stick_test.js" />
+        </exec>
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Creates the API documentation                                       -->
+    <!-- =================================================================== -->
+    <target name="docs" depends="init">
+        <delete dir="${docs}"/>
+        <mkdir dir="${docs}"/>
+        <exec executable="packages/ringo-jsdoc/bin/ringo-doc${commandSuffix}">
+            <arg value="--file-urls" />
+            <arg value="-s" />
+            <arg value="${src}" />
+            <arg value="-d" />
+            <arg value="${docs}" />
+            <arg value="-p" />
+            <arg value="${home}/package.json" />
+            <arg value="-n" />
+            <arg value="Stick ${version} API" />
+        </exec>
+    </target>
+</project>
