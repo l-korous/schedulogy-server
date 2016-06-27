@@ -3,8 +3,11 @@ var app = exports.app = new Application();
 app.configure('route');
 app.configure('params');
 
+var settings = require('./settings.js');
+var utilities = require('./utilities.js');
+
 var mongo = require('./mongoSetup.js');
-mongo.initialize(app);
+mongo.initialize(app, settings, utilities);
 
 var solver = require('./solver.js');
 
