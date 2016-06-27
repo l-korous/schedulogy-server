@@ -1,7 +1,78 @@
-exports.timeToInt = function(time, breakingHour) {
-    
-};
+exports.initialize = function (settings) {
+    var moment = require('./bower_components/moment/moment.js');
 
-exports.slotToTime = function(slot, breakingHour) {
-    
+    var clog = function (what) {
+        if (settings.debug)
+            console.log(what);
+    };
+    exports.clog = clog;
+
+    var cdir = function (what, stringify) {
+        if (stringify)
+            console.log(JSON.stringify(what, null, 4));
+        else if (settings.debug)
+            console.dir(what);
+    };
+    exports.cdir = cdir;
+
+    exports.timeToSlot = function (time, btime) {
+        clog(time);
+        clog(btime);
+
+        var weeks = time.diff(btime, 'w');
+        var weekSlots = weeks * settings.daysPerWeek;
+
+        var time_minusWeeks = time.clone().subtract(weeks, 'w');
+        var days = time_minusWeeks.diff(btime, 'd');
+        // There is a weekend in between
+        var weekendInBetween = false;
+        if ((time_minusWeeks.isoWeekday() < btime.isoWeekday()) || ((time_minusWeeks.isoWeekday() === btime.isoWeekday()) && (time_minusWeeks.hours() < btime.hours()))) {
+            days -= 2;
+            weekendInBetween = true;
+        }
+        var daySlots = days * settings.hoursPerDay;
+
+        var time_minusDays = time.clone().subtract(days + (weekendInBetween * 2), 'd');
+        var hours = 0;
+        if (time_minusDays.isoWeekday() !== btime.isoWeekday())
+            hours = (time_minusDays.hours() - settings.startHour) + Math.max(0, (settings.endHour - btime.hours()));
+        else
+            hours = time_minusDays.diff(btime, 'h');
+
+        var result = weekSlots + daySlots + hours;
+        clog(result);
+        return result;
+    };
+
+    exports.slotToTime = function (slot, btime) {
+        clog(slot);
+        clog(btime);
+        var endOfDay = settings.endHour - btime.hours();
+        var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endHour, 'h');
+        var weekMiliseconds = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 604800000;
+        var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay);
+        var dayMiliseconds = Math.floor(slotModWeeks / settings.hoursPerDay) * 86400000;
+        var slotModDays = slot % (settings.hoursPerDay);
+        if(slotModDays > endOfDay - 1) {
+            dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * 36e5;
+            slotModDays -= (endOfDay - slotModDays);
+        }
+        var hourMiliseconds = slotModDays * 36e5;
+        
+        var total = weekMiliseconds + dayMiliseconds + hourMiliseconds;
+        // Over the weekend.
+        if(btime.clone().add(total, 'ms') > endOfWeek)
+            total += 2 * 86400000;
+        
+        var result = btime.clone().add(total, 'ms');
+        clog(result);
+        return result;
+    };
+
+    exports.getBTime = function () {
+        if (settings.fixedBTime)
+            return moment(settings.fixedBTime);
+        else
+            return moment(new Date());
+    };
 };
