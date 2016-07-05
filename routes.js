@@ -1,51 +1,52 @@
-exports.initialize = function (app, mongo, solver, util) {
-    app.post('/task', function (request) {
+exports.initialize = function (app, mongo, solver, util, settings) {
+    app.options('/task', function () {
+        return {
+            body: [],
+            headers: settings.defaultHeader,
+            status: 200
+        };
+    });
+
+    app.post('/task', function (request, what) {
         var btime = util.getBTime();
 
         var task = request.params;
-
+        
         mongo.storeTask(task);
 
-        var result = solver.solve(mongo.getProblemJson(btime));
+        return {
+            body: [mongo.getClientJson()],
+            headers: settings.defaultHeaderJson,
+            status: 200
+        };
 
-        if (result) {
-            mongo.storeSlnData(result, btime);
-            return {
-                body: [JSON.stringify(mongo.getClientJson())],
-                headers: {'Content-Type': 'application/json'},
-                status: 200
-            };
-        }
-        else {
-            mongo.tasks.remove({dirty: true});
-            return {
-                body: 'Invalid input data',
-                headers: {'Content-Type': 'application/json'},
-                status: 400
-            };
-        }
+        /*
+         * var result = solver.solve(mongo.getProblemJson(btime));
+         
+         if (result) {
+         mongo.storeSlnData(result, btime);
+         return {
+         body: [mongo.getClientJson()],
+         headers: settings.defaultHeaderJson,
+         status: 200
+         };
+         }
+         else {
+         mongo.tasks.remove({dirty: true});
+         return {
+         body: 'Invalid input data',
+         headers: settings.defaultHeaderJson,
+         status: 400
+         };
+         }
+         */
     });
 
-    app.get('/', function (request) {
-        var btime = util.getBTime();
-        
-        var result = solver.solve(mongo.getProblemJson(btime));
-
-        if (result) {
-            mongo.storeSlnData(result, btime);
-            return {
-                body: [JSON.stringify(mongo.getClientJson())],
-                headers: {'Content-Type': 'application/json'},
-                status: 200
-            };
-        }
-        else {
-            mongo.tasks.remove({dirty: true});
-            return {
-                body: 'Invalid input data',
-                headers: {'Content-Type': 'application/json'},
-                status: 400
-            };
-        }
+    app.get('/task', function (request) {
+        return {
+            body: [mongo.getClientJson()],
+            headers: settings.defaultHeaderJson,
+            status: 200
+        };
     });
 };

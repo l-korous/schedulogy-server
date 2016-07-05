@@ -10,24 +10,26 @@ exports.initialize = function (app, settings, util) {
     exports.tasks = tasks;
 
     exports.getProblemJson = function (btime) {
+        util.clog('getProblemJson starts with btime = ' + btime.toString());
         // First, potentially fix btime
         tasks.find({}).toArray().some(function (task) {
             var start = moment(task.data.starts);
             var end = start.clone().add(settings.msGranularity * task.data.duration, 'ms');
             if ((end > btime) && start <= btime) {
-                util.clog('Shifting btime from: ' + btime + ' to: ' + end);
+                util.clog('Shifting btime from: ' + btime.toString() + ' to: ' + end);
                 btime = end;
                 // Return right away, as there can't be more than one task right now.
+                // This means that one resource can have just one task at a time
+                // ... plus we have only one resource.
                 return true;
             }
         });
-        //util.clog(btime);
 
         var toReturn = {};
         toReturn.Problem = {};
         toReturn.Problem.General = {};
-        toReturn.Problem.General.DaysPerWeek = 5;
-        toReturn.Problem.General.SlotsPerDay = 8;
+        toReturn.Problem.General.DaysPerWeek = settings.daysPerWeek;
+        toReturn.Problem.General.SlotsPerDay = settings.hoursPerDay;
         toReturn.Problem.Resources = [{TimePreferences: []}];
         var counter = 0;
         tasks.find({type: 'fixed'}).forEach(function (fixedTask) {
@@ -134,7 +136,6 @@ exports.initialize = function (app, settings, util) {
 
     exports.storeTask = function (task) {
         // TODO validation (timezone - all incoming tasks should be in UTC)
-
         if (task.dependencies) {
             for (var i = 0; i < task.dependencies.length; i++) {
                 var dependency = task.dependencies[i];
@@ -142,17 +143,26 @@ exports.initialize = function (app, settings, util) {
             }
         }
 
+        if (task._id)
+            task._id = new Packages.org.bson.types.ObjectId(task._id);
+
         task.dirty = true;
-        tasks.insert(task);
+        tasks.save(task);
     };
 
     exports.getClientJson = function () {
-        var toReturn = {tasks: []};
-        var counter = 0;
+        var toReturn = "{\"tasks\": [";
+        var first_task = true;
         tasks.find().forEach(function (task) {
-            toReturn.tasks[counter++] = task.data;
+            if (!first_task)
+                toReturn += ",";
+            else
+                first_task = false;
+
+            toReturn += task.toJSON();
         });
-        util.clog(JSON.stringify(toReturn, null, 4));
+        toReturn += "]}";
+        util.clog(toReturn);
         return toReturn;
     };
 };

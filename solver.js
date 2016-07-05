@@ -1,15 +1,17 @@
-exports.solve = function (problemJson) {
-    addToClasspath("../cpsolver/dist/cpsolver-1.3-SNAPSHOT.jar");
-    addToClasspath("../cpsolver/dist/json-20090211.jar");
-    addToClasspath("../cpsolver/dist/log4j-1.2.17.jar");
-    addToClasspath("../cpsolver/dist/dom4j-1.6.1.jar");
-    addToClasspath("../cpsolver/dist/xml-apis-1.0.b2.jar");
+exports.initialize = function (settings) {
+    exports.solve = function (problemJson) {
+        addToClasspath("../cpsolver/dist/cpsolver-1.3-SNAPSHOT.jar");
+        addToClasspath("../cpsolver/dist/json-20090211.jar");
+        addToClasspath("../cpsolver/dist/log4j-1.2.17.jar");
+        addToClasspath("../cpsolver/dist/dom4j-1.6.1.jar");
+        addToClasspath("../cpsolver/dist/xml-apis-1.0.b2.jar");
 
-    importPackage(org.cpsolver.ifs.example.tt);
+        importPackage(org.cpsolver.ifs.example.tt);
 
-    var calculator = new Calculator;
+        var calculator = new Calculator;
 
-    var solution = calculator.calculate(JSON.stringify(problemJson));
+        var solution = calculator.calculate(JSON.stringify(problemJson), settings.solverTimeout);
 
-    return solution;
+        return solution;
+    };
 };
