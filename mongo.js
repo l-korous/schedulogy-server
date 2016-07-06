@@ -13,8 +13,8 @@ exports.initialize = function (app, settings, util) {
         util.clog('getProblemJson starts with btime = ' + btime.toString());
         // First, potentially fix btime
         tasks.find({}).toArray().some(function (task) {
-            var start = moment(task.data.starts);
-            var end = start.clone().add(settings.msGranularity * task.data.duration, 'ms');
+            var start = moment(task.data.start);
+            var end = start.clone().add(settings.msGranularity * task.data.dur, 'ms');
             if ((end > btime) && start <= btime) {
                 util.clog('Shifting btime from: ' + btime.toString() + ' to: ' + end);
                 btime = end;
@@ -37,8 +37,8 @@ exports.initialize = function (app, settings, util) {
             util.cdir(fixedTask.data, true);
 
             // Skipping past tasks.
-            var start = moment(fixedTask.data.starts);
-            var end = start.clone().add(settings.msGranularity * fixedTask.data.duration, 'ms');
+            var start = moment(fixedTask.data.start);
+            var end = start.clone().add(settings.msGranularity * fixedTask.data.dur, 'ms');
             if (end > btime) {
                 var leftBound = Math.max(0, util.timeToSlot(start, btime));
                 var rightBound = util.timeToSlot(end, btime);
@@ -57,9 +57,9 @@ exports.initialize = function (app, settings, util) {
             util.cdir(floatingTask.data, true);
 
             // Skipping past tasks. But not skipping unscheduled tasks.
-            var scheduleTask = !floatingTask.data.starts;
+            var scheduleTask = !floatingTask.data.start;
             if (!scheduleTask) {
-                var start = moment(floatingTask.data.starts);
+                var start = moment(floatingTask.data.start);
                 if (start > btime)
                     scheduleTask = true;
             }
@@ -67,9 +67,8 @@ exports.initialize = function (app, settings, util) {
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(moment(floatingTask.data.due), btime);
                 toReturn.Problem.Activities[counter++] = {
-                    Length: floatingTask.data.duration,
-                    id: floatingTask.id,
-                    Name: floatingTask.data.name,
+                    Length: floatingTask.data.dur,
+                    id: floatingTask._id,
                     TimePreferences: [{
                             Type: "Due",
                             Value: dueInteger
@@ -90,8 +89,8 @@ exports.initialize = function (app, settings, util) {
                         util.cdir(prerequisiteTask, true);
 
                         // Skipping past tasks.
-                        var preq_start = moment(prerequisiteTask.data.starts);
-                        var preq_end = preq_start.clone().add(settings.msGranularity * prerequisiteTask.data.duration, 'ms');
+                        var preq_start = moment(prerequisiteTask.data.start);
+                        var preq_end = preq_start.clone().add(settings.msGranularity * prerequisiteTask.data.dur, 'ms');
                         if (preq_end > btime) {
                             if (prerequisiteTask.data.type === 'fixed') {
                                 var fixedPrerequisite = util.timeToSlot(preq_end, btime);
@@ -124,22 +123,22 @@ exports.initialize = function (app, settings, util) {
     };
 
     exports.storeSlnData = function (outputJsonString, btime) {
+        clog('storeSlnData starts with btime = ' + btime.toString() + '.');
         var outputJson = JSON.parse(outputJsonString);
         var solArray = outputJson.solution;
         solArray.forEach(function (solutionEl) {
-            var starts = util.slotToTime(solutionEl.StartTime, btime);
-            console.log(starts);
-            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {starts: starts.toString(), dirty: false}});
+            var start = util.slotToTime(solutionEl.StartTime, btime);
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {start: start.toString(), dirty: false}});
 
         });
     };
 
     exports.storeTask = function (task) {
         // TODO validation (timezone - all incoming tasks should be in UTC)
-        if (task.dependencies) {
-            for (var i = 0; i < task.dependencies.length; i++) {
-                var dependency = task.dependencies[i];
-                task.dependencies[i] = mongo.tasks.findOne(new Packages.org.bson.types.ObjectId(dependency));
+        if (task.deps) {
+            for (var i = 0; i < task.deps.length; i++) {
+                var dependency = task.deps[i];
+                task.deps[i] = new Packages.org.bson.types.ObjectId(dependency);
             }
         }
 
@@ -148,6 +147,13 @@ exports.initialize = function (app, settings, util) {
 
         task.dirty = true;
         tasks.save(task);
+    };
+
+    exports.removeTask = function (task_id) {
+        // TODO validation (timezone - all incoming tasks should be in UTC)
+        // TODO DEV-22
+
+        tasks.remove({_id: new Packages.org.bson.types.ObjectId(task_id)});
     };
 
     exports.getClientJson = function () {
