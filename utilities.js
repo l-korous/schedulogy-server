@@ -19,7 +19,7 @@ exports.initialize = function (settings) {
         clog('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
 
         var weeks = time.diff(btime, 'w');
-        var weekSlots = weeks * settings.daysPerWeek;
+        var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay;
 
         var time_minusWeeks = time.clone().subtract(weeks, 'w');
         var days = time_minusWeeks.diff(btime, 'd');
