@@ -12,6 +12,9 @@ app.cors({
     allowCredentials: true
 });
 
+var mail = require('ringo-mail');
+//mail.send({host: 'smtp.gmail.com', port: 587, encrypt: true,username: 'util.314@gmail.com', password: '[4t94ek123', to: 'BB <lukas.korous@gmail.com>'});
+
 var settings = require('./settings.js').settings;
 var utilities = require('./utilities.js');
 utilities.initialize(settings);
