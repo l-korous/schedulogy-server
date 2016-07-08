@@ -1,4 +1,4 @@
-exports.initialize = function (app, mongo, solver, util, settings) {
+exports.initialize = function (app, mongo, solver, util, settings, mailer) {
     app.options('/task', function () {
         return {
             body: [],
@@ -6,7 +6,7 @@ exports.initialize = function (app, mongo, solver, util, settings) {
             status: 200
         };
     });
-    
+
     app.options('/task/:taskId', function () {
         return {
             body: [],
@@ -14,7 +14,7 @@ exports.initialize = function (app, mongo, solver, util, settings) {
             status: 200
         };
     });
-    
+
     app.del('/task/:taskId', function (request, task_id) {
         var btime = util.getBTime();
 
@@ -48,13 +48,13 @@ exports.initialize = function (app, mongo, solver, util, settings) {
          */
     });
 
-    
+
 
     app.post('/task', function (request, what) {
         var btime = util.getBTime();
 
         var task = request.params;
-        
+
         mongo.storeTask(task);
 
         return {
@@ -89,6 +89,24 @@ exports.initialize = function (app, mongo, solver, util, settings) {
         return {
             body: [mongo.getClientJson()],
             headers: settings.defaultHeaderJson,
+            status: 200
+        };
+    });
+
+    app.options('/msg', function () {
+        return {
+            body: [],
+            headers: settings.defaultHeader,
+            status: 200
+        };
+    });
+
+    app.post('/msg', function (request) {
+        console.dir(request);
+
+        return {
+            body: [],
+            headers: settings.defaultHeader,
             status: 200
         };
     });

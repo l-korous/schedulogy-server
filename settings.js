@@ -9,14 +9,19 @@ exports.settings = {
     fixedBTime: new Date(2016, 6, 1, 8, 0),
     debug: true,
     defaultHeader: {
-            'Access-Control-Allow-Origin': "*",
-            'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization'
+        'Access-Control-Allow-Origin': "*",
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization'
     },
     defaultHeaderJson: {
-            'Access-Control-Allow-Origin': "*",
-            'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization',
-            'Content-Type': 'application/json'
-    }
+        'Access-Control-Allow-Origin': "*",
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization',
+        'Content-Type': 'application/json'
+    },
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: 587,
+    smtpEncrypt: true,
+    smtpUsername: 'util.314@gmail.com',
+    smtpPassword: '[4t94ek123'
 };
