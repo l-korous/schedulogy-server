@@ -1,6 +1,4 @@
-exports.initialize = function (settings) {
-    var moment = require('./bower_components/moment/moment.js');
-
+exports.initialize = function (settings, moment) {
     var clog = function (what) {
         if (settings.debug)
             console.log(what);
@@ -22,6 +20,8 @@ exports.initialize = function (settings) {
         var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay;
 
         var time_minusWeeks = time.clone().subtract(weeks, 'w');
+        clog('** timeToSlot: time_minusWeeks = ' + time_minusWeeks.toString());
+
         var days = time_minusWeeks.diff(btime, 'd');
         // There is a weekend in between
         var weekendInBetween = false;
@@ -30,27 +30,33 @@ exports.initialize = function (settings) {
             weekendInBetween = true;
         }
         var daySlots = days * settings.hoursPerDay;
-
         var time_minusDays = time.clone().subtract(days + (weekendInBetween * 2), 'd');
+        clog('** timeToSlot: time_minusDays = ' + time_minusDays);
+        
         var hours = 0;
+        // This is for the case that time is earlier (but on a further day) than btime.
         if (time_minusDays.isoWeekday() !== btime.isoWeekday())
-            hours = (time_minusDays.hours() - settings.startHour) + Math.max(0, (settings.endHour - btime.hours()));
+            hours = Math.max(0, time_minusDays.hours() - settings.startHour) + Math.max(0, (settings.endHour - btime.hours()));
         else
             hours = time_minusDays.diff(btime, 'h');
 
-        var result = weekSlots + daySlots + hours;
+        // +1 is because cpsolver numbers from 1.
+        var result = weekSlots + daySlots + hours + 1;
         clog('* timeToSlot finishes with: ' + result + '.');
         return result;
     };
 
     exports.slotToTime = function (slot, btime) {
-        clog('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
+        // -1 is because cpsolver numbers from 1.
+        var internal_slot = slot - 1;
+        
+        clog('* slotToTime starts with internal_slot = ' + internal_slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endHour - btime.hours();
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endHour, 'h');
         var weekMiliseconds = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 604800000;
-        var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay);
+        var slotModWeeks = internal_slot % (settings.daysPerWeek * settings.hoursPerDay);
         var dayMiliseconds = Math.floor(slotModWeeks / settings.hoursPerDay) * 86400000;
-        var slotModDays = slot % (settings.hoursPerDay);
+        var slotModDays = internal_slot % (settings.hoursPerDay);
         if (slotModDays > endOfDay - 1) {
             dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * 36e5;
             slotModDays -= (endOfDay - slotModDays);
@@ -65,14 +71,5 @@ exports.initialize = function (settings) {
         var result = btime.clone().add(total, 'ms');
         clog('* slotToTime finishes with: ' + result + '.');
         return result;
-    };
-
-    exports.getBTime = function () {
-        if (settings.fixedBTime)
-            return moment(settings.fixedBTime);
-        else {
-            // TODO - if we change the step, this has to be changed.
-            return moment(new Date()).add('hours', 1).minutes(0).seconds(0);
-        }
     };
 };
