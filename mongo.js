@@ -43,12 +43,7 @@ exports.initialize = function (app, settings, util) {
             util.cdir(floatingTask.data, true);
 
             // Skipping past tasks. But not skipping unscheduled tasks.
-            var scheduleTask = !floatingTask.data.start || floatingTask.data.dirty;
-            if (!scheduleTask) {
-                var start = moment(floatingTask.data.start);
-                if (start > btime)
-                    scheduleTask = true;
-            }
+            var scheduleTask = floatingTask.data.start || (moment(floatingTask.data.start) > btime) || floatingTask.data.dirty;
 
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(moment(floatingTask.data.due), btime);
@@ -77,19 +72,17 @@ exports.initialize = function (app, settings, util) {
                         // Skipping past tasks.
                         var preq_start = moment(prerequisiteTask.data.start);
                         var preq_end = preq_start.clone().add(settings.msGranularity * prerequisiteTask.data.dur * (prerequisiteTask.data.type === 'fixedAllDay' ? (86400000 / 36e5) : 1), 'ms');
-                        if (preq_end > btime) {
-                            if (prerequisiteTask.data.type === 'fixed') {
-                                var fixedPrerequisite = util.timeToSlot(preq_end, btime);
-                                maxFixedPrerequisite = Math.max(maxFixedPrerequisite, fixedPrerequisite);
-                            } else if (prerequisiteTask.data.type === 'floating') {
-                                toReturn.Problem.Dependencies[counterDeps++] = {
-                                    id: counterDeps.toString(),
-                                    FirstActivity: dependencyId,
-                                    SecondActivity: floatingTask.id
-                                };
-                                util.clog('-- float dependency:');
-                                util.cdir(toReturn.Problem.Dependencies[counterDeps - 1], true);
-                            }
+                        if (['fixed', 'fixedAllDay'].indexOf(prerequisiteTask.data.type) > -1) {
+                            var fixedPrerequisite = Math.max(0, util.timeToSlot(preq_end, btime));
+                            maxFixedPrerequisite = Math.max(maxFixedPrerequisite, fixedPrerequisite);
+                        } else if (prerequisiteTask.data.type === 'floating') {
+                            toReturn.Problem.Dependencies[counterDeps++] = {
+                                id: counterDeps.toString(),
+                                FirstActivity: dependencyId,
+                                SecondActivity: floatingTask.id
+                            };
+                            util.clog('-- float dependency:');
+                            util.cdir(toReturn.Problem.Dependencies[counterDeps - 1], true);
                         }
                     });
 
@@ -104,7 +97,7 @@ exports.initialize = function (app, settings, util) {
                 }
             }
         });
-        
+
         util.cdir(toReturn, true);
         return toReturn;
     };

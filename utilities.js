@@ -40,23 +40,19 @@ exports.initialize = function (settings, moment) {
         else
             hours = time_minusDays.diff(btime, 'h');
 
-        // +1 is because cpsolver numbers from 1.
-        var result = weekSlots + daySlots + hours + 1;
+        var result = weekSlots + daySlots + hours;
         clog('* timeToSlot finishes with: ' + result + '.');
         return result;
     };
 
     exports.slotToTime = function (slot, btime) {
-        // -1 is because cpsolver numbers from 1.
-        var internal_slot = slot - 1;
-        
-        clog('* slotToTime starts with internal_slot = ' + internal_slot + ', btime = ' + btime.toString() + '.');
+        clog('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endHour - btime.hours();
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endHour, 'h');
         var weekMiliseconds = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 604800000;
-        var slotModWeeks = internal_slot % (settings.daysPerWeek * settings.hoursPerDay);
+        var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay);
         var dayMiliseconds = Math.floor(slotModWeeks / settings.hoursPerDay) * 86400000;
-        var slotModDays = internal_slot % (settings.hoursPerDay);
+        var slotModDays = slot % (settings.hoursPerDay);
         if (slotModDays > endOfDay - 1) {
             dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * 36e5;
             slotModDays -= (endOfDay - slotModDays);
