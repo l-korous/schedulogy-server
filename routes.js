@@ -24,7 +24,7 @@ exports.initialize = function (app, mongo, solver, util, settings, mailer, momen
     });
 
     var returnSchedule = function (btime) {
-        if (false) {
+        if (0) {
             return {
                 body: [mongo.getClientJson()],
                 headers: settings.defaultHeaderJson,
@@ -36,6 +36,8 @@ exports.initialize = function (app, mongo, solver, util, settings, mailer, momen
 
             if (result) {
                 mongo.storeSlnData(result, btime);
+                mongo.recalculateConstraints(btime);
+                
                 return {
                     body: [mongo.getClientJson()],
                     headers: settings.defaultHeaderJson,
@@ -53,30 +55,21 @@ exports.initialize = function (app, mongo, solver, util, settings, mailer, momen
         }
     };
 
-    var justReturn = function (btime) {
-        return {
-            body: [mongo.getClientJson()],
-            headers: settings.defaultHeaderJson,
-            status: 200
-        };
-    };
-
     app.del('/task/:taskId', function (request, task_id) {
-        var btime = moment(request.params.btime);
         mongo.removeTask(task_id);
-        return returnSchedule(btime);
+        
+        return returnSchedule(request.params.btime);
     });
 
     app.post('/task', function (request, what) {
-        var btime = moment(request.params.btime);
         var task = request.postParams;
         mongo.storeTask(task);
-        return returnSchedule(btime);
+        
+        return returnSchedule(request.params.btime);
     });
 
     app.get('/task', function (request) {
-        var btime = moment(request.params.btime);
-        return returnSchedule(btime);
+        return returnSchedule(request.params.btime);
     });
 
     app.post('/msg', function (request) {

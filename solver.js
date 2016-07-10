@@ -15,5 +15,5 @@ exports.initialize = function (settings, util) {
         util.cdir(solution);
 
         return solution === "" ? false : solution;
-    };
+    };  
 };

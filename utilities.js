@@ -13,7 +13,10 @@ exports.initialize = function (settings, moment) {
     };
     exports.cdir = cdir;
 
-    exports.timeToSlot = function (time, btime) {
+    exports.timeToSlot = function (timeUnix, btimeUnix) {
+        var time = moment.unix(timeUnix);
+        var btime = moment.unix(btimeUnix);
+        
         clog('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
 
         var weeks = time.diff(btime, 'w');
@@ -45,7 +48,9 @@ exports.initialize = function (settings, moment) {
         return result;
     };
 
-    exports.slotToTime = function (slot, btime) {
+    exports.slotToTime = function (slot, btimeUnix) {
+        var btime = moment.unix(btimeUnix);
+        
         clog('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endHour - btime.hours();
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endHour, 'h');
@@ -54,10 +59,10 @@ exports.initialize = function (settings, moment) {
         var dayMiliseconds = Math.floor(slotModWeeks / settings.hoursPerDay) * 86400000;
         var slotModDays = slot % (settings.hoursPerDay);
         if (slotModDays > endOfDay - 1) {
-            dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * 36e5;
+            dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * settings.msGranularity;
             slotModDays -= (endOfDay - slotModDays);
         }
-        var hourMiliseconds = slotModDays * 36e5;
+        var hourMiliseconds = slotModDays * settings.msGranularity;
 
         var total = weekMiliseconds + dayMiliseconds + hourMiliseconds;
         // Over the weekend.
@@ -66,6 +71,6 @@ exports.initialize = function (settings, moment) {
 
         var result = btime.clone().add(total, 'ms');
         clog('* slotToTime finishes with: ' + result + '.');
-        return result;
+        return result.unix();
     };
 };
