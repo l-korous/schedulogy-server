@@ -17,12 +17,18 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
     app.options('/activate', function () {
         return settings.optionAllowedResponse;
     });
+    app.options('/set-username', function () {
+        return settings.optionAllowedResponse;
+    });
+    app.options('/set-password', function () {
+        return settings.optionAllowedResponse;
+    });
 
     app.post('/msg', function (req) {
         // TODO
     });
     app.post('/login', function (req) {
-        var res = mongoUtil.verifyUserCredentialsReturnUser(req.params.credentials);
+        var res = mongoUtil.verifyUserCredentialsReturnUser(req.params);
         if (typeof res === 'object') {
             return {
                 body: ['{"token":"' + auth.generateToken(res) + '"}'],
@@ -38,7 +44,7 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
         var res = mongoUtil.createUser(req.params);
         if (res.id) {
             mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
-            
+
             res = 'ok';
         }
         return util.simpleResponse(res);
@@ -56,6 +62,24 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
 
     app.post('/activate', function (req) {
         var res = mongoUtil.activateUser(req.params.password, req.params.userId, req.params.passwordResetHash);
+        return util.simpleResponse(res);
+    });
+
+    app.post('/set-username', function (req) {
+        var res = mongoUtil.setUsername(req.session.data.userId, req.params.username);
+        if (typeof res === 'object') {
+            return {
+                body: ['{"token":"' + auth.generateToken(res) + '"}'],
+                headers: settings.defaultHeaderJson,
+                status: 200
+            };
+        }
+        else
+            return util.simpleResponse(res);
+    });
+
+    app.post('/set-password', function (req) {
+        var res = mongoUtil.setPassword(req.session.data.userId, req.params.password);
         return util.simpleResponse(res);
     });
 };

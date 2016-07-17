@@ -48,10 +48,10 @@ exports.initialize = function (app, settings, util) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime);
 
                 // Now this task might be due sooner, if there is a fixed dependency on it:
-                tasks.find({deps: floatingTask.id, type: {$in : ['fixed', 'fixedAllDay']}}).forEach(function (dependentTask) {
+                tasks.find({deps: floatingTask.id, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (dependentTask) {
                     dueInteger = Math.min(dueInteger, util.timeToSlot(dependentTask.data.start, btime));
                 });
-                
+
                 toReturn.Problem.Activities[counter++] = {
                     Length: floatingTask.data.dur,
                     id: floatingTask.id,
@@ -181,11 +181,12 @@ exports.initialize = function (app, settings, util) {
             }
         });
     };
-    exports.storeTask = function (task) {
+    exports.storeTask = function (task, userId) {
         // TODO validation (timezone - all incoming tasks should be in UTC)
         if (task._id)
             task._id = new Packages.org.bson.types.ObjectId(task._id);
         task.dirty = true;
+        task.user = new Packages.org.bson.types.ObjectId(userId);
         tasks.save(task);
     };
     exports.removeTask = function (task_id) {
@@ -201,10 +202,11 @@ exports.initialize = function (app, settings, util) {
 
         tasks.remove({_id: new Packages.org.bson.types.ObjectId(task_id)});
     };
-    exports.getClientJson = function () {
+    exports.getClientJson = function (userId) {
         var toReturn = "{\"tasks\": [";
         var first_task = true;
-        tasks.find().forEach(function (task) {
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        tasks.find({user: userIdInMongo}).forEach(function (task) {
             if (!first_task)
                 toReturn += ",";
             else

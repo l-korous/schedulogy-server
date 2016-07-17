@@ -58,7 +58,7 @@ exports.initialize = function (app, settings, secrets, util) {
             return '!existing';
         }
         else {
-            if(existingUser.data.passwordResetHash === '')
+            if (existingUser.data.passwordResetHash === '')
                 return 'used';
             else if (existingUser.data.passwordResetHash === passwordResetHash)
                 return 'ok';
@@ -79,5 +79,26 @@ exports.initialize = function (app, settings, secrets, util) {
     };
 
     exports.deleteUser = function (userId) {
+    };
+
+    exports.setUsername = function (userId, username) {
+        try {
+            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {username: username}});
+            return users.findOne({_id: new Packages.org.bson.types.ObjectId(userId)}).data;
+        }
+        catch (msg) {
+            return msg ? msg : '';
+        }
+    };
+
+    exports.setPassword = function (userId, password) {
+        try {
+            var passwordHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
+            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {password: passwordHash}});
+            return 'ok';
+        }
+        catch (msg) {
+            return msg ? msg : '';
+        }
     };
 };

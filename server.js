@@ -5,10 +5,10 @@ app.configure('params');
 var settings = require('./settings.js').settings;
 var secrets = require('./secrets.js').secrets;
 
+var moment = require('./bower_components/moment/moment.js');
+
 var util = require('./util.js');
 util.initialize(settings, moment);
-
-var moment = require('./bower_components/moment/moment.js');
 
 var auth = require('./auth.js');
 auth.initialize(settings, secrets, util, moment);

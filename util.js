@@ -78,7 +78,7 @@ exports.initialize = function (settings, moment) {
     // otherwise 400, unless not given a code as the second parameter
     exports.simpleResponse = function(msg, code) {
         return {
-            body: ['{"message": "' + msg + '"}'],
+            body: ['{"msg": "' + msg + '"}'],
             status: msg === 'ok' ? 200 : (code ? code : 400),
             headers: settings.defaultHeaderJson
         };

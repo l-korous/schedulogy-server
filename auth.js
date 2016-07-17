@@ -6,26 +6,28 @@ exports.initialize = function (settings, secrets, util, moment) {
     exports.generateToken = function (user) {
         var issuer = "http://schedulogy.com/";
         var iat = moment().unix();
-        util.clog(iat);
         var exp = iat + 60 * 60 * 24;
-        util.clog(exp);
         var x = new java.util.HashMap();
         x.put("iss", issuer);
         x.put("iat", iat);
         x.put("exp", exp);
         x.put("exp", exp);
-        x.put("u", user._id.toString());
+        x.put("uid", user._id.toString());
+        x.put("uem", user.email);
+        x.put("uname", user.username || '');
         var signer = new JWTSigner(secrets.jwtSecret);
         var jwt = signer.sign(x);
         return jwt;
     };
 
-    exports.checkTokenReturnUserId = function (token, userId) {
+    exports.checkToken = function (token, userId) {
         try {
             var verifier = new JWTVerifier(secrets.jwtSecret);
             var claims = verifier.verify(token);
-            if (claims.get('u') === userId)
+            if (claims.get('uid') === userId)
                 return 'ok';
+            else if(parseInt(claims.get('exp')) < moment().unix())
+                return 'expired';
             else
                 return 'fraud';
         } catch (e) {
@@ -45,7 +47,7 @@ exports.initialize = function (settings, secrets, util, moment) {
                 if (!req.headers.authorization || !req.headers.xuser)
                     return util.simpleResponse('missingAuth', 403);
                 else {
-                    var auth_res = exports.checkTokenReturnUserId(req.headers.authorization, req.headers.xuser);
+                    var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
                     if(auth_res === 'ok') {
                         req.session.data.userId = req.headers.xuser;
                         return next(req);

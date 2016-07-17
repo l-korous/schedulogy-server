@@ -24,7 +24,7 @@ exports.settings = {
         headers: {
             'Access-Control-Allow-Origin': "*",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization'
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser'
         },
         status: 200
     },
