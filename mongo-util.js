@@ -1,19 +1,19 @@
-exports.initialize = function (app, settings, secrets, crypt, util) {
+exports.initialize = function (app, settings, secrets, util) {
     var mongo = require('ringo-mongodb');
-    var defer = require("ringo/promise");
     var client = new mongo.MongoClient('localhost', 27017);
     var db = client.getDB('scheduler');
     var users = db.getCollection('user');
+    addToClasspath("./cpsolver/dist/jbcrypt-0.3m.jar");
+    importPackage(org.mindrot.jbcrypt);
 
     exports.verifyUserCredentialsReturnUser = function (credentials) {
         var user = users.findOne({email: credentials.email});
-        if (user.active) {
-            crypt.checkpw(credentials.password, user.password, function (result) {
-                if (result)
-                    return user;
-                else
-                    return 'password';
-            });
+        if (user.data.active) {
+            var res = BCrypt.checkpw(credentials.password, user.data.password);
+            if (res)
+                return user.data;
+            else
+                return 'password';
         }
         else
             return 'inactive';
@@ -22,7 +22,7 @@ exports.initialize = function (app, settings, secrets, crypt, util) {
     exports.createUser = function (userData) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
-            util.clog('exports.createUser: existing');
+            util.clog('createUser: existing');
             return 'existing';
         }
         else {
@@ -37,11 +37,11 @@ exports.initialize = function (app, settings, secrets, crypt, util) {
                 return text;
             }
             ;
-            userData.passwordSetupHash = createRandomString(128);
+            userData.passwordResetHash = createRandomString(128);
 
             var saved = users.save(userData);
             if (saved.error) {
-                util.clog('exports.createUser: error: ' + saved);
+                util.clog('createUser: error: ' + saved);
                 return 'error';
             }
             else {
@@ -50,13 +50,32 @@ exports.initialize = function (app, settings, secrets, crypt, util) {
         }
     };
 
-    exports.activateUser = function (userId, password) {
-        var deferred = new defer.Deferred();
-        crypt.hashpw(password, secrets.cryptSalt, function (passwordHash) {
-            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {active: 1, password: passwordHash});
-            deferred.resolve('OK');
-        });
-        return deferred.promise;
+    exports.verifyPasswordResetLink = function (userId, passwordResetHash) {
+        var existingUser = users.findOne(new Packages.org.bson.types.ObjectId(userId));
+
+        if (!existingUser) {
+            util.clog('verifyPasswordResetLink: (!) existing');
+            return '!existing';
+        }
+        else {
+            if(existingUser.data.passwordResetHash === '')
+                return 'used';
+            else if (existingUser.data.passwordResetHash === passwordResetHash)
+                return 'ok';
+            else
+                return 'password';
+        }
+    };
+
+    exports.activateUser = function (password, userId, passwordResetHash) {
+        var linkCheck = exports.verifyPasswordResetLink(userId, passwordResetHash);
+        if (linkCheck === 'ok') {
+            var passwordHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
+            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {active: 1, password: passwordHash, passwordResetHash: ''}});
+            return 'ok';
+        }
+        else
+            return linkCheck;
     };
 
     exports.deleteUser = function (userId) {

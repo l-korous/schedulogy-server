@@ -19,11 +19,6 @@ exports.settings = {
     smtpEncrypt: true,
     smtpUsername: 'util.314@gmail.com',
     smtpPassword: '[4t94ek123',
-    forbiddenResponse: {
-        body: ['Forbidden!'],
-        status: 403,
-        header: {'Content-Type': 'text/html'}
-    },
     optionAllowedResponse: {
         body: [],
         headers: {
@@ -34,10 +29,10 @@ exports.settings = {
         status: 200
     },
     mailSetupSubject: 'Welcome to SCHEDULOGY',
-    mailSetupUrl: 'http://localhost:8100/#/password-setup',
-    mailSetupText: function(email, passwordSetupHash) {
+    mailSetupUrl: 'http://localhost:8100/#/password-reset',
+    mailSetupText: function (userId, passwordResetHash) {
         var text = 'Welcome to SCHEDULOGY \r\n\r\n Please visit ';
-        text += this.mailSetupUrl + '?id=' + passwordSetupHash + '&user=' + email;
+        text += this.mailSetupUrl + '?id=' + passwordResetHash + '&user=' + userId;
         text += '. \r\n\r\n Please enjoy SCHEDULOGY and contact us at info@schedulogy.com with any questions you have.';
         return text;
     }

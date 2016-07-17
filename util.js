@@ -73,4 +73,14 @@ exports.initialize = function (settings, moment) {
         clog('* slotToTime finishes with: ' + result + '.');
         return result.unix();
     };
+    
+    // This function, if given msg === 'ok', generates an OK response (200 HTTP Status Code),
+    // otherwise 400, unless not given a code as the second parameter
+    exports.simpleResponse = function(msg, code) {
+        return {
+            body: ['{"message": "' + msg + '"}'],
+            status: msg === 'ok' ? 200 : (code ? code : 400),
+            headers: settings.defaultHeaderJson
+        };
+    };
 };

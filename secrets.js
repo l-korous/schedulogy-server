@@ -1,4 +1,4 @@
 exports.secrets = {
     jwtSecret: 'whatever',
-    cryptSalt: '$2a$08$b0MHMsT3ErLoTRjpjzsCie'
+    cryptSalt: '$2a$04$b0MHMsT3ErLoTRjpjzsCie'
 };

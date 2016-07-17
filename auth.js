@@ -1,54 +1,61 @@
-exports.initialize = function (settings, secrets) {
-    var kjur = require('./bower_components/kjur-jsrsasign/jsrsasign-latest-all-min.js');
-    var defer = require("ringo/promise");
+exports.initialize = function (settings, secrets, util, moment) {
+    addToClasspath("./cpsolver/dist/java-jwt-2.1.0.jar");
+    importPackage(com.auth0.jwt);
+    importPackage(java.util);
 
     exports.generateToken = function (user) {
-        var oHeader = {alg: 'HS256', typ: 'JWT'};
-
-        var oPayload = {};
-        var tNow = kjur.jws.IntDate.get('now');
-        var tEnd = kjur.jws.IntDate.get('now + 1day');
-        oPayload.nbf = tNow;
-        oPayload.iat = tNow;
-        oPayload.exp = tEnd;
-        oPayload.jti = user;
-        var sHeader = JSON.stringify(oHeader);
-        var sPayload = JSON.stringify(oPayload);
-        return kjur.jws.JWS.sign("HS256", sHeader, sPayload, secrets.jwtSecret);
+        var issuer = "http://schedulogy.com/";
+        var iat = moment().unix();
+        util.clog(iat);
+        var exp = iat + 60 * 60 * 24;
+        util.clog(exp);
+        var x = new java.util.HashMap();
+        x.put("iss", issuer);
+        x.put("iat", iat);
+        x.put("exp", exp);
+        x.put("exp", exp);
+        x.put("u", user._id.toString());
+        var signer = new JWTSigner(secrets.jwtSecret);
+        var jwt = signer.sign(x);
+        return jwt;
     };
 
-    exports.checkTokenReturnUserId = function (token) {
-        var isValid = kjur.jws.JWS.verifyJWT(token, secrets.jwtSecret, {alg: ['HS256']});
-
-        if (isValid)
-            return kjur.jws.JWS.readSafeJSONString(b64utoutf8(token.split(".")[1])).jti._id;
-        else
-            return false;
+    exports.checkTokenReturnUserId = function (token, userId) {
+        try {
+            var verifier = new JWTVerifier(secrets.jwtSecret);
+            var claims = verifier.verify(token);
+            if (claims.get('u') === userId)
+                return 'ok';
+            else
+                return 'fraud';
+        } catch (e) {
+            return 'error';
+        }
     };
 
     exports.middleware = function (next) {
         return function (req) {
             if (req.method === 'OPTIONS')
                 return settings.optionAllowedResponse;
-            // For login, we do not parse the token:
-            if ((req.pathInfo === '/login') || (req.pathInfo === '/register')) {
-                // TODO - this may be greatly slowing everything down.
-                // If there is a way how to do this in such a way that we are not blocking a thread here, it would be great.
-                return next(req).wait();
+            // For login etc., we do not parse the token:
+            if (['/password-reset-check', '/login', '/register', '/activate'].indexOf(req.pathInfo) > -1) {
+                return next(req);
             }
-            if (!req.session.data.user) {
-                if (!req.headers.authorization)
-                    return settings.forbiddenResponse;
+            if (!req.session.data.userId) {
+                if (!req.headers.authorization || !req.headers.xuser)
+                    return util.simpleResponse('missingAuth', 403);
                 else {
-                    var userId = exports.checkTokenReturnUserId(req.headers.authorization);
-                    if (!userId)
-                        return settings.forbiddenResponse;
-                    else {
-                        req.session.data.userId = userId;
+                    var auth_res = exports.checkTokenReturnUserId(req.headers.authorization, req.headers.xuser);
+                    if(auth_res === 'ok') {
+                        req.session.data.userId = req.headers.xuser;
+                        return next(req);
                     }
+                    else
+                        return util.simpleResponse(auth_res, 403);
                 }
             }
-            return next(req);
+            else
+                return next(req);
         };
     };
 };

@@ -1,6 +1,4 @@
 exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, auth) {
-    var defer = require("ringo/promise");
-
     app.options('/msg', function () {
         return settings.optionAllowedResponse;
     });
@@ -10,71 +8,54 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
     app.options('/register', function () {
         return settings.optionAllowedResponse;
     });
+    app.options('/password-reset-check', function () {
+        return settings.optionAllowedResponse;
+    });
+    app.options('/authenticate', function () {
+        return settings.optionAllowedResponse;
+    });
+    app.options('/activate', function () {
+        return settings.optionAllowedResponse;
+    });
 
     app.post('/msg', function (req) {
         // TODO
     });
     app.post('/login', function (req) {
-        var user = mongoUtil.verifyUserCredentialsReturnUser(req.params.credentials);
-        if (user)
+        var res = mongoUtil.verifyUserCredentialsReturnUser(req.params.credentials);
+        if (typeof res === 'object') {
             return {
-                body: [auth.generateToken(user)],
-                headers: settings.defaultHeader,
+                body: ['{"token":"' + auth.generateToken(res) + '"}'],
+                headers: settings.defaultHeaderJson,
                 status: 200
             };
+        }
         else
-            return settings.forbiddenResponse;
+            return util.simpleResponse(res, 403);
     });
 
     app.post("/register", function (req) {
         var res = mongoUtil.createUser(req.params);
-        if (res._id) {
-
-            mailer.mail(res.email, settings.mailSetupSubject, settings.mailSetupText(res.email, res.passwordSetupHash));
-
-            return {
-                body: [res],
-                status: 200,
-                headers: settings.defaultHeaderJson
-            };
+        if (res.id) {
+            mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
+            
+            res = 'ok';
         }
-        else
-            return {
-                body: [res],
-                status: 400,
-                headers: settings.defaultHeaderJson
-            };
+        return util.simpleResponse(res);
     });
 
     app.post('/authenticate', function (req) {
         // The middle ware takes care of forbidden states, once we get here, all is OK.
-        return {
-            body: ['OK'],
-            status: 200,
-            headers: {'Content-Type': 'application/json'}
-        };
+        return util.simpleResponse('ok');
+    });
+
+    app.post('/password-reset-check', function (req) {
+        var res = mongoUtil.verifyPasswordResetLink(req.params.userId, req.params.passwordResetHash);
+        return util.simpleResponse(res);
     });
 
     app.post('/activate', function (req) {
-        var result = 
-        mongoUtil.createUser(req.params).then(function (res) {
-            if (res._id) {
-
-                mailer.mail(res.email, settings.mailSetupSubject, settings.mailSetupText(res.email, res.passwordSetupHash));
-
-                response.resolve({
-                    body: [res],
-                    status: 200,
-                    headers: settings.defaultHeaderJson
-                });
-            }
-            else
-                response.resolve({
-                    body: [res],
-                    status: 400,
-                    headers: settings.defaultHeaderJson
-                });
-        });
-        return response.promise;
+        var res = mongoUtil.activateUser(req.params.password, req.params.userId, req.params.passwordResetHash);
+        return util.simpleResponse(res);
     });
 };
