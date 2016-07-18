@@ -40,7 +40,7 @@ exports.initialize = function (settings, secrets, util, moment) {
             if (req.method === 'OPTIONS')
                 return settings.optionAllowedResponse;
             // For login etc., we do not parse the token:
-            if (['/password-reset-check', '/login', '/register', '/activate'].indexOf(req.pathInfo) > -1) {
+            if (['/password-reset-check', '/login', '/register', '/activate', '/reset-password'].indexOf(req.pathInfo) > -1) {
                 return next(req);
             }
             if (!req.session.data.userId) {

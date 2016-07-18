@@ -19,6 +19,15 @@ exports.initialize = function (app, settings, secrets, util) {
             return 'inactive';
     };
 
+    exports.getUserByEmail = function (email) {
+        var user = users.findOne({email: email});
+        return user ? user : '!existing';
+    };
+
+    exports.storePasswordResetHash = function (userId, newHash) {
+        users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {passwordResetHash: newHash}});
+    };
+
     exports.createUser = function (userData) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
@@ -27,17 +36,7 @@ exports.initialize = function (app, settings, secrets, util) {
         }
         else {
             userData.active = 0;
-
-            function createRandomString(length)
-            {
-                var text = "";
-                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                for (var i = 0; i < length; i++)
-                    text += possible.charAt(Math.floor(Math.random() * possible.length));
-                return text;
-            }
-            ;
-            userData.passwordResetHash = createRandomString(128);
+            userData.passwordResetHash = util.generatePasswordResetHash();
 
             var saved = users.save(userData);
             if (saved.error) {

@@ -23,6 +23,9 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
     app.options('/set-password', function () {
         return settings.optionAllowedResponse;
     });
+    app.options('/reset-password', function () {
+        return settings.optionAllowedResponse;
+    });
 
     app.post('/msg', function (req) {
         // TODO
@@ -45,6 +48,17 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
         if (res.id) {
             mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
 
+            res = 'ok';
+        }
+        return util.simpleResponse(res);
+    });
+
+    app.post("/reset-password", function (req) {
+        var res = mongoUtil.getUserByEmail(req.params.email);
+        if (res.id) {
+            var newHash = util.generatePasswordResetHash();
+            mongoUtil.storePasswordResetHash(res.data._id, newHash);
+            mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, newHash));
             res = 'ok';
         }
         return util.simpleResponse(res);

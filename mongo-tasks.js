@@ -113,13 +113,15 @@ exports.initialize = function (app, settings, util) {
     // For a single task, calculate the amount of time necessary to complete all its dependencies.
     // While not counting durations of tasks that are (already) in constraintsUtilArray and at the same time updating the array.
     var getStartConstraintFromDeps = function (task, btime) {
-        util.clog('getStartConstraintFromDeps starts with task = ' + task.title + ', btime = ' + moment.unix(btime) + '.');
+        util.clog('getStartConstraintFromDeps starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
         task.deps.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
+            util.clog('* getStartConstraintFromDeps - a prerequisite: ' + prerequisiteTask.data.title + '.');
             if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && getEnd(prerequisiteTask) > btime) {
                 constraintsUtilArray.push(prerequisiteTaskId);
                 toReturn += (prerequisiteTask.type === 'fixedAllDay' ? (settings.hoursPerDay * prerequisiteTask.dur) : prerequisiteTask.dur) + getStartConstraintFromDeps(prerequisiteTask, btime);
+                util.clog('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
             }
         });
         return toReturn;
@@ -129,7 +131,7 @@ exports.initialize = function (app, settings, util) {
     // - all tasks with due date before this task (with dependencies)
     // - all fixed tasks which have to occur before due - dur
     var getStartConstraint = function (task, btime, clear) {
-        util.clog('getStartConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime) + '.');
+        util.clog('getStartConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
         if (clear)
             constraintsUtilArray = [];
@@ -148,15 +150,17 @@ exports.initialize = function (app, settings, util) {
     // all dependent floating tasks
     // all of them with dependencies (through getStartConstraint)
     var getEndConstraint = function (task, btime) {
-        util.clog('getEndConstraint starts with task = ' + task.data.title + ', btime = ' + moment.unix(btime) + '.');
+        util.clog('getEndConstraint starts with task = ' + task.data.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
         constraintsUtilArray = [];
         tasks.find({deps: task.id}).forEach(function (dependentTask) {
             util.clog('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
-            var startTime = dependentTask.data.type === 'floating' ? dependentTask.data.due - (settings.msGranularity / 1000) : dependentTask.data.start;
-            startTime -= getStartConstraint(dependentTask.data, task, false) * (settings.msGranularity / 1000);
-            if (!toReturn || (startTime < toReturn))
-                toReturn = startTime;
+            var depLatestStartTimestartTime = dependentTask.data.type === 'floating' ? dependentTask.data.due - (settings.msGranularity / 1000) : dependentTask.data.start;
+            util.clog('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
+            depLatestStartTimestartTime -= getStartConstraint(dependentTask.data, btime, false) * (settings.msGranularity / 1000);
+            util.clog('* getEndConstraint - dependent task latest start (with its deps): ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
+            if (!toReturn || (depLatestStartTimestartTime < toReturn))
+                toReturn = depLatestStartTimestartTime;
         });
         if (!toReturn)
             toReturn = moment.unix(btime).add(settings.weeks, 'w').unix();
@@ -164,7 +168,6 @@ exports.initialize = function (app, settings, util) {
     };
     // This function assumes that all tasks are not-dirty, and are correctly stored in the DB.
     exports.recalculateConstraints = function (btime) {
-        var toSave = [];
         tasks.find({}).forEach(function (task) {
             if (getEnd(task.data) > btime) {
                 var constraint = {
