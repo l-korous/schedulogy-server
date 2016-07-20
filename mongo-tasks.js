@@ -48,9 +48,10 @@ exports.initialize = function (app, settings, util) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime);
 
                 // Now this task might be due sooner, if there is a fixed dependency on it:
-                tasks.find({deps: floatingTask.id, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (dependentTask) {
-                    dueInteger = Math.min(dueInteger, util.timeToSlot(dependentTask.data.start, btime));
-                });
+                // Fixed tasks being dependent are not supported so far.
+                // tasks.find({needs: floatingTask.id, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (dependentTask) {
+                //     dueInteger = Math.min(dueInteger, util.timeToSlot(dependentTask.data.start, btime));
+                // });
 
                 toReturn.Problem.Activities[counter++] = {
                     Length: floatingTask.data.dur,
@@ -63,12 +64,16 @@ exports.initialize = function (app, settings, util) {
                 util.clog('- adding activity:');
                 util.cdir(toReturn.Problem.Activities[counter - 1], true);
                 // Dependencies:
-                if (floatingTask.data.deps) {
+                if (floatingTask.data.needs) {
                     // Slot when all fixed prerequisites are done.
                     // During evalution, care must be taken not to have due < maxFixedPrerequisite.
                     var maxFixedPrerequisite = 0;
-                    floatingTask.data.deps.forEach(function (dependencyId) {
-                        var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependencyId));
+                    floatingTask.data.needs.forEach(function (prerequisiteTaskId) {
+                        var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
+                        if (!prerequisiteTask) {
+                            util.clog('Error: prerequisite not exists: ' + prerequisiteTaskId);
+                            return;
+                        }
                         util.clog('- dependency:');
                         util.cdir(prerequisiteTask, true);
                         // Skipping past tasks.
@@ -79,7 +84,7 @@ exports.initialize = function (app, settings, util) {
                         } else if (prerequisiteTask.data.type === 'floating') {
                             toReturn.Problem.Dependencies[counterDeps++] = {
                                 id: counterDeps.toString(),
-                                FirstActivity: dependencyId,
+                                FirstActivity: prerequisiteTaskId,
                                 SecondActivity: floatingTask.id
                             };
                             util.clog('-- float dependency:');
@@ -115,8 +120,13 @@ exports.initialize = function (app, settings, util) {
     var getStartConstraintFromDeps = function (task, btime) {
         util.clog('getStartConstraintFromDeps starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
-        task.deps.forEach(function (prerequisiteTaskId) {
+        task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
+            if (!prerequisiteTask) {
+                util.clog('Error: prerequisite not exists: ' + prerequisiteTaskId);
+                return;
+            }
+
             util.clog('* getStartConstraintFromDeps - a prerequisite: ' + prerequisiteTask.data.title + '.');
             if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && getEnd(prerequisiteTask) > btime) {
                 constraintsUtilArray.push(prerequisiteTaskId);
@@ -153,7 +163,7 @@ exports.initialize = function (app, settings, util) {
         util.clog('getEndConstraint starts with task = ' + task.data.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
         constraintsUtilArray = [];
-        tasks.find({deps: task.id}).forEach(function (dependentTask) {
+        tasks.find({needs: task.id}).forEach(function (dependentTask) {
             util.clog('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
             var depLatestStartTimestartTime = dependentTask.data.type === 'floating' ? dependentTask.data.due - (settings.msGranularity / 1000) : dependentTask.data.start;
             util.clog('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
@@ -188,18 +198,30 @@ exports.initialize = function (app, settings, util) {
         // TODO validation (timezone - all incoming tasks should be in UTC)
         if (task._id)
             task._id = new Packages.org.bson.types.ObjectId(task._id);
+
+        var blocksToBeSaved = task.blocks;
+
         task.dirty = true;
         task.user = new Packages.org.bson.types.ObjectId(userId);
         tasks.save(task);
+        blocksToBeSaved.forEach(function (dependentTaskId) {
+            var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
+            var index = dependentTask.data.needs.findIndex(function (dep) {
+                return dep === task._id;
+            });
+            dependentTask.data.needs.splice(index, 1);
+            dependentTask.data.needs.push(task._id.toString());
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
+        });
     };
     exports.removeTask = function (task_id) {
         // TODO validation (timezone - all incoming tasks should be in UTC)
 
-        tasks.find({deps: task_id}).forEach(function (dependentTask) {
-            var index = dependentTask.data.deps.findIndex(function (dep) {
+        tasks.find({needs: task_id}).forEach(function (dependentTask) {
+            var index = dependentTask.data.needs.findIndex(function (dep) {
                 return dep === task_id;
             });
-            dependentTask.data.deps.splice(index, 1);
+            dependentTask.data.needs.splice(index, 1);
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTask.id)}, dependentTask.data);
         });
 
@@ -214,6 +236,12 @@ exports.initialize = function (app, settings, util) {
                 toReturn += ",";
             else
                 first_task = false;
+
+            task.blocks = [];
+            tasks.find({needs: task.id}).forEach(function (dependentTask) {
+                task.blocks.push(dependentTask.data._id);
+            });
+
             toReturn += task.toJSON();
         });
         toReturn += "]}";
