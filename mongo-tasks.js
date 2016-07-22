@@ -11,8 +11,9 @@ exports.initialize = function (app, settings, util) {
         return task.start + (settings.msGranularity * task.dur * (task.type === 'fixedAllDay' ? (86400000 / settings.msGranularity) : 1) / 1000.);
     };
 
-    exports.getProblemJson = function (btime) {
-        util.clog('getProblemJson starts with btime = ' + moment.unix(btime).toString());
+    exports.getProblemJson = function (btime, userId) {
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        util.clog('getProblemJson starts with btime = ' + moment.unix(btime).toString() + ', user = ' + userId);
         var toReturn = {};
         toReturn.Problem = {};
         toReturn.Problem.General = {};
@@ -20,14 +21,14 @@ exports.initialize = function (app, settings, util) {
         toReturn.Problem.General.SlotsPerDay = settings.hoursPerDay;
         toReturn.Problem.Resources = [{TimePreferences: []}];
         var counter = 0;
-        tasks.find({type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {
+        tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {
             util.clog('Fixed task:');
             util.cdir(fixedTask.data, true);
             // Skipping past tasks.
             var start = fixedTask.data.start;
             var end = getEnd(fixedTask.data);
             if (end > btime) {
-                var leftBound = Math.max(1, util.timeToSlot(start, btime));
+                var leftBound = Math.max(0, util.timeToSlot(start, btime));
                 var rightBound = util.timeToSlot(end, btime);
                 for (var i = leftBound; i < rightBound; i++) {
                     util.clog('- adding hard resource time: ' + i);
@@ -39,11 +40,11 @@ exports.initialize = function (app, settings, util) {
         toReturn.Problem.Dependencies = [];
         counter = 0;
         var counterDeps = 0;
-        tasks.find({type: 'floating'}).forEach(function (floatingTask) {
+        tasks.find({user: userIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
             util.clog('Floating task:');
             util.cdir(floatingTask.data, true);
             // Skipping past tasks. But not skipping unscheduled tasks.
-            var scheduleTask = floatingTask.data.start || (floatingTask.data.start > btime) || floatingTask.data.dirty;
+            var scheduleTask = (!floatingTask.data.start) || (floatingTask.data.start > btime) || floatingTask.data.dirty;
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime);
 
@@ -104,7 +105,7 @@ exports.initialize = function (app, settings, util) {
         util.cdir(toReturn, true);
         return toReturn;
     };
-    exports.storeSlnData = function (outputJsonString, btime) {
+    exports.storeSlnData = function (outputJsonString, btime, userId) {
         util.clog('storeSlnData starts with btime = ' + moment.unix(btime).toString() + '.');
         var outputJson = JSON.parse(outputJsonString);
         var solArray = outputJson.solution;
@@ -112,6 +113,9 @@ exports.initialize = function (app, settings, util) {
             var start = util.slotToTime(solutionEl.StartTime, btime);
             tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {start: start.toString(), dirty: false}});
         });
+        // Also mark all fixed tasks as not-dirty.
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        tasks.update({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}, {$set: {dirty: false}});
     };
 
     var constraintsUtilArray = [];
@@ -163,7 +167,10 @@ exports.initialize = function (app, settings, util) {
                 constraintsUtilArray.push(taskId);
             }
         });
-        return toReturn;
+        if (toReturn > 0)
+            return moment.unix(btime).add(toReturn, 'h').toISOString();
+        else
+            return null;
     };
     // For a single task, calculate the earliest time when this task must be done to satisfy all dependencies:
     // all dependent fixed tasks
@@ -172,19 +179,20 @@ exports.initialize = function (app, settings, util) {
     var getEndConstraint = function (task, taskId, btime) {
         util.clog('getEndConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
-        constraintsUtilArray = [];
-        var dependentTasks = taskId ? task.blocks : tasks.find({needs: taskId}).toArray();
+        constraintsUtilArray = [taskId];
+        var dependentTasks = taskId ? tasks.find({needs: taskId}).toArray() : task.blocks;
         dependentTasks.forEach(function (dependentTask) {
             util.clog('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
             var depLatestStartTimestartTime = dependentTask.data.type === 'floating' ? dependentTask.data.due - (settings.msGranularity / 1000) : dependentTask.data.start;
             util.clog('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
-            depLatestStartTimestartTime -= getStartConstraint(dependentTask.data, btime, false) * (settings.msGranularity / 1000);
+            depLatestStartTimestartTime -= getStartConstraint(dependentTask.data, dependentTask.id, btime, false) * (settings.msGranularity / 1000);
             util.clog('* getEndConstraint - dependent task latest start (with its deps): ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
             if (!toReturn || (depLatestStartTimestartTime < toReturn))
                 toReturn = depLatestStartTimestartTime;
         });
-        if (!toReturn)
-            toReturn = moment.unix(btime).add(settings.weeks, 'w').unix();
+        if (toReturn)
+            toReturn = moment.unix(toReturn).toISOString();
+        util.clog('getEndConstraint finishes with: ' + toReturn + '.');
         return toReturn;
     };
     // This function assumes that all tasks are not-dirty, and are correctly stored in the DB.
@@ -192,40 +200,39 @@ exports.initialize = function (app, settings, util) {
         util.clog('recalculateConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         if (getEnd(task) > btime) {
             var constraint = {
-                start: moment.unix(btime).add(getStartConstraint(task, taskId, btime, true), 'h').toISOString(),
+                start: getStartConstraint(task, taskId, btime, true),
                 end: getEndConstraint(task, taskId, btime)
             };
 
-            if (constraint.end)
-                constraint.end = moment.unix(constraint.end).toISOString();
-
             if (save) {
                 task.constraint = constraint;
-
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(taskId)}, task);
             }
+
             util.clog('recalculateConstraint finishes with constraints [' + constraint.start + ' - ' + constraint.end + '].');
             return constraint;
         }
     };
     // This function assumes that all tasks are not-dirty, and are correctly stored in the DB.
-    exports.recalculateConstraints = function (btime) {
-        tasks.find({}).forEach(function (task) {
+    exports.recalculateConstraints = function (btime, userId) {
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        tasks.find({user: userIdInMongo}).forEach(function (task) {
             exports.recalculateConstraint(task.data, task.id, btime, true);
         });
     };
-    exports.storeTask = function (task, userId) {
+    exports.storeTask = function (task, userId, tasksToBeDirtied) {
         // TODO validation (timezone - all incoming tasks should be in UTC)
-        if (task._id)
+        if (task._id) {
             task._id = new Packages.org.bson.types.ObjectId(task._id);
-
-        var blocksToBeSaved = task.blocks;
+            tasksToBeDirtied.push({_id: task._id, data: tasks.findOne(task._id).data});
+        }
 
         task.dirty = true;
         task.user = new Packages.org.bson.types.ObjectId(userId);
         tasks.save(task);
-        blocksToBeSaved.forEach(function (dependentTaskId) {
+        task.blocks.forEach(function (dependentTaskId) {
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
+            tasksToBeDirtied.push({_id: new Packages.org.bson.types.ObjectId(dependentTaskId), data: dependentTask.data});
             var index = dependentTask.data.needs.findIndex(function (dep) {
                 return dep === task._id;
             });

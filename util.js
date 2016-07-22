@@ -53,21 +53,31 @@ exports.initialize = function (settings, moment) {
 
         clog('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endHour - btime.hours();
+        exports.clog('** slotToTime - endOfDay: ' + endOfDay);
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endHour, 'h');
+        exports.clog('** slotToTime - endOfWeek: ' + endOfWeek);
         var weekMiliseconds = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 604800000;
+        exports.clog('** slotToTime - weekMiliseconds: ' + weekMiliseconds);
         var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay);
+        exports.clog('** slotToTime - slotModWeeks: ' + slotModWeeks);
         var dayMiliseconds = Math.floor(slotModWeeks / settings.hoursPerDay) * 86400000;
+        exports.clog('** slotToTime - dayMiliseconds: ' + dayMiliseconds);
         var slotModDays = slot % (settings.hoursPerDay);
+        exports.clog('** slotToTime - slotModDays: ' + slotModDays);
         if (slotModDays > endOfDay - 1) {
             dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * settings.msGranularity;
-            slotModDays -= (endOfDay - slotModDays);
+            slotModDays -= endOfDay;
         }
+        exports.clog('** slotToTime - slotModDays: ' + slotModDays);
         var hourMiliseconds = slotModDays * settings.msGranularity;
-
+        exports.clog('** slotToTime - hourMiliseconds: ' + hourMiliseconds);
         var total = weekMiliseconds + dayMiliseconds + hourMiliseconds;
+        exports.clog('** slotToTime - total: ' + total);
         // Over the weekend.
         if (btime.clone().add(total, 'ms') > endOfWeek)
             total += 2 * 86400000;
+
+        exports.clog('** slotToTime - total: ' + total);
 
         var result = btime.clone().add(total, 'ms');
         clog('* slotToTime finishes with: ' + result + '.');
