@@ -124,7 +124,7 @@ exports.initialize = function (app, settings, util) {
     var getStartConstraintFromDeps = function (task, btime) {
         util.clog('getStartConstraintFromDeps starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
-        task.needs.forEach(function (prerequisiteTaskId) {
+        task.needs && task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
             if (!prerequisiteTask) {
                 util.clog('Error: prerequisite not exists: ' + prerequisiteTaskId);
@@ -230,7 +230,8 @@ exports.initialize = function (app, settings, util) {
         task.dirty = true;
         task.user = new Packages.org.bson.types.ObjectId(userId);
         tasks.save(task);
-        task.blocks.forEach(function (dependentTaskId) {
+
+        task.blocks && task.blocks.forEach(function (dependentTaskId) {
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
             tasksToBeDirtied.push({_id: new Packages.org.bson.types.ObjectId(dependentTaskId), data: dependentTask.data});
             var index = dependentTask.data.needs.findIndex(function (dep) {
@@ -253,6 +254,11 @@ exports.initialize = function (app, settings, util) {
         });
 
         tasks.remove({_id: new Packages.org.bson.types.ObjectId(task_id)});
+    };
+    exports.removeTasks = function (searchObject) {
+        tasks.find(searchObject).forEach(function (task) {
+            exports.removeTask(task.id);
+        });
     };
     exports.getClientJson = function (userId) {
         var toReturn = "{\"tasks\": [";

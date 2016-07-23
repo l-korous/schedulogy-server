@@ -1,11 +1,12 @@
 exports.settings = {
-    weeks: 6,
+    weeks: 52,
     solverTimeout: 5,
     daysPerWeek: 5,
     hoursPerDay: 9,
     startHour: 8,
     endHour: 17,
     msGranularity: 36e5,
+    maxICalSize: 10,
     debug: true,
     // TODO - Are these correct?
     defaultHeaderJson: {
@@ -24,7 +25,7 @@ exports.settings = {
         headers: {
             'Access-Control-Allow-Origin': "*",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser'
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime'
         },
         status: 200
     },

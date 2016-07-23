@@ -1,35 +1,8 @@
 exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, auth) {
-    app.options('/msg', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/login', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/register', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/password-reset-check', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/authenticate', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/activate', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/set-username', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/set-password', function () {
-        return settings.optionAllowedResponse;
-    });
-    app.options('/reset-password', function () {
-        return settings.optionAllowedResponse;
-    });
-
     app.post('/msg', function (req) {
         // TODO
     });
+
     app.post('/login', function (req) {
         var res = mongoUtil.verifyUserCredentialsReturnUser(req.params);
         if (typeof res === 'object') {

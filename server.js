@@ -18,6 +18,9 @@ app.configure('session');
 var mongoTasks = require('./mongo-tasks.js');
 mongoTasks.initialize(app, settings, util);
 
+var mongoIcal = require('./mongo-ical.js');
+mongoIcal.initialize(app, settings, util, moment, mongoTasks);
+
 var mongoUtil = require('./mongo-util.js');
 mongoUtil.initialize(app, settings, secrets, util);
 
@@ -28,7 +31,7 @@ var mailer = require('./mailer.js');
 mailer.initialize(settings);
 
 var routesTasks = require('./routes-tasks.js');
-routesTasks.initialize(app, mongoTasks, solver, util, settings, mailer, moment);
+routesTasks.initialize(app, mongoTasks, solver, util, settings, mailer, moment, mongoIcal);
 
 var routesUtil = require('./routes-util.js');
 routesUtil.initialize(app, mongoUtil, util, settings, mailer, moment, auth);

@@ -1,15 +1,5 @@
-exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, moment) {
-    app.options('/task', function () {
-        return settings.optionAllowedResponse;
-    });
-
-    app.options('/task/:taskId', function () {
-        return settings.optionAllowedResponse;
-    });
-
-    app.options('/task/checkConstraints', function () {
-        return settings.optionAllowedResponse;
-    });
+exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, moment, mongoIcal) {
+    var http = require('ringo/utils/http');
 
     var returnSchedule = function (btime, userId, recalculate, rollbackTaskValues) {
         if (recalculate) {
@@ -68,6 +58,24 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     });
 
     app.get('/task', function (req) {
-        return returnSchedule(req.params.btime, req.session.data.userId, true);
+        return returnSchedule(req.params.btime, req.session.data.userId, false);
+    });
+
+    app.post('/ical', function (req) {
+        var res = 'ok';
+        var file = http.parseFileUpload(req).file;
+        if (!file) {
+            res = 'Invalid file';
+        }
+        else {
+            if (file.value.length > (settings.maxICalSize * 1024 * 1024))
+                res = 'File too large, maximum size is ' + settings.maxICalSize + 'MB.';
+            else {
+                mongoIcal.processIcalFile(file.value, req.session.data.userId, req.headers.btime);
+                return returnSchedule(req.headers.btime, req.session.data.userId, true);
+            }
+        }
+
+        return util.simpleResponse(res);
     });
 };
