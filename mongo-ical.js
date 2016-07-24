@@ -22,19 +22,23 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
     };
 
     var saveImportedTask = function (component, userId, btime) {
-        var taskStart = moment.utc(component.getProperty('DTSTART'), 'YYYYMMDDThhmm');
-        var taskEnd = moment.utc(component.getProperty('DTEND'), 'YYYYMMDDThhmm');
+        // Sanity check.
+        if((!component.getProperty('DTSTART')) || (!component.getProperty('DTEND')) || (!component.getProperty('SUMMARY')))
+            return;
+        
+        var taskStart = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm');
+        var taskEnd = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm');
         var bTimeMoment = moment.unix(btime);
         var endMoment = moment.unix(btime).add(settings.weeks, 'w');
-
-        util.clog('saveImportedTask starts with btime = ' + bTimeMoment.toString() + ', taskEnd = ' + taskEnd.toString());
+       
+        util.clog('saveImportedTask starts with btime = ' + bTimeMoment.toString() + ', taskEnd = ' + taskEnd);
 
         // Only tasks in present or future.
         if ((taskEnd.diff(bTimeMoment, 's') > 0) && (endMoment.diff(taskEnd, 's') > 0)) {
-            var taskTitle = component.getProperty('SUMMARY').toString();
-            util.clog('saveImportedTask - task not in the past, creating if not exists: ' + taskTitle);
+            var taskTitle = component.getProperty('SUMMARY').getValue();
+            util.clog('saveImportedTask - task not in the past (' + taskEnd.toString() + '), creating if not exists: ' + taskTitle);
 
-            var uid = component.getProperty('UID').toString();
+            var uid = component.getProperty('UID').getValue();
             var exists = mongoTasks.tasks.findOne({iCalUid:uid});
             if (!exists) {
                 util.clog('saveImportedTask - task not exists, creating new...');
@@ -45,12 +49,11 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
                     start: taskStart.unix(),
                     dur: Math.ceil(taskEnd.diff(taskStart, 'ms') / settings.msGranularity),
                     title: taskTitle,
-                    desc: component.getProperty('DESCRIPTION').toString()
+                    desc: component.getProperty('DESCRIPTION') ? component.getProperty('DESCRIPTION').getValue() : ''
                 };
                 
                 // Save the task. Only if it is not stored already.
-                var created = mongoTasks.storeTask(taskToStore, userId);
-                util.clog('saveImportedTask - task not exists, created: ' + created);
+                mongoTasks.storeTask(taskToStore, userId);
             }
         }
     };

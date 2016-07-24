@@ -2,7 +2,7 @@ exports.initialize = function (app, settings, util) {
     var mongo = require('ringo-mongodb');
     var moment = require('./bower_components/moment/moment.js');
     var client = new mongo.MongoClient('localhost', 27017);
-    var db = client.getDB('scheduler');
+    var db = client.getDB('schedulogy');
     var tasks = db.getCollection('task');
     exports.tasks = tasks;
 
