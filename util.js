@@ -13,6 +13,18 @@ exports.initialize = function (settings, moment) {
     };
     exports.cdir = cdir;
 
+    exports.ToSlots = function (momentTime) {
+        return ((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity;
+    };
+
+    exports.ToMinutesPlusDuration = function (momentTime, addedDuration) {
+        return ((momentTime.hour() * 60) + momentTime.minute() + (addedDuration * settings.minuteGranularity));
+    };
+
+    exports.equalDays = function (momentTime1, momentTime2) {
+        return (momentTime1.format("YYYY-MM-DD") === momentTime2.format("YYYY-MM-DD"));
+    };
+
     exports.timeToSlot = function (timeUnix, btimeUnix) {
         var time = moment.unix(timeUnix);
         var btime = moment.unix(btimeUnix);
@@ -20,7 +32,7 @@ exports.initialize = function (settings, moment) {
         clog('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
 
         var weeks = time.diff(btime, 'w');
-        var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay;
+        var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour;
 
         var time_minusWeeks = time.clone().subtract(weeks, 'w');
         clog('** timeToSlot: time_minusWeeks = ' + time_minusWeeks.toString());
@@ -32,18 +44,18 @@ exports.initialize = function (settings, moment) {
             days -= 2;
             weekendInBetween = true;
         }
-        var daySlots = days * settings.hoursPerDay;
+        var daySlots = days * settings.hoursPerDay * settings.slotsPerHour;
         var time_minusDays = time.clone().subtract(days + (weekendInBetween * 2), 'd');
         clog('** timeToSlot: time_minusDays = ' + time_minusDays);
 
-        var hours = 0;
+        var slots = 0;
         // This is for the case that time is earlier (but on a further day) than btime.
         if (time_minusDays.isoWeekday() !== btime.isoWeekday())
-            hours = Math.max(0, time_minusDays.hours() - settings.startHour) + Math.max(0, (settings.endHour - btime.hours()));
+            slots = Math.max(0, (exports.ToSlots(time_minusDays) - settings.startSlot)) + Math.max(0, (settings.endSlot - exports.ToSlots(btime)));
         else
-            hours = time_minusDays.diff(btime, 'h');
+            slots = time_minusDays.diff(btime, 'm') / settings.minGranularity;
 
-        var result = weekSlots + daySlots + hours;
+        var result = weekSlots + daySlots + slots;
         clog('* timeToSlot finishes with: ' + result + '.');
         return result;
     };
@@ -52,34 +64,34 @@ exports.initialize = function (settings, moment) {
         var btime = moment.unix(btimeUnix);
 
         clog('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
-        var endOfDay = settings.endHour - btime.hours();
+        var endOfDay = settings.endSlot - exports.ToSlots(btime);
         exports.clog('** slotToTime - endOfDay: ' + endOfDay);
-        var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endHour, 'h');
+        var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endSlot * settings.minGranularity, 'm');
         exports.clog('** slotToTime - endOfWeek: ' + endOfWeek);
-        var weekMiliseconds = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 604800000;
-        exports.clog('** slotToTime - weekMiliseconds: ' + weekMiliseconds);
+        var weekMinutes = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 7 * 1440;
+        exports.clog('** slotToTime - weekMinutes: ' + weekMinutes);
         var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay);
         exports.clog('** slotToTime - slotModWeeks: ' + slotModWeeks);
-        var dayMiliseconds = Math.floor(slotModWeeks / settings.hoursPerDay) * 86400000;
-        exports.clog('** slotToTime - dayMiliseconds: ' + dayMiliseconds);
+        var dayMinutes = Math.floor(slotModWeeks / settings.hoursPerDay) * 1440;
+        exports.clog('** slotToTime - dayMinutes: ' + dayMinutes);
         var slotModDays = slot % (settings.hoursPerDay);
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);
         if (slotModDays > endOfDay - 1) {
-            dayMiliseconds += (24 - (settings.endHour - settings.startHour)) * settings.msGranularity;
+            dayMinutes += (24 - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
             slotModDays -= endOfDay;
         }
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);
-        var hourMiliseconds = slotModDays * settings.msGranularity;
-        exports.clog('** slotToTime - hourMiliseconds: ' + hourMiliseconds);
-        var total = weekMiliseconds + dayMiliseconds + hourMiliseconds;
+        var hourMinutes = slotModDays * settings.minGranularity;
+        exports.clog('** slotToTime - hourMinutes: ' + hourMinutes);
+        var total = weekMinutes + dayMinutes + hourMinutes;
         exports.clog('** slotToTime - total: ' + total);
         // Over the weekend.
         if (btime.clone().add(total, 'ms') > endOfWeek)
-            total += 2 * 86400000;
+            total += 2 * 1440;
 
         exports.clog('** slotToTime - total: ' + total);
 
-        var result = btime.clone().add(total, 'ms');
+        var result = btime.clone().add(total, 'm');
         clog('* slotToTime finishes with: ' + result + '.');
         return result.unix();
     };
@@ -113,5 +125,23 @@ exports.initialize = function (settings, moment) {
 
     exports.from_utf = function (s) {
         return decodeURIComponent(escape(s));
+    };
+
+    exports.getUnixEnd = function (task) {
+        // Duration in seconds (unix time is in seconds)
+        var duration = 60 * (task.dur * (task.type === 'fixedAllDay' ? 1440 : settings.minGranularity));
+        return task.start + duration;
+    };
+
+    exports.getUnixStart = function (task) {
+        if (task.type !== 'floating')
+            return task.start;
+        // Duration in seconds (unix time is in seconds)
+        var duration = 60 * task.dur * settings.minGranularity;
+        return task.due - duration;
+    };
+
+    exports.getUnixDuration = function (task) {
+        return  60 * (task.dur * (task.type === 'fixedAllDay' ? 1440 : settings.minGranularity));
     };
 };

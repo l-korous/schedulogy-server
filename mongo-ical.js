@@ -47,7 +47,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
                     iCalUid: uid,
                     type: 'fixed',
                     start: taskStart.unix(),
-                    dur: Math.ceil(taskEnd.diff(taskStart, 'ms') / settings.msGranularity),
+                    dur: Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minGranularity),
                     title: taskTitle,
                     desc: component.getProperty('DESCRIPTION') ? component.getProperty('DESCRIPTION').getValue() : ''
                 };

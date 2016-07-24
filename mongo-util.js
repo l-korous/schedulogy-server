@@ -8,15 +8,20 @@ exports.initialize = function (app, settings, secrets, util) {
 
     exports.verifyUserCredentialsReturnUser = function (credentials) {
         var user = users.findOne({email: credentials.email});
-        if (user.data.active) {
-            var res = BCrypt.checkpw(credentials.password, user.data.password);
-            if (res)
-                return user.data;
+        if (user) {
+            if (user.data.active) {
+                var res = BCrypt.checkpw(credentials.password, user.data.password);
+                if (res)
+                    return user.data;
+                else
+                    return 'password';
+            }
             else
-                return 'password';
+                return 'inactive';
         }
-        else
-            return 'inactive';
+        else {
+            return 'password';
+        }
     };
 
     exports.getUserByEmail = function (email) {

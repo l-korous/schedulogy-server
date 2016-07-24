@@ -3,9 +3,11 @@ exports.settings = {
     solverTimeout: 5,
     daysPerWeek: 5,
     hoursPerDay: 9,
-    startHour: 8,
-    endHour: 17,
-    msGranularity: 36e5,
+    minGranularity: 30,
+    // This has to be exactly calculated using minGranularity
+    slotsPerHour: 2, // === (60 / minGranularity)
+    startSlot: 16, // This has to correspond to the above as well.
+    endSlot: 34, // This has to correspond to the above as well.
     maxICalSize: 10,
     debug: true,
     // TODO - Are these correct?
