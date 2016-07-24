@@ -14,7 +14,7 @@ exports.initialize = function (settings, moment) {
     exports.cdir = cdir;
 
     exports.ToSlots = function (momentTime) {
-        return ((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity;
+        return Math.floor(((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity);
     };
 
     exports.ToMinutesPlusDuration = function (momentTime, addedDuration) {
@@ -53,7 +53,7 @@ exports.initialize = function (settings, moment) {
         if (time_minusDays.isoWeekday() !== btime.isoWeekday())
             slots = Math.max(0, (exports.ToSlots(time_minusDays) - settings.startSlot)) + Math.max(0, (settings.endSlot - exports.ToSlots(btime)));
         else
-            slots = time_minusDays.diff(btime, 'm') / settings.minGranularity;
+            slots = Math.floor(time_minusDays.diff(btime, 'm') / settings.minGranularity);
 
         var result = weekSlots + daySlots + slots;
         clog('* timeToSlot finishes with: ' + result + '.');
@@ -68,13 +68,13 @@ exports.initialize = function (settings, moment) {
         exports.clog('** slotToTime - endOfDay: ' + endOfDay);
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endSlot * settings.minGranularity, 'm');
         exports.clog('** slotToTime - endOfWeek: ' + endOfWeek);
-        var weekMinutes = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay)) * 7 * 1440;
+        var weekMinutes = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour)) * 7 * 1440;
         exports.clog('** slotToTime - weekMinutes: ' + weekMinutes);
-        var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay);
+        var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour);
         exports.clog('** slotToTime - slotModWeeks: ' + slotModWeeks);
-        var dayMinutes = Math.floor(slotModWeeks / settings.hoursPerDay) * 1440;
+        var dayMinutes = Math.floor(slotModWeeks / (settings.hoursPerDay * settings.slotsPerHour)) * 1440;
         exports.clog('** slotToTime - dayMinutes: ' + dayMinutes);
-        var slotModDays = slot % (settings.hoursPerDay);
+        var slotModDays = slot % (settings.hoursPerDay * settings.slotsPerHour);
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);
         if (slotModDays > endOfDay - 1) {
             dayMinutes += (24 - (settings.endSlot - settings.startSlot)) * settings.minGranularity;

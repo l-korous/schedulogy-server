@@ -23,14 +23,15 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
 
     var saveImportedTask = function (component, userId, btime) {
         // Sanity check.
-        if((!component.getProperty('DTSTART')) || (!component.getProperty('DTEND')) || (!component.getProperty('SUMMARY')))
+        if ((!component.getProperty('DTSTART')) || (!component.getProperty('DTEND')) || (!component.getProperty('SUMMARY')))
             return;
-        
+
         var taskStart = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm');
         var taskEnd = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm');
+
         var bTimeMoment = moment.unix(btime);
         var endMoment = moment.unix(btime).add(settings.weeks, 'w');
-       
+
         util.clog('saveImportedTask starts with btime = ' + bTimeMoment.toString() + ', taskEnd = ' + taskEnd);
 
         // Only tasks in present or future.
@@ -39,19 +40,26 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
             util.clog('saveImportedTask - task not in the past (' + taskEnd.toString() + '), creating if not exists: ' + taskTitle);
 
             var uid = component.getProperty('UID').getValue();
-            var exists = mongoTasks.tasks.findOne({iCalUid:uid});
+            var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+            var exists = mongoTasks.tasks.findOne({user: userIdInMongo, iCalUid: uid});
+            util.clog(exists);
             if (!exists) {
                 util.clog('saveImportedTask - task not exists, creating new...');
+
+                // Handle duration and type
+                var type = ((taskEnd.hour() === 0 && taskStart.hour() === 0) ? 'fixedAllDay' : 'fixed');
+                var duration = ((type === 'fixedAllDay') ? taskEnd.diff(taskStart, 'd') : Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minGranularity));
+
                 // Create a JSON with the task to be inserted.
                 var taskToStore = {
                     iCalUid: uid,
-                    type: 'fixed',
+                    type: type,
                     start: taskStart.unix(),
-                    dur: Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minGranularity),
+                    dur: duration,
                     title: taskTitle,
                     desc: component.getProperty('DESCRIPTION') ? component.getProperty('DESCRIPTION').getValue() : ''
                 };
-                
+
                 // Save the task. Only if it is not stored already.
                 mongoTasks.storeTask(taskToStore, userId);
             }

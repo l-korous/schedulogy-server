@@ -73,7 +73,7 @@ exports.initialize = function (app, settings, util) {
                         util.clog('- dependency:');
                         util.cdir(prerequisiteTask, true);
                         // Skipping past tasks.
-                        var preq_end = getEnd(prerequisiteTask.data);
+                        var preq_end = util.getUnixEnd(prerequisiteTask.data);
                         if (['fixed', 'fixedAllDay'].indexOf(prerequisiteTask.data.type) > -1) {
                             var fixedPrerequisite = Math.max(0, util.timeToSlot(preq_end, btime));
                             maxFixedPrerequisite = Math.max(maxFixedPrerequisite, fixedPrerequisite);
@@ -127,7 +127,7 @@ exports.initialize = function (app, settings, util) {
             }
 
             util.clog('* getStartConstraintFromDeps - a prerequisite: ' + prerequisiteTask.data.title + '.');
-            if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && getEnd(prerequisiteTask.data) > btime) {
+            if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && util.getUnixEnd(prerequisiteTask.data) > btime) {
                 constraintsUtilArray.push(prerequisiteTaskId);
                 toReturn += util.getUnixDuration(prerequisiteTask.data) + getStartConstraintFromDeps(prerequisiteTask.data, btime);
                 util.clog('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
@@ -175,7 +175,7 @@ exports.initialize = function (app, settings, util) {
         var dependentTasks = taskId ? tasks.find({needs: taskId}).toArray() : task.blocks;
         dependentTasks.forEach(function (dependentTask) {
             util.clog('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
-            var depLatestStartTimestartTime = getUnixStart(dependentTask);
+            var depLatestStartTimestartTime = util.getUnixStart(dependentTask);
             util.clog('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
             depLatestStartTimestartTime -= getStartConstraint(dependentTask.data, dependentTask.id, btime, false);
             util.clog('* getEndConstraint - dependent task latest start (with its deps): ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
@@ -188,7 +188,7 @@ exports.initialize = function (app, settings, util) {
     // This function assumes that all tasks are not-dirty, and are correctly stored in the DB.
     exports.recalculateConstraint = function (task, taskId, btime, save) {
         util.clog('recalculateConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
-        if (getEnd(task) > btime) {
+        if (util.getUnixEnd(task) > btime) {
             var startConstraint = getStartConstraint(task, taskId, btime, true);
             var endConstraint = getEndConstraint(task, taskId, btime);
             var constraint = {
