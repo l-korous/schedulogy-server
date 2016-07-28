@@ -1,5 +1,5 @@
 exports.settings = {
-    weeks: 52,
+    weeks: 26,
     solverTimeout: 5,
     daysPerWeek: 5,
     hoursPerDay: 9,

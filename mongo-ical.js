@@ -18,16 +18,31 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
 
         var fin = new FileInputStream(tempFile);
         var builder = new CalendarBuilder();
-        return builder.build(fin);
+        return {calendar: builder.build(fin), registry: builder.getRegistry()};
     };
 
-    var saveImportedTask = function (component, userId, btime) {
+    var saveImportedTask = function (component, userId, btime, registry) {
         // Sanity check.
         if ((!component.getProperty('DTSTART')) || (!component.getProperty('DTEND')) || (!component.getProperty('SUMMARY')))
             return;
 
+        var taskTitle = component.getProperty('SUMMARY').getValue();
+
         var taskStart = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm');
         var taskEnd = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm');
+        try {
+            var tz = registry.getTimeZone(component.getProperty('DTSTART').getParameter("TZID").getValue());
+            if (tz) {
+                var taskStartInUnix = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm').unix();
+                var taskEndInUnix = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm').unix();
+                taskStart = moment.unix(taskStartInUnix).add(-tz.getOffset(taskStartInUnix * 1000), 'ms');
+                taskEnd = moment.unix(taskEndInUnix).add(-tz.getOffset(taskEndInUnix * 1000), 'ms');
+            }
+        }
+        catch (e) {
+            util.clog('Exception: ' + e);
+        }
+
 
         var bTimeMoment = moment.unix(btime);
         var endMoment = moment.unix(btime).add(settings.weeks, 'w');
@@ -36,7 +51,6 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
 
         // Only tasks in present or future.
         if ((taskEnd.diff(bTimeMoment, 's') > 0) && (endMoment.diff(taskEnd, 's') > 0)) {
-            var taskTitle = component.getProperty('SUMMARY').getValue();
             util.clog('saveImportedTask - task not in the past (' + taskEnd.toString() + '), creating if not exists: ' + taskTitle);
 
             var uid = component.getProperty('UID').getValue();
@@ -55,7 +69,11 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
                     iCalUid: uid,
                     type: type,
                     start: taskStart.unix(),
+                    due: taskEnd.unix(),
+                    needs: [],
+                    blocks:[],
                     dur: duration,
+                    dirty:true,
                     title: taskTitle,
                     desc: component.getProperty('DESCRIPTION') ? component.getProperty('DESCRIPTION').getValue() : ''
                 };
@@ -67,11 +85,12 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
     };
 
     exports.processIcalFile = function (inputData, userId, btime) {
-        var calendar = getCalendar(inputData, userId);
+        var calendar = getCalendar(inputData, userId).calendar;
+        var registry = getCalendar(inputData, userId).registry;
 
         for (var i = calendar.getComponents().iterator(); i.hasNext(); ) {
             var component = i.next();
-            saveImportedTask(component, userId, btime);
+            saveImportedTask(component, userId, btime, registry);
         }
     };
 };

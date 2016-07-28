@@ -116,7 +116,7 @@ exports.initialize = function (settings, moment) {
             return text;
         }
 
-        return createRandomString(128);
+        return createRandomString(32);
     };
 
     exports.to_utf = function (s) {

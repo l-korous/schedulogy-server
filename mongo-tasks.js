@@ -130,6 +130,8 @@ exports.initialize = function (app, settings, util) {
             if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && util.getUnixEnd(prerequisiteTask.data) > btime) {
                 constraintsUtilArray.push(prerequisiteTaskId);
                 toReturn += util.getUnixDuration(prerequisiteTask.data) + getStartConstraintFromDeps(prerequisiteTask.data, btime);
+                if (prerequisiteTask.data.type !== 'floating')
+                    toReturn += (prerequisiteTask.data.start - btime);
                 util.clog('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
             }
         });
@@ -147,18 +149,24 @@ exports.initialize = function (app, settings, util) {
         // This is for the case that task itself is not stored in DB.
         if (!taskId || constraintsUtilArray.indexOf(taskId) === -1) {
             toReturn += getStartConstraintFromDeps(task, btime);
+            if (toReturn)
+                util.clog('* getStartConstraint - current toReturn: ' + toReturn + '.');
             constraintsUtilArray.push(taskId);
         }
 
         tasks.find({due: {$lte: task.due}, type: 'floating'}).forEach(function (taskWithLeqDue) {
             if (constraintsUtilArray.indexOf(taskWithLeqDue.id) === -1) {
                 toReturn += getStartConstraintFromDeps(taskWithLeqDue.data, btime);
+                if (toReturn)
+                    util.clog('* getStartConstraint - current toReturn: ' + toReturn + '.');
                 constraintsUtilArray.push(taskId);
             }
         });
         tasks.find({start: {$lte: task.due}, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (taskWithLeqStart) {
             if (constraintsUtilArray.indexOf(taskWithLeqStart.id) === -1) {
                 toReturn += getStartConstraintFromDeps(taskWithLeqStart.data, btime);
+                if (toReturn)
+                    util.clog('* getStartConstraint - current toReturn: ' + toReturn + '.');
                 constraintsUtilArray.push(taskId);
             }
         });
@@ -192,7 +200,7 @@ exports.initialize = function (app, settings, util) {
             var startConstraint = getStartConstraint(task, taskId, btime, true);
             var endConstraint = getEndConstraint(task, taskId, btime);
             var constraint = {
-                start: startConstraint ? moment.unix(btime + startConstraint).toISOString() : null,
+                start: startConstraint ? moment.unix(parseInt(btime) + startConstraint).toISOString() : null,
                 end: endConstraint ? moment.unix(endConstraint).toISOString() : null
             };
 
@@ -247,7 +255,17 @@ exports.initialize = function (app, settings, util) {
 
         tasks.remove({_id: new Packages.org.bson.types.ObjectId(task_id)});
     };
-    exports.removeTasks = function (searchObject) {
+
+    exports.resetTasks = function (tasks, userId) {
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        tasks.forEach(function (rollbackTask) {
+            tasks.update({_id: rollbackTask._id, user: userIdInMongo}, rollbackTask.data);
+        });
+    };
+
+    exports.removeTasks = function (searchObject, userId) {
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        searchObject.user = userIdInMongo;
         tasks.find(searchObject).forEach(function (task) {
             exports.removeTask(task.id);
         });

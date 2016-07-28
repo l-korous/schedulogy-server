@@ -10,12 +10,8 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
                 mongoTasks.recalculateConstraints(btime, userId);
             }
             else {
-                if (rollbackTaskValues) {
-                    rollbackTaskValues.forEach(function (rollbackTask) {
-                        mongoTasks.tasks.update({_id: rollbackTask._id}, rollbackTask.data);
-                    });
-                }
-                mongoTasks.tasks.remove({dirty: true});
+                rollbackTaskValues && mongoTasks.resetTasks(rollbackTaskValues);
+                mongoTasks.removeTasks({dirty: true}, userId);
             }
 
             return {
@@ -35,6 +31,12 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
 
     app.del('/task/:taskId', function (req, task_id) {
         mongoTasks.removeTask(task_id);
+
+        return returnSchedule(req.params.btime, req.session.data.userId, true);
+    });
+
+    app.del('/task', function (req) {
+        mongoTasks.removeTasks({}, req.session.data.userId);
 
         return returnSchedule(req.params.btime, req.session.data.userId, true);
     });
