@@ -10,7 +10,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
                 mongoTasks.recalculateConstraints(btime, userId);
             }
             else {
-                rollbackTaskValues && mongoTasks.resetTasks(rollbackTaskValues);
+                rollbackTaskValues && mongoTasks.resetTasks(rollbackTaskValues, userId);
                 mongoTasks.removeTasks({dirty: true}, userId);
             }
 

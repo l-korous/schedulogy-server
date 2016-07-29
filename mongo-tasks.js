@@ -110,7 +110,11 @@ exports.initialize = function (app, settings, util) {
         });
         // Also mark all fixed tasks as not-dirty.
         var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
-        tasks.update({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}, {$set: {dirty: false}});
+        // Very important - Ringo.js MongoDB driver does not support updates with option {multi: true}, so we need to update one-by-one.
+        tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (task) {
+            task.data.dirty = false;
+            tasks.save(task.data);
+        });
     };
 
     var constraintsUtilArray = [];
@@ -256,9 +260,9 @@ exports.initialize = function (app, settings, util) {
         tasks.remove({_id: new Packages.org.bson.types.ObjectId(task_id)});
     };
 
-    exports.resetTasks = function (tasks, userId) {
+    exports.resetTasks = function (tasksToResetTo, userId) {
         var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
-        tasks.forEach(function (rollbackTask) {
+        tasksToResetTo.forEach(function (rollbackTask) {
             tasks.update({_id: rollbackTask._id, user: userIdInMongo}, rollbackTask.data);
         });
     };
