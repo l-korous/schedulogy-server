@@ -77,7 +77,7 @@ exports.initialize = function (settings, moment) {
         var slotModDays = slot % (settings.hoursPerDay * settings.slotsPerHour);
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);
         if (slotModDays > endOfDay - 1) {
-            dayMinutes += (24 - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
+            dayMinutes += ((24*settings.slotsPerHour) - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
             slotModDays -= endOfDay;
         }
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);
@@ -86,7 +86,7 @@ exports.initialize = function (settings, moment) {
         var total = weekMinutes + dayMinutes + hourMinutes;
         exports.clog('** slotToTime - total: ' + total);
         // Over the weekend.
-        if (btime.clone().add(total, 'ms') > endOfWeek)
+        if (btime.clone().add(total, 'm') > endOfWeek)
             total += 2 * 1440;
 
         exports.clog('** slotToTime - total: ' + total);
