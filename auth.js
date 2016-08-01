@@ -4,7 +4,7 @@ exports.initialize = function (settings, secrets, util, moment) {
     importPackage(java.util);
 
     exports.generateToken = function (user) {
-        var issuer = "http://schedulogy.com/";
+        var issuer = "schedulogy.com";
         var iat = moment().unix();
         var exp = iat + 60 * 60 * 24;
         var x = new java.util.HashMap();
