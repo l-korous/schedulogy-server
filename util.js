@@ -13,6 +13,7 @@ exports.initialize = function (settings, moment) {
     };
     exports.cdir = cdir;
 
+    // This is only for comparison !!! As this calculates slots since the beginning of the day.
     exports.ToSlots = function (momentTime) {
         return Math.floor(((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity);
     };
@@ -32,28 +33,51 @@ exports.initialize = function (settings, moment) {
         clog('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
 
         var weeks = time.diff(btime, 'w');
+        clog('** timeToSlot: weeks = ' + weeks);
+        
         var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour;
+        clog('** timeToSlot: weekSlots = ' + weekSlots);
 
-        var time_minusWeeks = time.clone().subtract(weeks, 'w');
-        clog('** timeToSlot: time_minusWeeks = ' + time_minusWeeks.toString());
+        var timeMinusWeeks = time.clone().subtract(weeks, 'w');
+        clog('** timeToSlot: timeMinusWeeks = ' + timeMinusWeeks.toString());
 
-        var days = time_minusWeeks.diff(btime, 'd');
+        var days = timeMinusWeeks.diff(btime, 'd');
+        clog('** timeToSlot: days = ' + days);
+        
         // There is a weekend in between
         var weekendInBetween = false;
-        if ((time_minusWeeks.isoWeekday() < btime.isoWeekday()) || ((time_minusWeeks.isoWeekday() === btime.isoWeekday()) && (time_minusWeeks.hours() < btime.hours()))) {
+        if ((timeMinusWeeks.isoWeekday() < btime.isoWeekday()) || ((timeMinusWeeks.isoWeekday() === btime.isoWeekday()) && (timeMinusWeeks.hours() < btime.hours()))) {
             days -= 2;
             weekendInBetween = true;
         }
+        clog('** timeToSlot: weekendInBetween = ' + weekendInBetween);
+        
         var daySlots = days * settings.hoursPerDay * settings.slotsPerHour;
-        var time_minusDays = time.clone().subtract(days + (weekendInBetween * 2), 'd');
-        clog('** timeToSlot: time_minusDays = ' + time_minusDays);
+        clog('** timeToSlot: daySlots = ' + daySlots);
+        
+        var timeMinusDays = timeMinusWeeks.clone().subtract(days + (weekendInBetween * 2), 'd');
+        clog('** timeToSlot: timeMinusDays = ' + timeMinusDays);
 
         var slots = 0;
         // This is for the case that time is earlier (but on a further day) than btime.
-        if (time_minusDays.isoWeekday() !== btime.isoWeekday())
-            slots = Math.max(0, (exports.ToSlots(time_minusDays) - settings.startSlot)) + Math.max(0, (settings.endSlot - exports.ToSlots(btime)));
-        else
-            slots = Math.floor(time_minusDays.diff(btime, 'm') / settings.minGranularity);
+        if (timeMinusDays.isoWeekday() !== btime.isoWeekday()) {
+            clog('** timeToSlot: same weekday = false');
+            var timeMinusDaysToSlots = exports.ToSlots(timeMinusDays);
+            clog('** timeToSlot: timeMinusDaysToSlots = ' + timeMinusDaysToSlots);
+            var shiftToStartSlot = timeMinusDaysToSlots - settings.startSlot;
+            clog('** timeToSlot: shiftToStartSlot = ' + shiftToStartSlot);
+            
+            var bTimeToSlots = exports.ToSlots(btime);
+            clog('** timeToSlot: bTimeToSlots = ' + bTimeToSlots);
+            var shiftToEndSlot = settings.endSlot - bTimeToSlots;
+            clog('** timeToSlot: shiftToEndSlot = ' + shiftToEndSlot);
+                
+            slots = Math.max(0, shiftToStartSlot) + Math.max(0, shiftToEndSlot);
+        }
+        else {
+            clog('** timeToSlot: same weekday = true');
+            slots = Math.floor(timeMinusDays.diff(btime, 'm') / settings.minGranularity);
+        }
 
         var result = weekSlots + daySlots + slots;
         clog('* timeToSlot finishes with: ' + result + '.');
@@ -86,7 +110,7 @@ exports.initialize = function (settings, moment) {
         var total = weekMinutes + dayMinutes + hourMinutes;
         exports.clog('** slotToTime - total: ' + total);
         // Over the weekend.
-        if (btime.clone().add(total, 'm') > endOfWeek)
+        if (btime.clone().add(dayMinutes + hourMinutes, 'm') > endOfWeek)
             total += 2 * 1440;
 
         exports.clog('** slotToTime - total: ' + total);

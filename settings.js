@@ -1,8 +1,8 @@
-var serverUrl = 'http://localhost/api';
+var clientUrl = 'http://localhost:8100';
 
 exports.settings = {
     weeks: 26,
-    solverTimeout: 5,
+    solverTimeout: 50,
     daysPerWeek: 5,
     hoursPerDay: 9,
     minGranularity: 30,
@@ -24,6 +24,7 @@ exports.settings = {
     smtpEncrypt: true,
     smtpUsername: 'util.314@gmail.com',
     smtpPassword: 'utili+t8k',
+    msgReceiver: 'lukas@schedulogy.com',
     optionAllowedResponse: {
         body: [],
         headers: {
@@ -34,7 +35,7 @@ exports.settings = {
         status: 200
     },
     mailSetupSubject: 'Welcome to SCHEDULOGY',
-    mailSetupUrl: serverUrl + '/#/password-reset',
+    mailSetupUrl: clientUrl + '/#/password-reset',
     mailSetupText: function (userId, passwordResetHash) {
         var text = 'Welcome to SCHEDULOGY \r\n\r\n Please visit ';
         text += this.mailSetupUrl + '?id=' + passwordResetHash + '&user=' + userId;

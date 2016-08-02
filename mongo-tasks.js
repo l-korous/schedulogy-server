@@ -12,8 +12,8 @@ exports.initialize = function (app, settings, util) {
         var toReturn = {};
         toReturn.Problem = {};
         toReturn.Problem.General = {};
-        toReturn.Problem.General.DaysPerWeek = settings.daysPerWeek;
-        toReturn.Problem.General.SlotsPerDay = settings.hoursPerDay;
+        toReturn.Problem.General.DaysPerWeek = settings.weeks * settings.daysPerWeek;
+        toReturn.Problem.General.SlotsPerDay = settings.hoursPerDay * settings.slotsPerHour;
         toReturn.Problem.Resources = [{TimePreferences: []}];
         var counter = 0;
         tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {

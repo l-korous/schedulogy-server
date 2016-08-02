@@ -29,6 +29,11 @@ exports.initialize = function (app, settings, secrets, util) {
         return user ? user : '!existing';
     };
 
+    exports.getUserById = function (userId) {
+        var user = users.findOne(new Packages.org.bson.types.ObjectId(userId));
+        return user ? user : '!existing';
+    };
+
     exports.storePasswordResetHash = function (userId, newHash) {
         users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {passwordResetHash: newHash}});
     };
