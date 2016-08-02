@@ -1,3 +1,5 @@
+var serverUrl = 'http://localhost/api';
+
 exports.settings = {
     weeks: 26,
     solverTimeout: 5,
@@ -21,7 +23,7 @@ exports.settings = {
     smtpPort: 587,
     smtpEncrypt: true,
     smtpUsername: 'util.314@gmail.com',
-    smtpPassword: '[4t94ek123',
+    smtpPassword: 'utili+t8k',
     optionAllowedResponse: {
         body: [],
         headers: {
@@ -32,7 +34,7 @@ exports.settings = {
         status: 200
     },
     mailSetupSubject: 'Welcome to SCHEDULOGY',
-    mailSetupUrl: 'http://localhost:8100/#/password-reset',
+    mailSetupUrl: serverUrl + '/#/password-reset',
     mailSetupText: function (userId, passwordResetHash) {
         var text = 'Welcome to SCHEDULOGY \r\n\r\n Please visit ';
         text += this.mailSetupUrl + '?id=' + passwordResetHash + '&user=' + userId;
