@@ -3,10 +3,11 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
 
     var returnSchedule = function (btime, userId, recalculate, rollbackTaskValues) {
         if (recalculate) {
+            var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').unix();
             var result = solver.solve(mongoTasks.getProblemJson(btime, userId));
 
             if (result) {
-                mongoTasks.storeSlnData(result, btime, userId);
+                mongoTasks.storeSlnData(result, btime_startOfDay, userId);
                 mongoTasks.recalculateConstraints(btime, userId);
             }
             else {

@@ -11,7 +11,6 @@ exports.settings = {
     startSlot: 16, // This has to correspond to the above as well.
     endSlot: 34, // This has to correspond to the above as well.
     maxICalSize: 10,
-    debug: true,
     // TODO - Are these correct?
     defaultHeaderJson: {
         'Access-Control-Allow-Origin': "*",

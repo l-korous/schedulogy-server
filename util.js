@@ -1,15 +1,20 @@
 exports.initialize = function (settings, moment) {
-    var clog = function (what) {
-        if (settings.debug)
-            console.log(what);
-    };
-    exports.clog = clog;
-
+    var logging = require("ringo/logging");
+    var loggingConfig = module.resolve("ringojs-0.12/modules/config/log4j.properties");
+    logging.setConfig(getResource(loggingConfig));
+    var log = logging.getLogger('schedulogy');
+    
+    exports.log = log;
     var cdir = function (what, stringify) {
-        if (stringify)
-            console.log(JSON.stringify(what, null, 4));
-        else if (settings.debug)
-            console.dir(what);
+        // This is only for debug output
+        if (settings.logLevel === 3) {
+            if (stringify)
+                log.debug(moment(new Date()).format('YYYY-MM-DD hh:mm:ss') + ' ' + JSON.stringify(what, null, 4));
+            else {
+                log.debug(moment(new Date()).format('YYYY-MM-DD hh:mm:ss'));
+                log.debug(what);
+            }
+        }
     };
     exports.cdir = cdir;
 
@@ -34,7 +39,7 @@ exports.initialize = function (settings, moment) {
 
         var weeks = time.diff(btime, 'w');
         clog('** timeToSlot: weeks = ' + weeks);
-        
+
         var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour;
         clog('** timeToSlot: weekSlots = ' + weekSlots);
 
@@ -43,7 +48,7 @@ exports.initialize = function (settings, moment) {
 
         var days = timeMinusWeeks.diff(btime, 'd');
         clog('** timeToSlot: days = ' + days);
-        
+
         // There is a weekend in between
         var weekendInBetween = false;
         if ((timeMinusWeeks.isoWeekday() < btime.isoWeekday()) || ((timeMinusWeeks.isoWeekday() === btime.isoWeekday()) && (timeMinusWeeks.hours() < btime.hours()))) {
@@ -51,10 +56,10 @@ exports.initialize = function (settings, moment) {
             weekendInBetween = true;
         }
         clog('** timeToSlot: weekendInBetween = ' + weekendInBetween);
-        
+
         var daySlots = days * settings.hoursPerDay * settings.slotsPerHour;
         clog('** timeToSlot: daySlots = ' + daySlots);
-        
+
         var timeMinusDays = timeMinusWeeks.clone().subtract(days + (weekendInBetween * 2), 'd');
         clog('** timeToSlot: timeMinusDays = ' + timeMinusDays);
 
@@ -66,12 +71,12 @@ exports.initialize = function (settings, moment) {
             clog('** timeToSlot: timeMinusDaysToSlots = ' + timeMinusDaysToSlots);
             var shiftToStartSlot = timeMinusDaysToSlots - settings.startSlot;
             clog('** timeToSlot: shiftToStartSlot = ' + shiftToStartSlot);
-            
+
             var bTimeToSlots = exports.ToSlots(btime);
             clog('** timeToSlot: bTimeToSlots = ' + bTimeToSlots);
             var shiftToEndSlot = settings.endSlot - bTimeToSlots;
             clog('** timeToSlot: shiftToEndSlot = ' + shiftToEndSlot);
-                
+
             slots = Math.max(0, shiftToStartSlot) + Math.max(0, shiftToEndSlot);
         }
         else {
@@ -101,7 +106,7 @@ exports.initialize = function (settings, moment) {
         var slotModDays = slot % (settings.hoursPerDay * settings.slotsPerHour);
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);
         if (slotModDays > endOfDay - 1) {
-            dayMinutes += ((24*settings.slotsPerHour) - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
+            dayMinutes += ((24 * settings.slotsPerHour) - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
             slotModDays -= endOfDay;
         }
         exports.clog('** slotToTime - slotModDays: ' + slotModDays);

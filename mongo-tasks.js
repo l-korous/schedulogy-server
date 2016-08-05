@@ -7,26 +7,32 @@ exports.initialize = function (app, settings, util) {
     exports.tasks = tasks;
 
     exports.getProblemJson = function (btime, userId) {
+        var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').unix();
         var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
-        util.clog('getProblemJson starts with btime = ' + moment.unix(btime).toString() + ', user = ' + userId);
+        util.log.debug('getProblemJson starts with btime = ' + moment.unix(btime).toString() + ', user = ' + userId);
         var toReturn = {};
         toReturn.Problem = {};
         toReturn.Problem.General = {};
         toReturn.Problem.General.DaysPerWeek = settings.weeks * settings.daysPerWeek;
         toReturn.Problem.General.SlotsPerDay = settings.hoursPerDay * settings.slotsPerHour;
         toReturn.Problem.Resources = [{TimePreferences: []}];
+        // The actual BTime is imposed as a hard preference.
         var counter = 0;
+        var bTimeActualSlot = util.timeToSlot(btime, btime_startOfDay);
+        for (var i = 0; i < bTimeActualSlot; i++) {
+            toReturn.Problem.Resources[0].TimePreferences[counter++] = {s: i};
+        }
         tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {
-            util.clog('Fixed task:');
+            util.log.debug('Fixed task:');
             util.cdir(fixedTask.data, true);
             // Skipping past tasks.
             var start = fixedTask.data.start;
             var end = util.getUnixEnd(fixedTask.data);
             if (end > btime) {
-                var leftBound = Math.max(0, util.timeToSlot(start, btime));
-                var rightBound = util.timeToSlot(end, btime);
+                var leftBound = Math.max(0, util.timeToSlot(start, btime_startOfDay));
+                var rightBound = util.timeToSlot(end, btime_startOfDay);
                 for (var i = leftBound; i < rightBound; i++) {
-                    util.clog('- adding hard resource time: ' + i);
+                    util.log.debug('- adding hard resource time: ' + i);
                     toReturn.Problem.Resources[0].TimePreferences[counter++] = {s: i};
                 }
             }
@@ -36,18 +42,12 @@ exports.initialize = function (app, settings, util) {
         counter = 0;
         var counterDeps = 0;
         tasks.find({user: userIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
-            util.clog('Floating task:');
+            util.log.debug('Floating task:');
             util.cdir(floatingTask.data, true);
             // Skipping past tasks. But not skipping unscheduled tasks.
             var scheduleTask = (!floatingTask.data.start) || (floatingTask.data.start > btime) || floatingTask.data.dirty;
             if (scheduleTask) {
-                var dueInteger = util.timeToSlot(floatingTask.data.due, btime);
-
-                // Now this task might be due sooner, if there is a fixed dependency on it:
-                // Fixed tasks being dependent are not supported so far.
-                // tasks.find({needs: floatingTask.id, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (dependentTask) {
-                //     dueInteger = Math.min(dueInteger, util.timeToSlot(dependentTask.data.start, btime));
-                // });
+                var dueInteger = util.timeToSlot(floatingTask.data.due, btime_startOfDay);
 
                 toReturn.Problem.Activities[counter++] = {
                     Length: floatingTask.data.dur,
@@ -57,7 +57,7 @@ exports.initialize = function (app, settings, util) {
                             Value: dueInteger
                         }]
                 };
-                util.clog('- adding activity:');
+                util.log.debug('- adding activity:');
                 util.cdir(toReturn.Problem.Activities[counter - 1], true);
                 // Dependencies:
                 if (floatingTask.data.needs) {
@@ -67,15 +67,15 @@ exports.initialize = function (app, settings, util) {
                     floatingTask.data.needs.forEach(function (prerequisiteTaskId) {
                         var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
                         if (!prerequisiteTask) {
-                            util.clog('Error: prerequisite not exists: ' + prerequisiteTaskId);
+                            util.log.error( 'Error: prerequisite not exists: ' + prerequisiteTaskId);
                             return;
                         }
-                        util.clog('- dependency:');
+                        util.log.debug('- dependency:');
                         util.cdir(prerequisiteTask, true);
                         // Skipping past tasks.
                         var preq_end = util.getUnixEnd(prerequisiteTask.data);
                         if (['fixed', 'fixedAllDay'].indexOf(prerequisiteTask.data.type) > -1) {
-                            var fixedPrerequisite = Math.max(0, util.timeToSlot(preq_end, btime));
+                            var fixedPrerequisite = Math.max(0, util.timeToSlot(preq_end, btime_startOfDay));
                             maxFixedPrerequisite = Math.max(maxFixedPrerequisite, fixedPrerequisite);
                         } else if (prerequisiteTask.data.type === 'floating') {
                             toReturn.Problem.Dependencies[counterDeps++] = {
@@ -83,7 +83,7 @@ exports.initialize = function (app, settings, util) {
                                 FirstActivity: prerequisiteTaskId,
                                 SecondActivity: floatingTask.id
                             };
-                            util.clog('-- float dependency:');
+                            util.log.debug('-- float dependency:');
                             util.cdir(toReturn.Problem.Dependencies[counterDeps - 1], true);
                         }
                     });
@@ -92,7 +92,7 @@ exports.initialize = function (app, settings, util) {
                             Type: "CanStart",
                             Value: maxFixedPrerequisite
                         };
-                        util.clog('- fixed deps: ' + maxFixedPrerequisite);
+                        util.log.debug('- fixed deps: ' + maxFixedPrerequisite);
                     }
                 }
             }
@@ -101,7 +101,7 @@ exports.initialize = function (app, settings, util) {
         return toReturn;
     };
     exports.storeSlnData = function (outputJsonString, btime, userId) {
-        util.clog('storeSlnData starts with btime = ' + moment.unix(btime).toString() + '.');
+        util.log.debug('storeSlnData starts with btime = ' + moment.unix(btime).toString() + '.');
         var outputJson = JSON.parse(outputJsonString);
         var solArray = outputJson.solution;
         solArray.forEach(function (solutionEl) {
@@ -121,22 +121,22 @@ exports.initialize = function (app, settings, util) {
     // For a single task, calculate the amount of time necessary to complete all its dependencies.
     // While not counting durations of tasks that are (already) in constraintsUtilArray and at the same time updating the array.
     var getStartConstraintFromDeps = function (task, btime) {
-        util.clog('getStartConstraintFromDeps starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
+        util.log.debug('getStartConstraintFromDeps starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
         task.needs && task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
             if (!prerequisiteTask) {
-                util.clog('Error: prerequisite not exists: ' + prerequisiteTaskId);
+                util.log.error( 'Error: prerequisite not exists: ' + prerequisiteTaskId);
                 return;
             }
 
-            util.clog('* getStartConstraintFromDeps - a prerequisite: ' + prerequisiteTask.data.title + '.');
+            util.log.debug('* getStartConstraintFromDeps - a prerequisite: ' + prerequisiteTask.data.title + '.');
             if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && util.getUnixEnd(prerequisiteTask.data) > btime) {
                 constraintsUtilArray.push(prerequisiteTaskId);
                 toReturn += util.getUnixDuration(prerequisiteTask.data) + getStartConstraintFromDeps(prerequisiteTask.data, btime);
                 if (prerequisiteTask.data.type !== 'floating')
                     toReturn += (prerequisiteTask.data.start - btime);
-                util.clog('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
+                util.log.debug('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
             }
         });
         return toReturn;
@@ -146,7 +146,7 @@ exports.initialize = function (app, settings, util) {
     // - all tasks with due date before this task (with dependencies)
     // - all fixed tasks which have to occur before due - dur
     var getStartConstraint = function (task, taskId, btime, clear) {
-        util.clog('getStartConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
+        util.log.debug('getStartConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
         if (clear)
             constraintsUtilArray = [];
@@ -154,7 +154,7 @@ exports.initialize = function (app, settings, util) {
         if (!taskId || constraintsUtilArray.indexOf(taskId) === -1) {
             toReturn += getStartConstraintFromDeps(task, btime);
             if (toReturn)
-                util.clog('* getStartConstraint - current toReturn: ' + toReturn + '.');
+                util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
             constraintsUtilArray.push(taskId);
         }
 
@@ -162,7 +162,7 @@ exports.initialize = function (app, settings, util) {
             if (constraintsUtilArray.indexOf(taskWithLeqDue.id) === -1) {
                 toReturn += getStartConstraintFromDeps(taskWithLeqDue.data, btime);
                 if (toReturn)
-                    util.clog('* getStartConstraint - current toReturn: ' + toReturn + '.');
+                    util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
                 constraintsUtilArray.push(taskId);
             }
         });
@@ -170,7 +170,7 @@ exports.initialize = function (app, settings, util) {
             if (constraintsUtilArray.indexOf(taskWithLeqStart.id) === -1) {
                 toReturn += getStartConstraintFromDeps(taskWithLeqStart.data, btime);
                 if (toReturn)
-                    util.clog('* getStartConstraint - current toReturn: ' + toReturn + '.');
+                    util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
                 constraintsUtilArray.push(taskId);
             }
         });
@@ -181,25 +181,25 @@ exports.initialize = function (app, settings, util) {
     // all dependent floating tasks
     // all of them with dependencies (through getStartConstraint)
     var getEndConstraint = function (task, taskId, btime) {
-        util.clog('getEndConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
+        util.log.debug('getEndConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
         constraintsUtilArray = [taskId];
         var dependentTasks = taskId ? tasks.find({needs: taskId}).toArray() : task.blocks;
         dependentTasks.forEach(function (dependentTask) {
-            util.clog('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
+            util.log.debug('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
             var depLatestStartTimestartTime = util.getUnixStart(dependentTask);
-            util.clog('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
+            util.log.debug('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
             depLatestStartTimestartTime -= getStartConstraint(dependentTask.data, dependentTask.id, btime, false);
-            util.clog('* getEndConstraint - dependent task latest start (with its deps): ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
+            util.log.debug('* getEndConstraint - dependent task latest start (with its deps): ' + moment.unix(depLatestStartTimestartTime).toString() + '.');
             if (!toReturn || (depLatestStartTimestartTime < toReturn))
                 toReturn = depLatestStartTimestartTime;
         });
-        util.clog('getEndConstraint finishes with: ' + toReturn + '.');
+        util.log.debug('getEndConstraint finishes with: ' + toReturn + '.');
         return toReturn;
     };
     // This function assumes that all tasks are not-dirty, and are correctly stored in the DB.
     exports.recalculateConstraint = function (task, taskId, btime, save) {
-        util.clog('recalculateConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
+        util.log.debug('recalculateConstraint starts with task = ' + task.title + ', btime = ' + moment.unix(btime).toString() + '.');
         if (util.getUnixEnd(task) > btime) {
             var startConstraint = getStartConstraint(task, taskId, btime, true);
             var endConstraint = getEndConstraint(task, taskId, btime);
@@ -213,7 +213,7 @@ exports.initialize = function (app, settings, util) {
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(taskId)}, task);
             }
 
-            util.clog('recalculateConstraint finishes with constraints [' + constraint.start + ' - ' + constraint.end + '].');
+            util.log.debug('recalculateConstraint finishes with constraints [' + constraint.start + ' - ' + constraint.end + '].');
             return constraint;
         }
     };
@@ -292,7 +292,7 @@ exports.initialize = function (app, settings, util) {
             toReturn += task.toJSON();
         });
         toReturn += "]}";
-        util.clog(toReturn);
+        util.log.debug(toReturn);
         return toReturn;
     };
 };

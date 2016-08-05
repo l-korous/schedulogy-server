@@ -40,25 +40,23 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
             }
         }
         catch (e) {
-            util.clog('Exception: ' + e);
+            util.log.error( 'Exception: ' + e);
         }
-
 
         var bTimeMoment = moment.unix(btime);
         var endMoment = moment.unix(btime).add(settings.weeks, 'w');
 
-        util.clog('saveImportedTask starts with btime = ' + bTimeMoment.toString() + ', taskEnd = ' + taskEnd);
+        util.log.debug('saveImportedTask starts with btime = ' + bTimeMoment.toString() + ', taskEnd = ' + taskEnd);
 
         // Only tasks in present or future.
         if ((taskEnd.diff(bTimeMoment, 's') > 0) && (endMoment.diff(taskEnd, 's') > 0)) {
-            util.clog('saveImportedTask - task not in the past (' + taskEnd.toString() + '), creating if not exists: ' + taskTitle);
+            util.log.debug('saveImportedTask - task not in the past (' + taskEnd.toString() + '), creating if not exists: ' + taskTitle);
 
             var uid = component.getProperty('UID').getValue();
             var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
             var exists = mongoTasks.tasks.findOne({user: userIdInMongo, iCalUid: uid});
-            util.clog(exists);
             if (!exists) {
-                util.clog('saveImportedTask - task not exists, creating new...');
+                util.log.debug('saveImportedTask - task not exists, creating new...');
 
                 // Handle duration and type
                 var type = ((taskEnd.hour() === 0 && taskStart.hour() === 0) ? 'fixedAllDay' : 'fixed');

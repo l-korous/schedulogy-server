@@ -5,14 +5,16 @@ exports.initialize = function (app, settings, secrets, util) {
     var users = db.getCollection('user');
     addToClasspath("./cpsolver/dist/jbcrypt-0.3m.jar");
     importPackage(org.mindrot.jbcrypt);
+    exports.users = users;
 
     exports.verifyUserCredentialsReturnUser = function (credentials) {
         var user = users.findOne({email: credentials.email});
         if (user) {
             if (user.data.active) {
                 var res = BCrypt.checkpw(credentials.password, user.data.password);
-                if (res)
+                if (res) {
                     return user.data;
+                }
                 else
                     return 'password';
             }
@@ -41,16 +43,17 @@ exports.initialize = function (app, settings, secrets, util) {
     exports.createUser = function (userData) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
-            util.clog('createUser: existing');
+            util.log.error( 'createUser: existing');
             return 'existing';
         }
         else {
             userData.active = 0;
+            userData.new_user = true;
             userData.passwordResetHash = util.generatePasswordResetHash();
 
             var saved = users.save(userData);
             if (saved.error) {
-                util.clog('createUser: error: ' + saved);
+                util.log.error( 'createUser: error: ' + saved);
                 return 'error';
             }
             else {
@@ -63,12 +66,14 @@ exports.initialize = function (app, settings, secrets, util) {
         var existingUser = users.findOne(new Packages.org.bson.types.ObjectId(userId));
 
         if (!existingUser) {
-            util.clog('verifyPasswordResetLink: (!) existing');
+            util.log.error( 'verifyPasswordResetLink: (!) existing');
             return '!existing';
         }
         else {
-            if (existingUser.data.passwordResetHash === '')
+            if (existingUser.data.passwordResetHash === '') {
+                util.log.error( 'verifyPasswordResetLink: (!) used');
                 return 'used';
+            }
             else if (existingUser.data.passwordResetHash === passwordResetHash)
                 return 'ok';
             else
