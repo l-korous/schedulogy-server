@@ -1,4 +1,14 @@
 exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, auth) {
+    app.post('/api/simplemail', function (req) {
+        try {
+            mailer.mail(settings.msgReceiver, 'Message from ' + req.params.email, req.params.msg);
+            return util.simpleResponse('ok');
+        }
+        catch (err) {
+            return util.simpleResponse(err.toString());
+        }
+    });
+    
     app.post('/api/msg', function (req) {
         try {
             util.cdir(req);
