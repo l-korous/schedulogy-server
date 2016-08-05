@@ -36,9 +36,10 @@ exports.settings = {
     mailSetupSubject: 'Welcome to SCHEDULOGY',
     mailSetupUrl: clientUrl + '/#/password-reset',
     mailSetupText: function (userId, passwordResetHash) {
-        var text = 'Welcome to SCHEDULOGY \r\n\r\n Please visit ';
+        var text = 'Welcome to SCHEDULOGY \r\n \r\n \r\n Please visit ';
         text += this.mailSetupUrl + '?id=' + passwordResetHash + '&user=' + userId;
-        text += '. \r\n\r\n Please enjoy SCHEDULOGY and contact us at info@schedulogy.com with any questions you have.';
+        text += '. \r\n \r\n \r\n Please enjoy SCHEDULOGY and contact us at info@schedulogy.com with any questions you have.';
+        text += '. \r\n \r\n \r\n SCHEDULOGY team';
         return text;
     }
 };
