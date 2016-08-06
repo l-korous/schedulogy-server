@@ -35,19 +35,19 @@ exports.initialize = function (settings, moment) {
         var time = moment.unix(timeUnix);
         var btime = moment.unix(btimeUnix);
 
-        clog('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
+        log.info('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
 
         var weeks = time.diff(btime, 'w');
-        clog('** timeToSlot: weeks = ' + weeks);
+        log.debug('** timeToSlot: weeks = ' + weeks);
 
         var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour;
-        clog('** timeToSlot: weekSlots = ' + weekSlots);
+        log.debug('** timeToSlot: weekSlots = ' + weekSlots);
 
         var timeMinusWeeks = time.clone().subtract(weeks, 'w');
-        clog('** timeToSlot: timeMinusWeeks = ' + timeMinusWeeks.toString());
+        log.debug('** timeToSlot: timeMinusWeeks = ' + timeMinusWeeks.toString());
 
         var days = timeMinusWeeks.diff(btime, 'd');
-        clog('** timeToSlot: days = ' + days);
+        log.debug('** timeToSlot: days = ' + days);
 
         // There is a weekend in between
         var weekendInBetween = false;
@@ -55,73 +55,73 @@ exports.initialize = function (settings, moment) {
             days -= 2;
             weekendInBetween = true;
         }
-        clog('** timeToSlot: weekendInBetween = ' + weekendInBetween);
+        log.debug('** timeToSlot: weekendInBetween = ' + weekendInBetween);
 
         var daySlots = days * settings.hoursPerDay * settings.slotsPerHour;
-        clog('** timeToSlot: daySlots = ' + daySlots);
+        log.debug('** timeToSlot: daySlots = ' + daySlots);
 
         var timeMinusDays = timeMinusWeeks.clone().subtract(days + (weekendInBetween * 2), 'd');
-        clog('** timeToSlot: timeMinusDays = ' + timeMinusDays);
+        log.debug('** timeToSlot: timeMinusDays = ' + timeMinusDays);
 
         var slots = 0;
         // This is for the case that time is earlier (but on a further day) than btime.
         if (timeMinusDays.isoWeekday() !== btime.isoWeekday()) {
-            clog('** timeToSlot: same weekday = false');
+            log.debug('** timeToSlot: same weekday = false');
             var timeMinusDaysToSlots = exports.ToSlots(timeMinusDays);
-            clog('** timeToSlot: timeMinusDaysToSlots = ' + timeMinusDaysToSlots);
+            log.debug('** timeToSlot: timeMinusDaysToSlots = ' + timeMinusDaysToSlots);
             var shiftToStartSlot = timeMinusDaysToSlots - settings.startSlot;
-            clog('** timeToSlot: shiftToStartSlot = ' + shiftToStartSlot);
+            log.debug('** timeToSlot: shiftToStartSlot = ' + shiftToStartSlot);
 
             var bTimeToSlots = exports.ToSlots(btime);
-            clog('** timeToSlot: bTimeToSlots = ' + bTimeToSlots);
+            log.debug('** timeToSlot: bTimeToSlots = ' + bTimeToSlots);
             var shiftToEndSlot = settings.endSlot - bTimeToSlots;
-            clog('** timeToSlot: shiftToEndSlot = ' + shiftToEndSlot);
+            log.debug('** timeToSlot: shiftToEndSlot = ' + shiftToEndSlot);
 
             slots = Math.max(0, shiftToStartSlot) + Math.max(0, shiftToEndSlot);
         }
         else {
-            clog('** timeToSlot: same weekday = true');
+            log.debug('** timeToSlot: same weekday = true');
             slots = Math.floor(timeMinusDays.diff(btime, 'm') / settings.minGranularity);
         }
 
         var result = weekSlots + daySlots + slots;
-        clog('* timeToSlot finishes with: ' + result + '.');
+        log.info('* timeToSlot finishes with: ' + result + '.');
         return result;
     };
 
     exports.slotToTime = function (slot, btimeUnix) {
         var btime = moment.unix(btimeUnix);
 
-        clog('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
+        log.info('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endSlot - exports.ToSlots(btime);
-        exports.clog('** slotToTime - endOfDay: ' + endOfDay);
+        log.debug('** slotToTime - endOfDay: ' + endOfDay);
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endSlot * settings.minGranularity, 'm');
-        exports.clog('** slotToTime - endOfWeek: ' + endOfWeek);
+        log.debug('** slotToTime - endOfWeek: ' + endOfWeek);
         var weekMinutes = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour)) * 7 * 1440;
-        exports.clog('** slotToTime - weekMinutes: ' + weekMinutes);
+        log.debug('** slotToTime - weekMinutes: ' + weekMinutes);
         var slotModWeeks = slot % (settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour);
-        exports.clog('** slotToTime - slotModWeeks: ' + slotModWeeks);
+        log.debug('** slotToTime - slotModWeeks: ' + slotModWeeks);
         var dayMinutes = Math.floor(slotModWeeks / (settings.hoursPerDay * settings.slotsPerHour)) * 1440;
-        exports.clog('** slotToTime - dayMinutes: ' + dayMinutes);
+        log.debug('** slotToTime - dayMinutes: ' + dayMinutes);
         var slotModDays = slot % (settings.hoursPerDay * settings.slotsPerHour);
-        exports.clog('** slotToTime - slotModDays: ' + slotModDays);
+        log.debug('** slotToTime - slotModDays: ' + slotModDays);
         if (slotModDays > endOfDay - 1) {
             dayMinutes += ((24 * settings.slotsPerHour) - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
             slotModDays -= endOfDay;
         }
-        exports.clog('** slotToTime - slotModDays: ' + slotModDays);
+        log.debug('** slotToTime - slotModDays: ' + slotModDays);
         var hourMinutes = slotModDays * settings.minGranularity;
-        exports.clog('** slotToTime - hourMinutes: ' + hourMinutes);
+        log.debug('** slotToTime - hourMinutes: ' + hourMinutes);
         var total = weekMinutes + dayMinutes + hourMinutes;
-        exports.clog('** slotToTime - total: ' + total);
+        log.debug('** slotToTime - total: ' + total);
         // Over the weekend.
         if (btime.clone().add(dayMinutes + hourMinutes, 'm') > endOfWeek)
             total += 2 * 1440;
 
-        exports.clog('** slotToTime - total: ' + total);
+        log.debug('** slotToTime - total: ' + total);
 
         var result = btime.clone().add(total, 'm');
-        clog('* slotToTime finishes with: ' + result + '.');
+        log.info('* slotToTime finishes with: ' + result + '.');
         return result.unix();
     };
 
