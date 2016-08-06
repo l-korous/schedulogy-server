@@ -41,13 +41,13 @@ exports.initialize = function (settings, secrets, util, moment) {
                 return settings.optionAllowedResponse;
 
             // Log the request.
-            util.debug(req);
+            util.log.debug(req);
 
             // For login etc., we do not parse the token:
             if (['/api/password-reset-check', '/api/login', '/api/register', '/api/activate', '/api/reset-password', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
                 var toReturn = next(req);
                 // Log the response.
-                util.debug(toReturn);
+                util.log.debug(toReturn);
                 return toReturn;
             }
             if (!req.session.data.userId) {
@@ -59,11 +59,11 @@ exports.initialize = function (settings, secrets, util, moment) {
                         req.session.data.userId = req.headers.xuser;
                         var toReturn = next(req);
                         // Log the response.
-                        util.debug(toReturn);
+                        util.log.debug(toReturn);
                         return toReturn;
                     }
                     else {
-                        util.info('bad_token: ' + auth_res);
+                        util.log.info('bad_token: ' + auth_res);
                         return util.simpleResponse(auth_res, 403);
                     }
                 }
