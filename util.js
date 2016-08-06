@@ -3,18 +3,11 @@ exports.initialize = function (settings, moment) {
     var loggingConfig = module.resolve("ringojs-0.12/modules/config/log4j.properties");
     logging.setConfig(getResource(loggingConfig));
     var log = logging.getLogger('schedulogy');
-    
+
     exports.log = log;
     var cdir = function (what, stringify) {
         // This is only for debug output
-        if (settings.logLevel === 3) {
-            if (stringify)
-                log.debug(moment(new Date()).format('YYYY-MM-DD hh:mm:ss') + ' ' + JSON.stringify(what, null, 4));
-            else {
-                log.debug(moment(new Date()).format('YYYY-MM-DD hh:mm:ss'));
-                log.debug(what);
-            }
-        }
+        log.debug(JSON.stringify(what, null, 4));
     };
     exports.cdir = cdir;
 
