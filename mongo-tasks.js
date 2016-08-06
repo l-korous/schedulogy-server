@@ -292,7 +292,6 @@ exports.initialize = function (app, settings, util) {
             toReturn += task.toJSON();
         });
         toReturn += "]}";
-        util.log.debug(toReturn);
         return toReturn;
     };
 };

@@ -26,7 +26,7 @@ exports.initialize = function (settings, secrets, util, moment) {
             var claims = verifier.verify(token);
             if (claims.get('uid') === userId)
                 return 'ok';
-            else if(parseInt(claims.get('exp')) < moment().unix())
+            else if (parseInt(claims.get('exp')) < moment().unix())
                 return 'expired';
             else
                 return 'fraud';
@@ -39,21 +39,33 @@ exports.initialize = function (settings, secrets, util, moment) {
         return function (req) {
             if (req.method === 'OPTIONS')
                 return settings.optionAllowedResponse;
+
+            // Log the request.
+            util.debug(req);
+
             // For login etc., we do not parse the token:
             if (['/api/password-reset-check', '/api/login', '/api/register', '/api/activate', '/api/reset-password', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
-                return next(req);
+                var toReturn = next(req);
+                // Log the response.
+                util.debug(toReturn);
+                return toReturn;
             }
             if (!req.session.data.userId) {
                 if (!req.headers.authorization || !req.headers.xuser)
                     return util.simpleResponse('missingAuth', 403);
                 else {
                     var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
-                    if(auth_res === 'ok') {
+                    if (auth_res === 'ok') {
                         req.session.data.userId = req.headers.xuser;
-                        return next(req);
+                        var toReturn = next(req);
+                        // Log the response.
+                        util.debug(toReturn);
+                        return toReturn;
                     }
-                    else
+                    else {
+                        util.info('bad_token: ' + auth_res);
                         return util.simpleResponse(auth_res, 403);
+                    }
                 }
             }
             else
