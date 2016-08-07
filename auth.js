@@ -35,19 +35,27 @@ exports.initialize = function (settings, secrets, util, moment) {
         }
     };
 
+    var log_request = function (req) {
+        var entry = '{path: ' + req.pathInfo + ', headers: ' + JSON.stringify(req.headers);
+        if (req.params)
+            entry += ', params: ' + JSON.stringify(req.params);
+        entry += '}';
+        util.log.info(entry);
+    };
+
     exports.middleware = function (next) {
         return function (req) {
             if (req.method === 'OPTIONS')
                 return settings.optionAllowedResponse;
 
             // Log the request.
-            util.cdir(req);
+            log_request(req);
 
             // For login etc., we do not parse the token:
             if (['/api/password-reset-check', '/api/login', '/api/register', '/api/activate', '/api/reset-password', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
                 var toReturn = next(req);
                 // Log the response.
-                util.cdir(toReturn);
+                util.log.info(toReturn.body);
                 return toReturn;
             }
             if (!req.session.data.userId) {
@@ -59,7 +67,7 @@ exports.initialize = function (settings, secrets, util, moment) {
                         req.session.data.userId = req.headers.xuser;
                         var toReturn = next(req);
                         // Log the response.
-                        util.cdir(toReturn);
+                        util.log.info(toReturn.body);
                         return toReturn;
                     }
                     else {

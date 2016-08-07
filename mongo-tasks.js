@@ -6,6 +6,18 @@ exports.initialize = function (app, settings, util) {
     var tasks = db.getCollection('task');
     exports.tasks = tasks;
 
+    exports.haveFloating = function (btime, userId) {
+        var toReturn = false;
+        util.log.debug('haveFloating starts');
+        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+        tasks.find({user: userIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
+            toReturn = toReturn || (!floatingTask.data.start) || (floatingTask.data.start > btime) || floatingTask.data.dirty;
+        });
+
+        util.log.debug('haveFloating finishes: ' + toReturn);
+        return toReturn;
+    };
+
     exports.getProblemJson = function (btime, userId) {
         var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').unix();
         var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
@@ -67,7 +79,7 @@ exports.initialize = function (app, settings, util) {
                     floatingTask.data.needs.forEach(function (prerequisiteTaskId) {
                         var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
                         if (!prerequisiteTask) {
-                            util.log.error( 'Error: prerequisite not exists: ' + prerequisiteTaskId);
+                            util.log.error('Error: prerequisite not exists: ' + prerequisiteTaskId);
                             return;
                         }
                         util.log.debug('- dependency:');
@@ -100,7 +112,7 @@ exports.initialize = function (app, settings, util) {
         util.cdir(toReturn, true);
         return toReturn;
     };
-    exports.storeSlnData = function (outputJsonString, btime, userId) {
+    exports.storeSlnData = function (outputJsonString, btime) {
         util.log.debug('storeSlnData starts with btime = ' + moment.unix(btime).toString() + '.');
         var outputJson = JSON.parse(outputJsonString);
         var solArray = outputJson.solution;
@@ -108,10 +120,11 @@ exports.initialize = function (app, settings, util) {
             var start = util.slotToTime(solutionEl.StartTime, btime);
             tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {start: start.toString(), dirty: false}});
         });
-        // Also mark all fixed tasks as not-dirty.
-        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
+    };
+
+    exports.markFixedAsNonDirty = function (userId) {
         // Very important - Ringo.js MongoDB driver does not support updates with option {multi: true}, so we need to update one-by-one.
-        tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (task) {
+        tasks.find({user: userId, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (task) {
             task.data.dirty = false;
             tasks.save(task.data);
         });
@@ -126,7 +139,7 @@ exports.initialize = function (app, settings, util) {
         task.needs && task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
             if (!prerequisiteTask) {
-                util.log.error( 'Error: prerequisite not exists: ' + prerequisiteTaskId);
+                util.log.error('Error: prerequisite not exists: ' + prerequisiteTaskId);
                 return;
             }
 

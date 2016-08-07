@@ -3,45 +3,39 @@ exports.initialize = function (settings, moment) {
     var loggingConfig = module.resolve("ringojs-0.12/modules/config/log4j.properties");
     logging.setConfig(getResource(loggingConfig));
     var log = logging.getLogger('schedulogy');
-
     exports.log = log;
     var cdir = function (what, stringify) {
         // This is only for debug output
-        log.debug(JSON.stringify(what, null, 4));
+        try {
+            log.debug(JSON.stringify(what, null, 4));
+        }
+        catch (e) {
+            log.debug(what.toString());
+        }
     };
     exports.cdir = cdir;
-
     // This is only for comparison !!! As this calculates slots since the beginning of the day.
     exports.ToSlots = function (momentTime) {
         return Math.floor(((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity);
     };
-
     exports.ToMinutesPlusDuration = function (momentTime, addedDuration) {
         return ((momentTime.hour() * 60) + momentTime.minute() + (addedDuration * settings.minuteGranularity));
     };
-
     exports.equalDays = function (momentTime1, momentTime2) {
         return (momentTime1.format("YYYY-MM-DD") === momentTime2.format("YYYY-MM-DD"));
     };
-
     exports.timeToSlot = function (timeUnix, btimeUnix) {
         var time = moment.unix(timeUnix);
         var btime = moment.unix(btimeUnix);
-
         log.info('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
-
         var weeks = time.diff(btime, 'w');
         log.debug('** timeToSlot: weeks = ' + weeks);
-
         var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour;
         log.debug('** timeToSlot: weekSlots = ' + weekSlots);
-
         var timeMinusWeeks = time.clone().subtract(weeks, 'w');
         log.debug('** timeToSlot: timeMinusWeeks = ' + timeMinusWeeks.toString());
-
         var days = timeMinusWeeks.diff(btime, 'd');
         log.debug('** timeToSlot: days = ' + days);
-
         // There is a weekend in between
         var weekendInBetween = false;
         if ((timeMinusWeeks.isoWeekday() < btime.isoWeekday()) || ((timeMinusWeeks.isoWeekday() === btime.isoWeekday()) && (timeMinusWeeks.hours() < btime.hours()))) {
@@ -49,13 +43,10 @@ exports.initialize = function (settings, moment) {
             weekendInBetween = true;
         }
         log.debug('** timeToSlot: weekendInBetween = ' + weekendInBetween);
-
         var daySlots = days * settings.hoursPerDay * settings.slotsPerHour;
         log.debug('** timeToSlot: daySlots = ' + daySlots);
-
         var timeMinusDays = timeMinusWeeks.clone().subtract(days + (weekendInBetween * 2), 'd');
         log.debug('** timeToSlot: timeMinusDays = ' + timeMinusDays);
-
         var slots = 0;
         // This is for the case that time is earlier (but on a further day) than btime.
         if (timeMinusDays.isoWeekday() !== btime.isoWeekday()) {
@@ -64,12 +55,10 @@ exports.initialize = function (settings, moment) {
             log.debug('** timeToSlot: timeMinusDaysToSlots = ' + timeMinusDaysToSlots);
             var shiftToStartSlot = timeMinusDaysToSlots - settings.startSlot;
             log.debug('** timeToSlot: shiftToStartSlot = ' + shiftToStartSlot);
-
             var bTimeToSlots = exports.ToSlots(btime);
             log.debug('** timeToSlot: bTimeToSlots = ' + bTimeToSlots);
             var shiftToEndSlot = settings.endSlot - bTimeToSlots;
             log.debug('** timeToSlot: shiftToEndSlot = ' + shiftToEndSlot);
-
             slots = Math.max(0, shiftToStartSlot) + Math.max(0, shiftToEndSlot);
         }
         else {
@@ -81,10 +70,8 @@ exports.initialize = function (settings, moment) {
         log.info('* timeToSlot finishes with: ' + result + '.');
         return result;
     };
-
     exports.slotToTime = function (slot, btimeUnix) {
         var btime = moment.unix(btimeUnix);
-
         log.info('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endSlot - exports.ToSlots(btime);
         log.debug('** slotToTime - endOfDay: ' + endOfDay);
@@ -110,14 +97,11 @@ exports.initialize = function (settings, moment) {
         // Over the weekend.
         if (btime.clone().add(dayMinutes + hourMinutes, 'm') > endOfWeek)
             total += 2 * 1440;
-
         log.debug('** slotToTime - total: ' + total);
-
         var result = btime.clone().add(total, 'm');
         log.info('* slotToTime finishes with: ' + result + '.');
         return result.unix();
     };
-
     // This function, if given msg === 'ok', generates an OK response (200 HTTP Status Code),
     // otherwise 400, unless not given a code as the second parameter
     exports.simpleResponse = function (msg, code) {
@@ -127,7 +111,6 @@ exports.initialize = function (settings, moment) {
             headers: settings.defaultHeaderJson
         };
     };
-
     exports.generatePasswordResetHash = function () {
         function createRandomString(length)
         {
@@ -140,21 +123,17 @@ exports.initialize = function (settings, moment) {
 
         return createRandomString(32);
     };
-
     exports.to_utf = function (s) {
         return unescape(encodeURIComponent(s));
     };
-
     exports.from_utf = function (s) {
         return decodeURIComponent(escape(s));
     };
-
     exports.getUnixEnd = function (task) {
         // Duration in seconds (unix time is in seconds)
         var duration = 60 * (task.dur * (task.type === 'fixedAllDay' ? 1440 : settings.minGranularity));
         return task.start + duration;
     };
-
     exports.getUnixStart = function (task) {
         if (task.type !== 'floating')
             return task.start;
@@ -162,7 +141,6 @@ exports.initialize = function (settings, moment) {
         var duration = 60 * task.dur * settings.minGranularity;
         return task.due - duration;
     };
-
     exports.getUnixDuration = function (task) {
         return  60 * (task.dur * (task.type === 'fixedAllDay' ? 1440 : settings.minGranularity));
     };
