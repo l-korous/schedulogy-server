@@ -14,6 +14,17 @@ exports.initialize = function (settings, moment) {
         }
     };
     exports.cdir = cdir;
+
+    exports.log_request = function (req) {
+        var entry = '{method: "' + req.method + '", path: "' + req.pathInfo + '", headers: ' + JSON.stringify(req.headers);
+        if (req.params)
+            entry += ', params: ' + JSON.stringify(req.params);
+        if (req.postParams)
+            entry += ', postParams: ' + JSON.stringify(req.postParams);
+        entry += '}';
+        log.info(entry);
+    };
+    
     // This is only for comparison !!! As this calculates slots since the beginning of the day.
     exports.ToSlots = function (momentTime) {
         return Math.floor(((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity);

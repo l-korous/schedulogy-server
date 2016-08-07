@@ -11,7 +11,7 @@ exports.initialize = function (app, settings, util) {
         util.log.debug('haveFloating starts');
         var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
         tasks.find({user: userIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
-            toReturn = toReturn || (!floatingTask.data.start) || (floatingTask.data.start > btime) || floatingTask.data.dirty;
+            toReturn = toReturn || (!floatingTask.data.start) || (floatingTask.data.start >= btime) || floatingTask.data.dirty;
         });
 
         util.log.debug('haveFloating finishes: ' + toReturn);
@@ -35,7 +35,6 @@ exports.initialize = function (app, settings, util) {
             toReturn.Problem.Resources[0].TimePreferences[counter++] = {s: i};
         }
         tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {
-            util.log.debug('Fixed task:');
             util.cdir(fixedTask.data, true);
             // Skipping past tasks.
             var start = fixedTask.data.start;
@@ -54,10 +53,12 @@ exports.initialize = function (app, settings, util) {
         counter = 0;
         var counterDeps = 0;
         tasks.find({user: userIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
-            util.log.debug('Floating task:');
-            util.cdir(floatingTask.data, true);
+            var toPrint = floatingTask.data;
+            toPrint.startString = moment.unix(floatingTask.data.start).toString();
+            toPrint.diffBTime = toPrint.start - btime;
+            util.cdir(toPrint, true);
             // Skipping past tasks. But not skipping unscheduled tasks.
-            var scheduleTask = (!floatingTask.data.start) || (floatingTask.data.start > btime) || floatingTask.data.dirty;
+            var scheduleTask = (!floatingTask.data.start) || (floatingTask.data.start >= btime) || floatingTask.data.dirty;
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime_startOfDay);
 
@@ -69,7 +70,6 @@ exports.initialize = function (app, settings, util) {
                             Value: dueInteger
                         }]
                 };
-                util.log.debug('- adding activity:');
                 util.cdir(toReturn.Problem.Activities[counter - 1], true);
                 // Dependencies:
                 if (floatingTask.data.needs) {

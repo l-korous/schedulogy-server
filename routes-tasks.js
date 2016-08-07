@@ -39,18 +39,19 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     };
 
     app.del('/api/task/:taskId', function (req, task_id) {
+        util.log_request(req);
         mongoTasks.removeTask(task_id);
-
         return returnSchedule(req.params.btime, req.session.data.userId, true);
     });
 
     app.del('/api/task', function (req) {
+        util.log_request(req);
         mongoTasks.removeTasks({}, req.session.data.userId);
-
         return returnSchedule(req.params.btime, req.session.data.userId, true);
     });
 
-    app.post('/api/task', function (req, what) {
+    app.post('/api/task', function (req) {
+        util.log_request(req);
         var task = req.postParams;
         var tasksToBeDirtied = [];
         mongoTasks.storeTask(task, req.session.data.userId, tasksToBeDirtied);
@@ -58,6 +59,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     });
 
     app.post('/api/task/checkConstraints', function (req, what) {
+        util.log_request(req);
         var task = req.postParams;
         // mongoTasks.storeTask(task, req.session.data.userId);
         // return returnSchedule(req.params.btime, req.session.data.userId);
@@ -69,10 +71,12 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     });
 
     app.get('/api/task', function (req) {
+        util.log_request(req);
         return returnSchedule(req.params.btime, req.session.data.userId, false);
     });
 
     app.post('/api/ical', function (req) {
+        util.log_request(req);
         var res = 'ok';
         var file = http.parseFileUpload(req).file;
         if (!file) {
