@@ -15,7 +15,7 @@ exports.settings = {
     defaultHeaderJson: {
         'Access-Control-Allow-Origin': "*",
         'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
-        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset',
         'Content-Type': 'application/json'
     },
     smtpHost: 'smtp.gmail.com',
@@ -29,7 +29,7 @@ exports.settings = {
         headers: {
             'Access-Control-Allow-Origin': "*",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime'
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset'
         },
         status: 200
     },

@@ -7,10 +7,10 @@ exports.initialize = function (settings, moment) {
     var cdir = function (what, is_for_info) {
         // This is only for debug output
         try {
-if(is_for_info)
-            log.info(JSON.stringify(what));
-else
-            log.debug(JSON.stringify(what));
+            if (is_for_info)
+                log.info(JSON.stringify(what));
+            else
+                log.debug(JSON.stringify(what));
         }
         catch (e) {
             log.debug(what.toString());
@@ -27,7 +27,7 @@ else
         entry += '}';
         log.info(entry);
     };
-    
+
     // This is only for comparison !!! As this calculates slots since the beginning of the day.
     exports.ToSlots = function (momentTime) {
         return Math.floor(((momentTime.hour() * 60) + momentTime.minute()) / settings.minGranularity);

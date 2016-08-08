@@ -54,8 +54,8 @@ exports.initialize = function (settings, secrets, util, moment) {
                     var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
                     if (auth_res === 'ok') {
                         req.session.data.userId = req.headers.xuser;
-			var toReturn = next(req);
-			util.log.info(req.pathInfo + ' : ' + toReturn.body);
+                        var toReturn = next(req);
+                        util.log.info(req.pathInfo + ' : ' + toReturn.body);
                         return toReturn;
                     }
                     else {
@@ -65,10 +65,10 @@ exports.initialize = function (settings, secrets, util, moment) {
                 }
             }
             else {
-			var toReturn = next(req);
-			util.log.info(req.pathInfo + ' : ' + toReturn.body);
-                        return toReturn;
-}
+                var toReturn = next(req);
+                util.log.info(req.pathInfo + ' : ' + toReturn.body);
+                return toReturn;
+            }
         };
     };
 };
