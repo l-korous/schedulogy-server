@@ -19,7 +19,7 @@ exports.initialize = function (app, settings, util) {
     };
 
     exports.getProblemJson = function (btime, utcOffset, userId) {
-        var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(utcOffset, 'm').unix();
+        var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(-utcOffset, 'm').unix();
         var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
         util.log.debug('getProblemJson starts with btime = ' + moment.unix(btime).toString() + ', user = ' + userId);
         var toReturn = {};
