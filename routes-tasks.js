@@ -41,13 +41,13 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     app.del('/api/task/:taskId', function (req, task_id) {
         util.log_request(req);
         mongoTasks.removeTask(task_id);
-        return returnSchedule(req.params.btime, req.headers.utcOffset, req.session.data.userId, true);
+        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.userId, true);
     });
 
     app.del('/api/task', function (req) {
         util.log_request(req);
         mongoTasks.removeTasks({}, req.session.data.userId);
-        return returnSchedule(req.params.btime, req.headers.utcOffset, req.session.data.userId, true);
+        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.userId, true);
     });
 
     app.post('/api/task', function (req) {
@@ -55,7 +55,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
         var task = req.postParams;
         var tasksToBeDirtied = [];
         mongoTasks.storeTask(task, req.session.data.userId, tasksToBeDirtied);
-        return returnSchedule(req.params.btime, req.headers.utcOffset, req.session.data.userId, true, tasksToBeDirtied);
+        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.userId, true, tasksToBeDirtied);
     });
 
     app.post('/api/task/checkConstraints', function (req, what) {
@@ -70,7 +70,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
 
     app.get('/api/task', function (req) {
         util.log_request(req);
-        return returnSchedule(req.params.btime, req.headers.utcOffset, req.session.data.userId, false);
+        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.userId, false);
     });
 
     app.post('/api/ical', function (req) {
@@ -85,7 +85,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
                 res = 'File too large, maximum size is ' + settings.maxICalSize + 'MB.';
             else {
                 mongoIcal.processIcalFile(file.value, req.session.data.userId, req.headers.btime);
-                return returnSchedule(req.headers.btime, req.headers.utcOffset, req.session.data.userId, true);
+                return returnSchedule(req.headers.btime, req.headers.utcoffset, req.session.data.userId, true);
             }
         }
 
