@@ -44,7 +44,7 @@ exports.initialize = function (settings, secrets, util, moment) {
             if (['/api/password-reset-check', '/api/login', '/api/register', '/api/activate', '/api/reset-password', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
                 var toReturn = next(req);
                 // Log the response.
-                util.log.info(toReturn.body);
+                util.log.info(req.pathInfo + ' : ' + toReturn.body);
                 return toReturn;
             }
             if (!req.session.data.userId) {
@@ -54,9 +54,8 @@ exports.initialize = function (settings, secrets, util, moment) {
                     var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
                     if (auth_res === 'ok') {
                         req.session.data.userId = req.headers.xuser;
-                        var toReturn = next(req);
-                        // Log the response.
-                        util.log.info(toReturn.body);
+			var toReturn = next(req);
+			util.log.info(req.pathInfo + ' : ' + toReturn.body);
                         return toReturn;
                     }
                     else {
@@ -65,8 +64,11 @@ exports.initialize = function (settings, secrets, util, moment) {
                     }
                 }
             }
-            else
-                return next(req);
+            else {
+			var toReturn = next(req);
+			util.log.info(req.pathInfo + ' : ' + toReturn.body);
+                        return toReturn;
+}
         };
     };
 };

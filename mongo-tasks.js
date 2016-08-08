@@ -35,7 +35,7 @@ exports.initialize = function (app, settings, util) {
             toReturn.Problem.Resources[0].TimePreferences[counter++] = {s: i};
         }
         tasks.find({user: userIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {
-            util.cdir(fixedTask.data, true);
+            util.cdir(fixedTask.data);
             // Skipping past tasks.
             var start = fixedTask.data.start;
             var end = util.getUnixEnd(fixedTask.data);
@@ -56,7 +56,7 @@ exports.initialize = function (app, settings, util) {
             var toPrint = floatingTask.data;
             toPrint.startString = moment.unix(floatingTask.data.start).toString();
             toPrint.diffBTime = toPrint.start - btime;
-            util.cdir(toPrint, true);
+            util.cdir(toPrint);
             // Skipping past tasks. But not skipping unscheduled tasks.
             var scheduleTask = (!floatingTask.data.start) || (floatingTask.data.start >= btime) || floatingTask.data.dirty;
             if (scheduleTask) {
@@ -70,7 +70,7 @@ exports.initialize = function (app, settings, util) {
                             Value: dueInteger
                         }]
                 };
-                util.cdir(toReturn.Problem.Activities[counter - 1], true);
+                util.cdir(toReturn.Problem.Activities[counter - 1]);
                 // Dependencies:
                 if (floatingTask.data.needs) {
                     // Slot when all fixed prerequisites are done.
@@ -83,7 +83,7 @@ exports.initialize = function (app, settings, util) {
                             return;
                         }
                         util.log.debug('- dependency:');
-                        util.cdir(prerequisiteTask, true);
+                        util.cdir(prerequisiteTask);
                         // Skipping past tasks.
                         var preq_end = util.getUnixEnd(prerequisiteTask.data);
                         if (['fixed', 'fixedAllDay'].indexOf(prerequisiteTask.data.type) > -1) {
@@ -96,7 +96,7 @@ exports.initialize = function (app, settings, util) {
                                 SecondActivity: floatingTask.id
                             };
                             util.log.debug('-- float dependency:');
-                            util.cdir(toReturn.Problem.Dependencies[counterDeps - 1], true);
+                            util.cdir(toReturn.Problem.Dependencies[counterDeps - 1]);
                         }
                     });
                     if (maxFixedPrerequisite > 0) {
@@ -109,7 +109,7 @@ exports.initialize = function (app, settings, util) {
                 }
             }
         });
-        util.cdir(toReturn, true);
+        util.cdir(toReturn);
         return toReturn;
     };
     exports.storeSlnData = function (outputJsonString, btime) {
@@ -152,6 +152,7 @@ exports.initialize = function (app, settings, util) {
                 util.log.debug('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
             }
         });
+	util.log.debug('getStartConstraintFromDeps finishes with: ' + toReturn);
         return toReturn;
     };
     // For a single task, calculate the amount of time (in hours now) necessary to complete:
@@ -187,6 +188,7 @@ exports.initialize = function (app, settings, util) {
                 constraintsUtilArray.push(taskId);
             }
         });
+	util.log.debug('getStartConstraint finishes with: ' + toReturn);
         return toReturn;
     };
     // For a single task, calculate the earliest time when this task must be done to satisfy all dependencies:
@@ -207,7 +209,7 @@ exports.initialize = function (app, settings, util) {
             if (!toReturn || (depLatestStartTimestartTime < toReturn))
                 toReturn = depLatestStartTimestartTime;
         });
-        util.log.debug('getEndConstraint finishes with: ' + toReturn + '.');
+        util.log.debug('getEndConstraint finishes with: ' + toReturn);
         return toReturn;
     };
     // This function assumes that all tasks are not-dirty, and are correctly stored in the DB.

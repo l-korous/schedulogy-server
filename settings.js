@@ -13,7 +13,7 @@ exports.settings = {
     maxICalSize: 10,
     // TODO - Are these correct?
     defaultHeaderJson: {
-        'Access-Control-Allow-Origin': "*",
+        'Access-Control-Allow-Origin': "https://www.schedulogy.com",
         'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
         'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization',
         'Content-Type': 'application/json'
@@ -27,7 +27,7 @@ exports.settings = {
     optionAllowedResponse: {
         body: [],
         headers: {
-            'Access-Control-Allow-Origin': "*",
+            'Access-Control-Allow-Origin': "https://www.schedulogy.com",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
             'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime'
         },

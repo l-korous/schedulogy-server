@@ -4,10 +4,13 @@ exports.initialize = function (settings, moment) {
     logging.setConfig(getResource(loggingConfig));
     var log = logging.getLogger('schedulogy');
     exports.log = log;
-    var cdir = function (what, stringify) {
+    var cdir = function (what, is_for_info) {
         // This is only for debug output
         try {
-            log.debug(JSON.stringify(what, null, 4));
+if(is_for_info)
+            log.info(JSON.stringify(what));
+else
+            log.debug(JSON.stringify(what));
         }
         catch (e) {
             log.debug(what.toString());
@@ -38,7 +41,7 @@ exports.initialize = function (settings, moment) {
     exports.timeToSlot = function (timeUnix, btimeUnix) {
         var time = moment.unix(timeUnix);
         var btime = moment.unix(btimeUnix);
-        log.info('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
+        log.debug('* timeToSlot starts with time = ' + time + ', btime = ' + btime.toString() + '.');
         var weeks = time.diff(btime, 'w');
         log.debug('** timeToSlot: weeks = ' + weeks);
         var weekSlots = weeks * settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour;
@@ -78,12 +81,12 @@ exports.initialize = function (settings, moment) {
         }
 
         var result = weekSlots + daySlots + slots;
-        log.info('* timeToSlot finishes with: ' + result + '.');
+        log.debug('* timeToSlot finishes with: ' + result + '.');
         return result;
     };
     exports.slotToTime = function (slot, btimeUnix) {
         var btime = moment.unix(btimeUnix);
-        log.info('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
+        log.debug('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endSlot - exports.ToSlots(btime);
         log.debug('** slotToTime - endOfDay: ' + endOfDay);
         var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endSlot * settings.minGranularity, 'm');
@@ -110,7 +113,7 @@ exports.initialize = function (settings, moment) {
             total += 2 * 1440;
         log.debug('** slotToTime - total: ' + total);
         var result = btime.clone().add(total, 'm');
-        log.info('* slotToTime finishes with: ' + result + '.');
+        log.debug('* slotToTime finishes with: ' + result + '.');
         return result.unix();
     };
     // This function, if given msg === 'ok', generates an OK response (200 HTTP Status Code),

@@ -11,7 +11,7 @@ exports.initialize = function (settings, util) {
 
         var solution = calculator.calculate(JSON.stringify(problemJson), settings.solverTimeout);
 
-        util.cdir(solution);
+        util.cdir(solution, true);
 
         return solution === "" ? false : solution;
     };
