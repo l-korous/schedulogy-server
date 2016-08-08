@@ -4,7 +4,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     var returnSchedule = function (btime, utcOffset, userId, recalculate, rollbackTaskValues) {
         if (recalculate) {
             if (mongoTasks.haveFloating(btime, userId)) {
-                var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').unix();
+                var btime_startOfDay = moment.unix(btime).startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(utcOffset, 'm').unix();
                 var result = solver.solve(mongoTasks.getProblemJson(btime, utcOffset, userId));
 
                 if (result) {
