@@ -21,7 +21,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
         return {calendar: builder.build(fin), registry: builder.getRegistry()};
     };
 
-    var saveImportedTask = function (component, userId, btime, registry) {
+    var saveImportedTask = function (component, tenantId, userId, btime, registry) {
         // Sanity check.
         if ((!component.getProperty('DTSTART')) || (!component.getProperty('DTEND')) || (!component.getProperty('SUMMARY')))
             return;
@@ -31,16 +31,19 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
         var taskStart = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm');
         var taskEnd = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm');
         try {
-            var tz = registry.getTimeZone(component.getProperty('DTSTART').getParameter("TZID").getValue());
-            if (tz) {
-                var taskStartInUnix = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm').unix();
-                var taskEndInUnix = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm').unix();
-                taskStart = moment.unix(taskStartInUnix).add(-tz.getOffset(taskStartInUnix * 1000), 'ms');
-                taskEnd = moment.unix(taskEndInUnix).add(-tz.getOffset(taskEndInUnix * 1000), 'ms');
+            if (component.getProperty('DTSTART').getParameter("TZID"))
+            {
+                var tz = registry.getTimeZone(component.getProperty('DTSTART').getParameter("TZID").getValue());
+                if (tz) {
+                    var taskStartInUnix = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmm').unix();
+                    var taskEndInUnix = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmm').unix();
+                    taskStart = moment.unix(taskStartInUnix).add(-tz.getOffset(taskStartInUnix * 1000), 'ms');
+                    taskEnd = moment.unix(taskEndInUnix).add(-tz.getOffset(taskEndInUnix * 1000), 'ms');
+                }
             }
         }
         catch (e) {
-            util.log.error( 'Exception: ' + e);
+            util.log.error('Exception: ' + e);
         }
 
         var bTimeMoment = moment.unix(btime);
@@ -54,7 +57,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
 
             var uid = component.getProperty('UID').getValue();
             var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
-            var exists = mongoTasks.tasks.findOne({user: userIdInMongo, iCalUid: uid});
+            var exists = mongoTasks.getSingleTask({user: userIdInMongo, iCalUid: uid});
             if (!exists) {
                 util.log.debug('saveImportedTask - task not exists, creating new...');
 
@@ -69,26 +72,26 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
                     start: taskStart.unix(),
                     due: taskEnd.unix(),
                     needs: [],
-                    blocks:[],
+                    blocks: [],
                     dur: duration,
-                    dirty:true,
+                    dirty: true,
                     title: taskTitle,
                     desc: component.getProperty('DESCRIPTION') ? component.getProperty('DESCRIPTION').getValue() : ''
                 };
 
                 // Save the task. Only if it is not stored already.
-                mongoTasks.storeTask(taskToStore, userId);
+                mongoTasks.storeTask(taskToStore, tenantId, userId);
             }
         }
     };
 
-    exports.processIcalFile = function (inputData, userId, btime) {
+    exports.processIcalFile = function (inputData, tenantId, userId, btime) {
         var calendar = getCalendar(inputData, userId).calendar;
         var registry = getCalendar(inputData, userId).registry;
 
         for (var i = calendar.getComponents().iterator(); i.hasNext(); ) {
             var component = i.next();
-            saveImportedTask(component, userId, btime, registry);
+            saveImportedTask(component, tenantId, userId, btime, registry);
         }
     };
 };

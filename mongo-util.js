@@ -3,9 +3,10 @@ exports.initialize = function (app, settings, secrets, util) {
     var client = new mongo.MongoClient('localhost', 27017);
     var db = client.getDB('schedulogy');
     var users = db.getCollection('user');
+    var tenants = db.getCollection('tenant');
+    var resources = db.getCollection('resource');
     addToClasspath("./cpsolver/dist/jbcrypt-0.3m.jar");
     importPackage(org.mindrot.jbcrypt);
-    exports.users = users;
 
     exports.verifyUserCredentialsReturnUser = function (credentials) {
         var user = users.findOne({email: credentials.email});
@@ -13,6 +14,15 @@ exports.initialize = function (app, settings, secrets, util) {
             if (user.data.active) {
                 var res = BCrypt.checkpw(credentials.password, user.data.password);
                 if (res) {
+
+                    if (user.data.new_user) {
+                        user.data.new_user = false;
+                        users.save(user.data);
+                        user.data.runIntro = true;
+                    }
+                    else
+                        user.data.runIntro = false;
+
                     return user.data;
                 }
                 else
@@ -40,10 +50,30 @@ exports.initialize = function (app, settings, secrets, util) {
         users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {passwordResetHash: newHash}});
     };
 
+    exports.createTenant = function (tenantData) {
+        var saved = tenants.save(tenantData);
+        if (saved.error) {
+            util.log.error('createTenant: error: ' + saved);
+            return false;
+        }
+        else
+            return tenantData._id;
+    };
+
+    exports.createResource = function (resourceData) {
+        var saved = resources.save(resourceData);
+        if (saved.error) {
+            util.log.error('createResource: error: ' + saved);
+            return false;
+        }
+        else
+            return resourceData._id;
+    };
+
     exports.createUser = function (userData) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
-            util.log.error( 'createUser: existing');
+            util.log.error('createUser: existing');
             return 'existing';
         }
         else {
@@ -51,13 +81,25 @@ exports.initialize = function (app, settings, secrets, util) {
             userData.new_user = true;
             userData.passwordResetHash = util.generatePasswordResetHash();
 
+            if (userData.tenant_id)
+                userData.tenant = new Packages.org.bson.types.ObjectId(userData.tenant_id);
+            else
+                userData.tenant = new Packages.org.bson.types.ObjectId(exports.createTenant({
+                    name: userData.email
+                }));
+
             var saved = users.save(userData);
             if (saved.error) {
-                util.log.error( 'createUser: error: ' + saved);
+                util.log.error('createUser: error: ' + saved);
                 return 'error';
             }
             else {
-                return users.findOne({email: userData.email});
+                exports.createResource({
+                    tenant: userData.tenant,
+                    type: 'user',
+                    user: userData._id
+                });
+                return users.findOne({_id: userData._id});
             }
         }
     };
@@ -66,12 +108,12 @@ exports.initialize = function (app, settings, secrets, util) {
         var existingUser = users.findOne(new Packages.org.bson.types.ObjectId(userId));
 
         if (!existingUser) {
-            util.log.error( 'verifyPasswordResetLink: (!) existing');
+            util.log.error('verifyPasswordResetLink: (!) existing');
             return '!existing';
         }
         else {
             if (existingUser.data.passwordResetHash === '') {
-                util.log.error( 'verifyPasswordResetLink: (!) used');
+                util.log.error('verifyPasswordResetLink: (!) used');
                 return 'used';
             }
             else if (existingUser.data.passwordResetHash === passwordResetHash)

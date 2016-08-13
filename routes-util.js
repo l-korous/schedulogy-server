@@ -24,14 +24,8 @@ exports.initialize = function (app, mongoUtil, util, settings, mailer, moment, a
     app.post('/api/login', function (req) {
         var res = mongoUtil.verifyUserCredentialsReturnUser(req.params);
         if (typeof res === 'object') {
-            var runIntro = false;
-            if(res.new_user) {
-                runIntro = true;
-                res.new_user = false;
-                mongoUtil.users.save(res);
-            }
             return {
-                body: ['{"token":"' + auth.generateToken(res) + '", "runIntro":' + runIntro + '}'],
+                body: ['{"token":"' + auth.generateToken(res) + '", "runIntro":' + res.runIntro + '}'],
                 headers: settings.defaultHeaderJson,
                 status: 200
             };

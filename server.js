@@ -24,6 +24,9 @@ mongoIcal.initialize(app, settings, util, moment, mongoTasks);
 var mongoUtil = require('./mongo-util.js');
 mongoUtil.initialize(app, settings, secrets, util);
 
+var mongoResources = require('./mongo-resources.js');
+mongoResources.initialize(app, settings, util);
+
 var solver = require('./solver.js');
 solver.initialize(settings, util);
 
@@ -35,6 +38,9 @@ routesTasks.initialize(app, mongoTasks, solver, util, settings, mailer, moment, 
 
 var routesUtil = require('./routes-util.js');
 routesUtil.initialize(app, mongoUtil, util, settings, mailer, moment, auth);
+
+var routesResources = require('./routes-resources.js');
+routesResources.initialize(app, mongoResources, util, settings);
 
 if (require.main == module) {
     require('ringo/httpserver').main(module.id);

@@ -4,7 +4,7 @@ exports.initialize = function (settings, util) {
     addToClasspath("./cpsolver/dist/log4j-1.2.17.jar");
     addToClasspath("./cpsolver/dist/dom4j-1.6.1.jar");
     addToClasspath("./cpsolver/dist/xml-apis-1.0.b2.jar");
-    importPackage(org.cpsolver.ifs.example.tt);
+    importPackage(org.cpsolver.ifs.schedulogy);
 
     exports.solve = function (problemJson) {
         var calculator = new Calculator;

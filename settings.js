@@ -2,7 +2,7 @@ var clientUrl = 'http://localhost:8100';
 
 exports.settings = {
     weeks: 26,
-    solverTimeout: 50,
+    solverTimeout: 5,
     daysPerWeek: 5,
     hoursPerDay: 9,
     minGranularity: 30,

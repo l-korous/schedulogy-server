@@ -13,6 +13,7 @@ exports.initialize = function (settings, secrets, util, moment) {
         x.put("exp", exp);
         x.put("exp", exp);
         x.put("uid", user._id.toString());
+        x.put("tid", user.tenant.toString());
         x.put("uem", user.email);
         x.put("uname", user.username || '');
         var signer = new JWTSigner(secrets.jwtSecret);
@@ -25,13 +26,13 @@ exports.initialize = function (settings, secrets, util, moment) {
             var verifier = new JWTVerifier(secrets.jwtSecret);
             var claims = verifier.verify(token);
             if (claims.get('uid') === userId)
-                return 'ok';
+                return {msg: 'ok', tenantId: claims.get('tid')};
             else if (parseInt(claims.get('exp')) < moment().unix())
-                return 'expired';
+                return {msg: 'expired'};
             else
-                return 'fraud';
+                return {msg: 'fraud'};
         } catch (e) {
-            return 'error';
+            return {msg: 'error'};
         }
     };
 
@@ -44,7 +45,7 @@ exports.initialize = function (settings, secrets, util, moment) {
             if (['/api/password-reset-check', '/api/login', '/api/register', '/api/activate', '/api/reset-password', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
                 var toReturn = next(req);
                 // Log the response.
-                util.log.info(req.pathInfo + ' : ' + toReturn.body);
+                util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
                 return toReturn;
             }
             if (!req.session.data.userId) {
@@ -52,21 +53,22 @@ exports.initialize = function (settings, secrets, util, moment) {
                     return util.simpleResponse('missingAuth', 403);
                 else {
                     var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
-                    if (auth_res === 'ok') {
+                    if (auth_res.msg === 'ok') {
                         req.session.data.userId = req.headers.xuser;
+                        req.session.data.tenantId = auth_res.tenantId;
                         var toReturn = next(req);
-                        util.log.info(req.pathInfo + ' : ' + toReturn.body);
+                        util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
                         return toReturn;
                     }
                     else {
-                        util.log.info('bad_token: ' + auth_res);
-                        return util.simpleResponse(auth_res, 403);
+                        util.log.info('bad_token: ' + auth_res.msg);
+                        return util.simpleResponse(auth_res.msg, 403);
                     }
                 }
             }
             else {
                 var toReturn = next(req);
-                util.log.info(req.pathInfo + ' : ' + toReturn.body);
+                util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
                 return toReturn;
             }
         };
