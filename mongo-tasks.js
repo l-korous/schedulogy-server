@@ -1,4 +1,4 @@
-exports.initialize = function (app, settings, util) {
+exports.initialize = function (settings, util) {
     var mongo = require('ringo-mongodb');
     var moment = require('./bower_components/moment/moment.js');
     var client = new mongo.MongoClient('localhost', 27017);

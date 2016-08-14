@@ -1,6 +1,5 @@
-exports.initialize = function (app, settings, util) {
+exports.initialize = function () {
     var mongo = require('ringo-mongodb');
-    var moment = require('./bower_components/moment/moment.js');
     var client = new mongo.MongoClient('localhost', 27017);
     var db = client.getDB('schedulogy');
     var users = db.getCollection('user');
@@ -23,7 +22,6 @@ exports.initialize = function (app, settings, util) {
                 var user = users.findOne({_id: resourceInMongo.data.user}).data;
                 resourceInMongo.data.username = user.username ? user.username : user.email;
             }
-            ;
 
             toReturn += resourceInMongo.toJSON();
         });
@@ -37,18 +35,18 @@ exports.initialize = function (app, settings, util) {
         return dirtiedTasks;
     };
 
-    exports.storeResource = function (resource, tenantId, userId, tasksToBeDirtied) {
+    exports.storeResource = function (resource, tenantId) {
         if (resource._id) {
             resource._id = new Packages.org.bson.types.ObjectId(resource._id);
             var oldResource = resources.findOne(resource._id).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
-                var dirtiedTasks = markTasksAsDirty(resourceIdInMongo);
+                var dirtiedTasks = markTasksAsDirty(resource._id);
                 if (dirtiedTasks > 0)
                     return 'too_many_affected_tasks';
             }
         }
 
-        resource.tenant = new Packages.org.bson.types.ObjectId(tenantId);
+        resource.tenant = new Packages.org.bson.types.ObjectId(resource.tenant || tenantId);
 
         if (resource.user)
             resource.user = new Packages.org.bson.types.ObjectId(resource.user);
@@ -57,9 +55,9 @@ exports.initialize = function (app, settings, util) {
         return 'ok';
     };
 
-    exports.removeResource = function (resourceId, tenantId) {
+    exports.removeResource = function (resourceId) {
         var resourceIdInMongo = new Packages.org.bson.types.ObjectId(resourceId);
-        var dirtiedTasks = markTasksAsDirty(resourceIdInMongo);
+        var dirtiedTasks = markResourceTasksAsDirty(resourceIdInMongo);
         if (dirtiedTasks > 0)
             return 'too_many_affected_tasks';
         else {
