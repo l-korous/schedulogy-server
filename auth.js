@@ -15,6 +15,7 @@ exports.initialize = function (settings, secrets, util, moment) {
         x.put("uid", user._id.toString());
         x.put("tid", user.tenant.toString());
         x.put("uem", user.email);
+        x.put("uro", user.role);
         x.put("uname", user.username || '');
         var signer = new JWTSigner(secrets.jwtSecret);
         var jwt = signer.sign(x);

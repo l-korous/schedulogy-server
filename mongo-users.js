@@ -14,6 +14,7 @@ exports.initialize = function (util, mongoResources) {
             email: userData.email,
             tenant: userData.tenant.toString(),
             username: userData.username || '',
+            role: userData.role,
             active: userData.active
         };
     };
@@ -61,6 +62,22 @@ exports.initialize = function (util, mongoResources) {
         return toReturn;
     };
 
+    exports.updateUser = function (user) {
+        try {
+            if (user._id)
+                user._id = new Packages.org.bson.types.ObjectId(user._id);
+
+            if (user.tenant)
+                user.tenant = new Packages.org.bson.types.ObjectId(user.tenant);
+
+            users.save(user);
+            return 'ok';
+        }
+        catch (e) {
+            return 'fail';
+        }
+    };
+
     exports.createUser = function (userData) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
@@ -81,8 +98,10 @@ exports.initialize = function (util, mongoResources) {
                     util.log.error('createTenant: error: ' + saved);
                     return 'create_tenant_error';
                 }
-                else
+                else {
                     userData.tenant = new Packages.org.bson.types.ObjectId(tenantData._id);
+                    userData.role = 'admin';
+                }
             }
 
             var saved = users.save(userData);

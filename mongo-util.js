@@ -3,7 +3,9 @@ exports.initialize = function (util) {
     var client = new mongo.MongoClient('localhost', 27017);
     var db = client.getDB('schedulogy');
     var users = db.getCollection('user');
-    
+    addToClasspath("./cpsolver/dist/jbcrypt-0.3m.jar");
+    importPackage(org.mindrot.jbcrypt);
+
     exports.verifyUserCredentialsReturnUser = function (credentials) {
         var user = users.findOne({email: credentials.email});
         if (user) {
@@ -31,7 +33,7 @@ exports.initialize = function (util) {
             return 'password';
         }
     };
-    
+
     exports.storePasswordResetHash = function (userId, newHash) {
         users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {passwordResetHash: newHash}});
     };
