@@ -3,8 +3,10 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
 
     var returnSchedule = function (btime, utcOffset, tenantId, rollbackTaskValues) {
         if (mongoTasks.mustSchedule(btime, tenantId)) {
-            var btime_startOfDay = moment.unix(btime).utc().startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(-utcOffset, 'm').unix();
-            var result = solver.solve(mongoTasks.getProblemJson(btime, btime_startOfDay, tenantId));
+            var btime_startOfDay_moment = moment.unix(btime).utc().startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(-utcOffset, 'm');
+            var btime_startOfDay = btime_startOfDay_moment.unix();
+            var btime_startOfWeekOffset = -moment.unix(btime).utc().startOf('week').add(-utcOffset, 'm').diff(btime_startOfDay_moment, 'm') / settings.minGranularity;
+            var result = solver.solve(mongoTasks.getProblemJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantId));
 
             if (result) {
                 mongoTasks.storeSlnData(result, btime_startOfDay);

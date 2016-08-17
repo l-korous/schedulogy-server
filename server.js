@@ -25,7 +25,7 @@ var mongoUtil = require('./mongo-util.js');
 mongoUtil.initialize(util);
 
 var mongoResources = require('./mongo-resources.js');
-mongoResources.initialize();
+mongoResources.initialize(util);
 
 var mongoUsers = require('./mongo-users.js');
 mongoUsers.initialize(util, mongoResources);

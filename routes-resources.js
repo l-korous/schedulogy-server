@@ -3,7 +3,7 @@ exports.initialize = function (app, mongoResources, util, settings) {
 
     app.del('/api/resource/:resourceId', function (req, resourceId) {
         util.log_request(req);
-        var res = mongoResources.removeResource(resourceId);
+        var res = mongoResources.removeResource(req.params.btime, resourceId);
         if (res === 'ok')
             return {
                 body: [mongoResources.getResources({tenant: new Packages.org.bson.types.ObjectId(req.session.data.tenantId)})],
@@ -17,7 +17,7 @@ exports.initialize = function (app, mongoResources, util, settings) {
     app.post('/api/resource', function (req) {
         util.log_request(req);
         var resource = req.postParams;
-        var res = mongoResources.storeResource(resource, req.session.data.tenantId, req.session.data.userId);
+        var res = mongoResources.storeResource(req.params.btime, resource, req.session.data.tenantId, req.session.data.userId);
         if (res === 'ok')
             return {
                 body: [mongoResources.getResources({tenant: new Packages.org.bson.types.ObjectId(req.session.data.tenantId)})],

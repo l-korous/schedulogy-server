@@ -6,6 +6,17 @@ exports.initialize = function (settings, util) {
     var tasks = db.getCollection('task');
     var resources = db.getCollection('resource');
 
+    var floatingTaskIsUnscheduled = function (floatingTask, btime) {
+        if (floatingTask.dirty)
+            return true;
+        if (!floatingTask.start)
+            return true;
+        if (floatingTask.start >= btime)
+            return true;
+
+        return false;
+    };
+
     exports.mustSchedule = function (btime, tenantId) {
         util.log.debug('mustSchedule starts');
 
@@ -16,7 +27,7 @@ exports.initialize = function (settings, util) {
 
         var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
         tasks.find({tenant: tenantIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
-            unscheduledFloating = unscheduledFloating || (!floatingTask.data.start) || ((floatingTask.data.start >= btime) && floatingTask.data.dirty);
+            unscheduledFloating = unscheduledFloating || floatingTaskIsUnscheduled(floatingTask.data);
             scheduledFloating = scheduledFloating || (floatingTask.data.start >= btime);
         });
 
@@ -42,43 +53,54 @@ exports.initialize = function (settings, util) {
         return toReturn;
     };
 
-    var getPrimaryResourceConstraints = function (btime, btime_startOfDay, resource) {
-        var toReturn = [];
-
-
+    var getPrimaryResourceConstraints = function (btime_startOfWeekOffset, resource) {
+        var toReturn = {};
+        toReturn.btimeOffset = btime_startOfWeekOffset;
+        toReturn.weekStart = resource.constraints ? resource.constraints[0].value_since - 1 : 0;
+        toReturn.weekEnd = resource.constraints ? resource.constraints[0].value_until - 1 : 6;
+        toReturn.dayStart = resource.constraints ? resource.constraints[1].value_since : 0;
+        toReturn.dayEnd = resource.constraints ? resource.constraints[1].value_until : settings.endSlot;
         return toReturn;
     };
 
-    var getResourcesJson = function (btime, btime_startOfDay, tenantIdInMongo) {
+    var getResourcesJson = function (btime, btime_startOfDay, btime_startOfWeekOffset, tenantIdInMongo) {
         var toReturn = [];
         resources.find({tenant: tenantIdInMongo}).forEach(function (resource) {
+            var resData = getPrimaryResourceConstraints(btime_startOfWeekOffset, resource.data);
+
             // This fills the basic constrains on the resource level.
-            var timePreferences = getPrimaryResourceConstraints(btime, btime_startOfDay, resource);
+            var timePreferences = [];
 
             // The actual BTime is imposed as a hard preference.
             var bTimeActualSlot = util.timeToSlot(btime, btime_startOfDay);
             for (var i = 0; i < bTimeActualSlot; i++)
                 timePreferences.push({s: i});
 
-            tasks.find({resource: resource.id, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (fixedTask) {
+            tasks.find({resource: resource.id, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}}).forEach(function (fixedTask) {
                 util.cdir(fixedTask.data);
-
-                // Skipping past tasks.
                 var start = fixedTask.data.start;
                 var end = util.getUnixEnd(fixedTask.data);
-                if (end > btime) {
-                    // start might be before btime_startOfDay, that is why we need to use the max fn.
-                    var leftBound = Math.max(0, util.timeToSlot(start, btime_startOfDay));
-                    var rightBound = util.timeToSlot(end, btime_startOfDay);
-                    // This has a very important implication - if leftBound === rightBound, then we do not add anything.
-                    // This applies for tasks, that fall out of this Resource constrainted days/times.
-                    for (var i = leftBound; i < rightBound; i++) {
-                        timePreferences.push({s: i});
-                    }
+
+                // start might be before btime_startOfDay, that is why we need to use the max fn.
+                var leftBound = Math.max(0, util.timeToSlot(start, btime_startOfDay));
+                var rightBound = util.timeToSlot(end, btime_startOfDay);
+                // This has a very important implication - if leftBound === rightBound, then we do not add anything.
+                // This applies for tasks, that fall out of this Resource constrainted days/times.
+                for (var i = leftBound; i < rightBound; i++) {
+                    timePreferences.push({s: i});
                 }
             });
 
-            toReturn.push({id: resource.id, name: resource.data.user.toString() || resource.data.name, tp: timePreferences});
+            toReturn.push({
+                id: resource.id,
+                name: resource.data.user ? resource.data.user.toString() : resource.data.name,
+                tp: timePreferences,
+                btimeOffset: resData.btimeOffset,
+                weekStart: resData.weekStart,
+                weekEnd: resData.weekEnd,
+                dayStart: resData.dayStart,
+                dayEnd: resData.dayEnd
+            });
         });
 
         return toReturn;
@@ -96,7 +118,7 @@ exports.initialize = function (settings, util) {
             toPrint.diffBTime = toPrint.start - btime;
             util.cdir(toPrint);
             // Skipping past tasks. But not skipping unscheduled tasks.
-            var scheduleTask = (!floatingTask.data.start) || (floatingTask.data.start >= btime) || floatingTask.data.dirty;
+            var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data);
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime_startOfDay);
                 var activity = {
@@ -156,14 +178,14 @@ exports.initialize = function (settings, util) {
         return toReturn;
     };
 
-    exports.getProblemJson = function (btime, btime_startOfDay, tenantId) {
+    exports.getProblemJson = function (btime, btime_startOfDay, btime_startOfWeekOffset, tenantId) {
         util.log.debug('getProblemJson starts with btime = ' + moment.unix(btime).toString() + ', tenant = ' + tenantId + ', btime_startOfDay = ' + moment.unix(btime_startOfDay).toString());
         var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
 
         var toReturn = {};
         toReturn.Problem = {};
         toReturn.Problem.General = getGeneralJson();
-        toReturn.Problem.Resources = getResourcesJson(btime, btime_startOfDay, tenantIdInMongo);
+        toReturn.Problem.Resources = getResourcesJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantIdInMongo);
 
         var ActivitiesAndDependencies = getActivitiesAndDependenciesJson(btime, btime_startOfDay, tenantIdInMongo);
         toReturn.Problem.Activities = ActivitiesAndDependencies.Activities;
@@ -311,12 +333,42 @@ exports.initialize = function (settings, util) {
     };
 
     exports.storeTask = function (task, tenantId, userId, tasksToBeDirtied) {
+        // Update
         if (task._id) {
-            task._id = new Packages.org.bson.types.ObjectId(task._id);
-            tasksToBeDirtied.push({_id: task._id, data: tasks.findOne(task._id).data});
-        }
+            task._id = new Packages.org.bson.types.ObjectId(task._id);  
+            var oldTask = tasks.findOne(task._id).data;
+            tasksToBeDirtied.push({_id: task._id, data: oldTask});
 
-        task.dirty = true;
+            task.dirty = false;
+            if (oldTask.type !== task.type)
+                task.dirty = true;
+            else if (oldTask.type === 'floating') {
+                if (oldTask.due !== task.due)
+                    task.dirty = true;
+                else if (oldTask.dur !== task.dur)
+                    task.dirty = true;
+                else if (JSON.stringify(oldTask.admissibleResources) !== JSON.stringify(task.admissibleResources))
+                    task.dirty = true;
+                else if (JSON.stringify(oldTask.needs) !== JSON.stringify(task.needs))
+                    task.dirty = true;
+                else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
+                    task.dirty = true;
+            }
+            else {
+                if (oldTask.start !== task.start)
+                    task.dirty = true;
+                else if (oldTask.dur !== task.dur)
+                    task.dirty = true;
+                else if (JSON.stringify(oldTask.resource) !== JSON.stringify(task.resource))
+                    task.dirty = true;
+                else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
+                    task.dirty = true;
+            }
+        }
+        // New task
+        else
+            task.dirty = true;
+
         task.tenant = new Packages.org.bson.types.ObjectId(tenantId);
         task.user = new Packages.org.bson.types.ObjectId(userId);
 
