@@ -2,7 +2,6 @@ exports.initialize = function (util) {
     var mongo = require('ringo-mongodb');
     var client = new mongo.MongoClient('localhost', 27017);
     var db = client.getDB('schedulogy');
-    var users = db.getCollection('user');
     var tasks = db.getCollection('task');
     var resources = db.getCollection('resource');
 
@@ -18,11 +17,6 @@ exports.initialize = function (util) {
                 toReturn += ",";
             else
                 first_resource = false;
-
-            if (resourceInMongo.data.type === 'user') {
-                var user = users.findOne({_id: new Packages.org.bson.types.ObjectId(resourceInMongo.data.user)}).data;
-                resourceInMongo.data.username = user.username ? user.username : user.email;
-            }
 
             toReturn += resourceInMongo.toJSON();
         });

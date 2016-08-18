@@ -419,6 +419,9 @@ exports.initialize = function (settings, util) {
     exports.getClientJson = function (tenantId) {
         var toReturn = "{\"tasks\": [";
         var first_task = true;
+        
+        var resourceNames = {};
+        
         tasks.find({tenant: tenantId}).forEach(function (task) {
             if (!first_task)
                 toReturn += ",";
@@ -429,7 +432,12 @@ exports.initialize = function (settings, util) {
             tasks.find({needs: task.id}).forEach(function (dependentTask) {
                 task.data.blocks.push(dependentTask.id);
             });
-
+            
+            if(!resourceNames[task.data.resource])
+                resourceNames[task.data.resource] = resources.findOne(new Packages.org.bson.types.ObjectId(task.data.resource)).data.name;
+               
+            task.data.resourceName = resourceNames[task.data.resource];
+            
             toReturn += task.toJSON();
         });
         toReturn += "]}";

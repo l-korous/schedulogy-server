@@ -108,7 +108,8 @@ exports.initialize = function (util, mongoResources) {
                 mongoResources.storeResource({
                     tenant: userData.tenant,
                     type: 'user',
-                    user: userData._id.toString()
+                    user: userData._id.toString(),
+                    name: userData.username ? userData.username : userData.email
                 });
                 return users.findOne({_id: userData._id});
             }
