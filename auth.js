@@ -1,4 +1,4 @@
-exports.initialize = function (settings, secrets, util, moment) {
+exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
     addToClasspath("./cpsolver/dist/java-jwt-2.1.0.jar");
     importPackage(com.auth0.jwt);
     importPackage(java.util);
@@ -26,8 +26,10 @@ exports.initialize = function (settings, secrets, util, moment) {
         try {
             var verifier = new JWTVerifier(secrets.jwtSecret);
             var claims = verifier.verify(token);
-            if (claims.get('uid') === userId)
+            if (claims.get('uid') === userId) {
+                // TODO: consult mongoUsers
                 return {msg: 'ok', tenantId: claims.get('tid')};
+            }
             else if (parseInt(claims.get('exp')) < moment().unix())
                 return {msg: 'expired'};
             else

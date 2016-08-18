@@ -20,7 +20,7 @@ exports.initialize = function (util) {
                 first_resource = false;
 
             if (resourceInMongo.data.type === 'user') {
-                var user = users.findOne({_id: resourceInMongo.data.user}).data;
+                var user = users.findOne({_id: new Packages.org.bson.types.ObjectId(resourceInMongo.data.user)}).data;
                 resourceInMongo.data.username = user.username ? user.username : user.email;
             }
 
@@ -34,14 +34,14 @@ exports.initialize = function (util) {
         util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + '.');
         var dirtiedTasks = 0;
 
-        tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}, resource: new Packages.org.bson.types.ObjectId(resourceId)}).forEach(function (task) {
+        tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}, resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
             tasks.save(task.data);
             dirtiedTasks++;
         });
 
-        tasks.find({type: 'floating', start: {$gte: btime}, admissibleResources: new Packages.org.bson.types.ObjectId(resourceId)}).forEach(function (task) {
+        tasks.find({type: 'floating', start: {$gte: btime}, admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
             tasks.save(task.data);
@@ -52,7 +52,7 @@ exports.initialize = function (util) {
         return dirtiedTasks;
     };
 
-    exports.storeResource = function (btime, resource, tenantId) {
+    exports.storeResource = function (resource, tenantId, btime) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
@@ -65,10 +65,8 @@ exports.initialize = function (util) {
             resource._id = new Packages.org.bson.types.ObjectId(resource._id);
         }
 
-        resource.tenant = new Packages.org.bson.types.ObjectId(resource.tenant || tenantId);
-
-        if (resource.user)
-            resource.user = new Packages.org.bson.types.ObjectId(resource.user);
+        if (!resource.tenant)
+            resource.tenant = tenantId;
 
         resources.save(resource);
         return 'ok';
@@ -80,7 +78,7 @@ exports.initialize = function (util) {
             // TODO Handle this better
             //return 'ok';
         }
-        resources.remove({_id: new Packages.org.bson.types.ObjectId(resourceIdInMongo)});
+        resources.remove({_id: new Packages.org.bson.types.ObjectId(resourceId)});
         return 'ok';
     };
 

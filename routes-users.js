@@ -20,7 +20,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
             var res = mongoUsers.updateUser(req.params);
             if (res === 'ok')
                 return {
-                    body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: new Packages.org.bson.types.ObjectId(req.session.data.tenantId)}))],
+                    body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
                     headers: settings.defaultHeaderJson,
                     status: 200
                 };
@@ -32,7 +32,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
             if (res.id) {
                 mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
                 return {
-                    body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: new Packages.org.bson.types.ObjectId(req.session.data.tenantId)}))],
+                    body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
                     headers: settings.defaultHeaderJson,
                     status: 200
                 };
@@ -46,7 +46,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         var res = mongoUsers.removeUser(userId);
         if (res === 'ok')
             return {
-                body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: new Packages.org.bson.types.ObjectId(req.session.data.tenantId)}))],
+                body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
                 headers: settings.defaultHeaderJson,
                 status: 200
             };
@@ -58,7 +58,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         util.log_request(req);
 
         return {
-            body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: new Packages.org.bson.types.ObjectId(req.session.data.tenantId)}))],
+            body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
             headers: settings.defaultHeaderJson,
             status: 200
         };

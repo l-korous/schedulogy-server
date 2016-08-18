@@ -67,9 +67,6 @@ exports.initialize = function (util, mongoResources) {
             if (user._id)
                 user._id = new Packages.org.bson.types.ObjectId(user._id);
 
-            if (user.tenant)
-                user.tenant = new Packages.org.bson.types.ObjectId(user.tenant);
-
             users.save(user);
             return 'ok';
         }
@@ -89,9 +86,7 @@ exports.initialize = function (util, mongoResources) {
             userData.new_user = true;
             userData.passwordResetHash = util.generatePasswordResetHash();
 
-            if (userData.tenant)
-                userData.tenant = new Packages.org.bson.types.ObjectId(userData.tenant);
-            else {
+            if (!userData.tenant) {
                 var tenantData = {name: userData.email};
                 var saved = tenants.save(tenantData);
                 if (saved.error) {
@@ -99,7 +94,7 @@ exports.initialize = function (util, mongoResources) {
                     return 'create_tenant_error';
                 }
                 else {
-                    userData.tenant = new Packages.org.bson.types.ObjectId(tenantData._id);
+                    userData.tenant = tenantData._id.toString();
                     userData.role = 'admin';
                 }
             }
@@ -113,7 +108,7 @@ exports.initialize = function (util, mongoResources) {
                 mongoResources.storeResource({
                     tenant: userData.tenant,
                     type: 'user',
-                    user: userData._id
+                    user: userData._id.toString()
                 });
                 return users.findOne({_id: userData._id});
             }
@@ -121,11 +116,10 @@ exports.initialize = function (util, mongoResources) {
     };
 
     exports.removeUser = function (userId) {
-        var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
-        var resource = resources.findOne({user: userIdInMongo});
+        var resource = resources.findOne({user: userId});
         var removeResourceRes = mongoResources.removeResource(resource.id);
         if (removeResourceRes === 'ok') {
-            users.remove({_id: userIdInMongo});
+            users.remove({_id: userId});
             return 'ok';
         }
         else

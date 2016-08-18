@@ -25,14 +25,13 @@ exports.initialize = function (settings, util) {
         var scheduledFloating = false;
         var dirtyFixed = false;
 
-        var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
-        tasks.find({tenant: tenantIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
+        tasks.find({tenant: tenantId, type: 'floating'}).forEach(function (floatingTask) {
             unscheduledFloating = unscheduledFloating || floatingTaskIsUnscheduled(floatingTask.data);
             scheduledFloating = scheduledFloating || (floatingTask.data.start >= btime);
         });
 
         if (!unscheduledFloating) {
-            tasks.find({tenant: tenantIdInMongo, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}}).forEach(function (fixedTask) {
+            tasks.find({tenant: tenantId, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}}).forEach(function (fixedTask) {
                 dirtyFixed = dirtyFixed || fixedTask.data.dirty;
             });
             if (dirtyFixed && scheduledFloating)
@@ -180,14 +179,13 @@ exports.initialize = function (settings, util) {
 
     exports.getProblemJson = function (btime, btime_startOfDay, btime_startOfWeekOffset, tenantId) {
         util.log.debug('getProblemJson starts with btime = ' + moment.unix(btime).toString() + ', tenant = ' + tenantId + ', btime_startOfDay = ' + moment.unix(btime_startOfDay).toString());
-        var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
-
+        
         var toReturn = {};
         toReturn.Problem = {};
         toReturn.Problem.General = getGeneralJson();
-        toReturn.Problem.Resources = getResourcesJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantIdInMongo);
+        toReturn.Problem.Resources = getResourcesJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantId);
 
-        var ActivitiesAndDependencies = getActivitiesAndDependenciesJson(btime, btime_startOfDay, tenantIdInMongo);
+        var ActivitiesAndDependencies = getActivitiesAndDependenciesJson(btime, btime_startOfDay, tenantId);
         toReturn.Problem.Activities = ActivitiesAndDependencies.Activities;
         toReturn.Problem.Dependencies = ActivitiesAndDependencies.Dependencies;
 
@@ -202,7 +200,7 @@ exports.initialize = function (settings, util) {
         solArray.forEach(function (solutionEl) {
             var start = util.slotToTime(solutionEl.StartTime, btime);
             // TODO - This will have to be changed if we start supporting multiple resources per task.
-            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {resource: new Packages.org.bson.types.ObjectId(solutionEl.Resource), start: start.toString(), dirty: false}});
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {resource: solutionEl.Resource, start: start.toString(), dirty: false}});
         });
     };
 
@@ -318,8 +316,7 @@ exports.initialize = function (settings, util) {
     };
 
     exports.recalculateConstraints = function (btime, tenantId) {
-        var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
-        tasks.find({tenant: tenantIdInMongo}).forEach(function (task) {
+        tasks.find({tenant: tenantId}).forEach(function (task) {
             exports.recalculateConstraint(task.data, task.id, btime, true);
         });
     };
@@ -337,49 +334,49 @@ exports.initialize = function (settings, util) {
         if (task._id) {
             task._id = new Packages.org.bson.types.ObjectId(task._id);  
             var oldTask = tasks.findOne(task._id).data;
-            tasksToBeDirtied.push({_id: task._id, data: oldTask});
-
+            util.log.debug('oldTask:' + JSON.stringify(oldTask.admissibleResources));
+            
             task.dirty = false;
             if (oldTask.type !== task.type)
-                task.dirty = true;
+                tasksToBeDirtied.push({_id: task._id, data: oldTask});
             else if (oldTask.type === 'floating') {
                 if (oldTask.due !== task.due)
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (oldTask.dur !== task.dur)
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (JSON.stringify(oldTask.admissibleResources) !== JSON.stringify(task.admissibleResources))
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (JSON.stringify(oldTask.needs) !== JSON.stringify(task.needs))
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
             }
             else {
                 if (oldTask.start !== task.start)
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (oldTask.dur !== task.dur)
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (JSON.stringify(oldTask.resource) !== JSON.stringify(task.resource))
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
                 else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
-                    task.dirty = true;
+                    tasksToBeDirtied.push({_id: task._id, data: oldTask});
             }
         }
         // New task
         else
-            task.dirty = true;
+            tasksToBeDirtied.push({_id: task._id, data: oldTask});
 
-        task.tenant = new Packages.org.bson.types.ObjectId(tenantId);
-        task.user = new Packages.org.bson.types.ObjectId(userId);
+        task.tenant = tenantId;
+        task.user = userId;
 
         // By default, users use their own single resource.
         if (!task.admissibleResources) {
             task.admissibleResources = [];
-            task.admissibleResources.push(new Packages.org.bson.types.ObjectId(resources.findOne({type: 'user', user: task.user}).id));
+            task.admissibleResources.push(resources.findOne({type: 'user', user: task.user}).id);
         }
         else {
             for (var i = 0; i < task.admissibleResources.length; i++)
-                task.admissibleResources[i] = new Packages.org.bson.types.ObjectId(task.admissibleResources[i]);
+                task.admissibleResources[i] = task.admissibleResources[i];
         }
 
         tasks.save(task);
@@ -414,8 +411,7 @@ exports.initialize = function (settings, util) {
     };
 
     exports.removeTasks = function (searchObject, tenantId) {
-        var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
-        searchObject.tenant = tenantIdInMongo;
+        searchObject.tenant = tenantId;
         tasks.find(searchObject).forEach(function (task) {
             exports.removeTask(task.id);
         });
@@ -423,8 +419,7 @@ exports.initialize = function (settings, util) {
     exports.getClientJson = function (tenantId) {
         var toReturn = "{\"tasks\": [";
         var first_task = true;
-        var tenantIdInMongo = new Packages.org.bson.types.ObjectId(tenantId);
-        tasks.find({tenant: tenantIdInMongo}).forEach(function (task) {
+        tasks.find({tenant: tenantId}).forEach(function (task) {
             if (!first_task)
                 toReturn += ",";
             else

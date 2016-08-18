@@ -10,8 +10,14 @@ var moment = require('./bower_components/moment/moment.js');
 var util = require('./util.js');
 util.initialize(settings, moment);
 
+var mongoResources = require('./mongo-resources.js');
+mongoResources.initialize(util);
+
+var mongoUsers = require('./mongo-users.js');
+mongoUsers.initialize(util, mongoResources);
+
 var auth = require('./auth.js');
-auth.initialize(settings, secrets, util, moment);
+auth.initialize(settings, secrets, util, moment, mongoUsers);
 app.configure(auth);
 app.configure('session');
 
@@ -23,12 +29,6 @@ mongoIcal.initialize(app, settings, util, moment, mongoTasks);
 
 var mongoUtil = require('./mongo-util.js');
 mongoUtil.initialize(util);
-
-var mongoResources = require('./mongo-resources.js');
-mongoResources.initialize(util);
-
-var mongoUsers = require('./mongo-users.js');
-mongoUsers.initialize(util, mongoResources);
 
 var solver = require('./solver.js');
 solver.initialize(settings, util);

@@ -56,8 +56,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks) {
             util.log.debug('saveImportedTask - task not in the past (' + taskEnd.toString() + '), creating if not exists: ' + taskTitle);
 
             var uid = component.getProperty('UID').getValue();
-            var userIdInMongo = new Packages.org.bson.types.ObjectId(userId);
-            var exists = mongoTasks.getSingleTask({user: userIdInMongo, iCalUid: uid});
+            var exists = mongoTasks.getSingleTask({user: userId, iCalUid: uid});
             if (!exists) {
                 util.log.debug('saveImportedTask - task not exists, creating new...');
 
