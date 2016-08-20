@@ -31,7 +31,8 @@ exports.initialize = function (settings, util) {
         });
 
         if (!unscheduledFloating) {
-            tasks.find({tenant: tenantId, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}}).forEach(function (fixedTask) {
+            // $gte: btime is a bug probably in the Mongo driver.
+            tasks.find({tenant: tenantId, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}}).forEach(function (fixedTask) {
                 dirtyFixed = dirtyFixed || fixedTask.data.dirty;
             });
             if (dirtyFixed && scheduledFloating)
@@ -75,7 +76,8 @@ exports.initialize = function (settings, util) {
             for (var i = 0; i < bTimeActualSlot; i++)
                 timePreferences.push({s: i});
 
-            tasks.find({resource: resource.id, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}}).forEach(function (fixedTask) {
+// $gte: btime is a bug probably in the Mongo driver.
+            tasks.find({resource: resource.id, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}}).forEach(function (fixedTask) {
                 var start = fixedTask.data.start;
                 var end = util.getUnixEnd(fixedTask.data);
 
@@ -227,8 +229,6 @@ exports.initialize = function (settings, util) {
             if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && util.getUnixEnd(prerequisiteTask.data) > btime) {
                 constraintsUtilArray.push(prerequisiteTaskId);
                 toReturn += util.getUnixDuration(prerequisiteTask.data) + getStartConstraintFromDeps(prerequisiteTask.data, btime);
-                if (prerequisiteTask.data.type !== 'floating')
-                    toReturn += (prerequisiteTask.data.start - btime);
                 util.log.debug('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
             }
         });
@@ -240,32 +240,36 @@ exports.initialize = function (settings, util) {
     // - all tasks with due date before this task (with dependencies)
     // - all fixed tasks which have to occur before due - dur
     var getStartConstraint = function (task, btime, clear) {
-        util.log.debug('getStartConstraint starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
+        if (task.type !== 'floating')
+            util.log.error('getStartConstraint called for a !floating Task.');
+
+        util.log.debug('getStartConstraint starts with task = ' + (task.title ? task.title : '(new)') + ', due: ' + moment.unix(task.due).toString() + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = 0;
         if (clear)
             constraintsUtilArray = [];
         // This is for the case that task itself is not stored in DB.
-        if (!(task._id.toString()) || constraintsUtilArray.indexOf(task._id.toString()) === -1) {
+        if (!task._id || constraintsUtilArray.indexOf(task._id.toString()) === -1) {
             toReturn += getStartConstraintFromDeps(task, btime);
             if (toReturn)
                 util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
             constraintsUtilArray.push(task._id);
         }
 
-        tasks.find({due: {$lte: task.due, $gte: btime}, type: 'floating'}).forEach(function (taskWithLeqDue) {
+        tasks.find({resource: task.resource, due: {$lte: task.due, $gte: btime - 1}, type: 'floating'}).forEach(function (taskWithLeqDue) {
             if (constraintsUtilArray.indexOf(taskWithLeqDue.id) === -1) {
-                toReturn += getStartConstraintFromDeps(taskWithLeqDue.data, btime);
+                toReturn += util.getUnixDuration(taskWithLeqDue.data) + getStartConstraintFromDeps(taskWithLeqDue.data, btime);
                 if (toReturn)
                     util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
-                constraintsUtilArray.push(task._id);
+                constraintsUtilArray.push(taskWithLeqDue._id);
             }
         });
-        tasks.find({start: {$lte: task.due, $gte: btime}, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (taskWithLeqStart) {
+        // Fixed tasks do not have dependences.
+        tasks.find({resource: task.resource, start: {$lte: task.due, $gte: btime - 1}, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (taskWithLeqStart) {
             if (constraintsUtilArray.indexOf(taskWithLeqStart.id) === -1) {
-                toReturn += getStartConstraintFromDeps(taskWithLeqStart.data, btime);
+                toReturn += util.getUnixDuration(taskWithLeqStart.data);
                 if (toReturn)
                     util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
-                constraintsUtilArray.push(task._id);
+                constraintsUtilArray.push(taskWithLeqStart._id);
             }
         });
         util.log.debug('getStartConstraint finishes with: ' + toReturn);
@@ -279,7 +283,7 @@ exports.initialize = function (settings, util) {
         util.log.debug('getEndConstraint starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
         constraintsUtilArray = [task._id];
-        var dependentTasks = task._id.toString() ? tasks.find({needs: task._id.toString()}).toArray() : task.blocks;
+        var dependentTasks = task._id ? tasks.find({needs: task._id.toString()}).toArray() : task.blocks;
         dependentTasks.forEach(function (dependentTask) {
             util.log.debug('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
             var depLatestStartTimestartTime = util.getUnixStart(dependentTask);
@@ -296,10 +300,11 @@ exports.initialize = function (settings, util) {
     exports.recalculateConstraint = function (task, btime, save) {
         util.log.debug('recalculateConstraint starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
         if (util.getUnixEnd(task) > btime) {
-            var startConstraint = getStartConstraint(task, btime, true);
+            // TODO This means that for fixed tasks, we do not have prerequisites, or any bound on start.
+            var startConstraint = task.type === 'floating' ? getStartConstraint(task, btime, true) : null;
             var endConstraint = getEndConstraint(task, btime);
             var constraint = {
-                start: startConstraint ? moment.unix(parseInt(btime) + startConstraint).toISOString() : null,
+                start: moment.unix(parseInt(btime) + startConstraint).toISOString(),
                 end: endConstraint ? moment.unix(endConstraint).toISOString() : null
             };
 
@@ -314,7 +319,8 @@ exports.initialize = function (settings, util) {
     };
 
     exports.recalculateConstraints = function (btime, tenantId) {
-        tasks.find({tenant: tenantId, start: {$gte: btime}}).forEach(function (task) {
+        // $gte: btime is a bug probably in the Mongo driver.
+        tasks.find({tenant: tenantId, start: {$gte: btime - 1}}).forEach(function (task) {
             exports.recalculateConstraint(task.data, btime, true);
         });
     };
