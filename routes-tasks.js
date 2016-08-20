@@ -46,17 +46,16 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     app.post('/api/task', function (req) {
         util.log_request(req);
         var task = req.postParams;
-        var tasksToBeDirtied = [];
-        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId, tasksToBeDirtied);
-        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.tenantId, tasksToBeDirtied);
+        var rollbackTaskValues = [];
+        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId, rollbackTaskValues);
+        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.tenantId, rollbackTaskValues);
     });
 
     app.post('/api/task/checkConstraints', function (req, what) {
         util.log_request(req);
         var task = req.postParams;
-        util.cdir(req.postParams);
         return {
-            body: [JSON.stringify(mongoTasks.recalculateConstraint(task, task._id, req.params.btime, false))],
+            body: [JSON.stringify(mongoTasks.recalculateConstraint(task, req.params.btime, false))],
             headers: settings.defaultHeaderJson,
             status: 200
         };

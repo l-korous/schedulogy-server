@@ -50,16 +50,9 @@ exports.initialize = function (settings, moment) {
         log.debug('** timeToSlot: timeMinusWeeks = ' + timeMinusWeeks.toString());
         var days = timeMinusWeeks.diff(btime, 'd');
         log.debug('** timeToSlot: days = ' + days);
-        // There is a weekend in between
-        var weekendInBetween = false;
-        if ((timeMinusWeeks.isoWeekday() < btime.isoWeekday()) || ((timeMinusWeeks.isoWeekday() === btime.isoWeekday()) && (timeMinusWeeks.hours() < btime.hours()))) {
-            days -= 2;
-            weekendInBetween = true;
-        }
-        log.debug('** timeToSlot: weekendInBetween = ' + weekendInBetween);
         var daySlots = days * settings.hoursPerDay * settings.slotsPerHour;
         log.debug('** timeToSlot: daySlots = ' + daySlots);
-        var timeMinusDays = timeMinusWeeks.clone().subtract(days + (weekendInBetween * 2), 'd');
+        var timeMinusDays = timeMinusWeeks.clone().subtract(days, 'd');
         log.debug('** timeToSlot: timeMinusDays = ' + timeMinusDays);
         var slots = 0;
         // This is for the case that time is earlier (but on a further day) than btime.
@@ -89,7 +82,7 @@ exports.initialize = function (settings, moment) {
         log.debug('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
         var endOfDay = settings.endSlot - exports.ToSlots(btime);
         log.debug('** slotToTime - endOfDay: ' + endOfDay);
-        var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').subtract(3, 'd').add(settings.endSlot * settings.minGranularity, 'm');
+        var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').add(settings.endSlot * settings.minGranularity, 'm');
         log.debug('** slotToTime - endOfWeek: ' + endOfWeek);
         var weekMinutes = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour)) * 7 * 1440;
         log.debug('** slotToTime - weekMinutes: ' + weekMinutes);

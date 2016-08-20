@@ -24,21 +24,30 @@ exports.initialize = function (util) {
         return toReturn;
     };
 
-    var markResourceTasksAsDirty = function (btime, resourceId) {
+    var markResourceTasksAsDirty = function (btime, resourceId, replacementResourceId) {
         util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + '.');
         var dirtiedTasks = 0;
 
         tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}, resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
-            tasks.save(task.data);
+            if (replacementResourceId)
+                task.data.resource = replacementResourceId;
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
             dirtiedTasks++;
         });
 
         tasks.find({type: 'floating', start: {$gte: btime}, admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
-            tasks.save(task.data);
+            if (replacementResourceId) {
+                var index = task.data.admissibleResources.findIndex(function (dep) {
+                    return dep === resourceId;
+                });
+                task.data.admissibleResources.splice(index, 1);
+                task.data.admissibleResources.push(replacementResourceId);
+            }
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
             dirtiedTasks++;
         });
 
