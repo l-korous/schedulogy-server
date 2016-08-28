@@ -23,12 +23,12 @@ exports.initialize = function (util) {
         toReturn += "]}";
         return toReturn;
     };
-
-    var markResourceTasksAsDirty = function (btime, resourceId, replacementResourceId) {
+    
+    exports.markResourceTasksAsDirty = function (btime, resourceId, replacementResourceId) {
         util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + '.');
         var dirtiedTasks = 0;
 
-        tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime}, resource: resourceId}).forEach(function (task) {
+        tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
             if (replacementResourceId)
@@ -37,7 +37,7 @@ exports.initialize = function (util) {
             dirtiedTasks++;
         });
 
-        tasks.find({type: 'floating', start: {$gte: btime}, admissibleResources: resourceId}).forEach(function (task) {
+        tasks.find({type: 'floating', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
             if (replacementResourceId) {
@@ -65,6 +65,7 @@ exports.initialize = function (util) {
                     // return 'ok';
                 }
             }
+            
             resource._id = new Packages.org.bson.types.ObjectId(resource._id);
         }
 
@@ -75,8 +76,8 @@ exports.initialize = function (util) {
         return 'ok';
     };
 
-    exports.removeResource = function (btime, resourceId) {
-        var dirtiedTasks = markResourceTasksAsDirty(btime, resourceId);
+    exports.removeResource = function (btime, resourceId, replacementResourceId) {
+        var dirtiedTasks = markResourceTasksAsDirty(btime, resourceId, replacementResourceId);
         if (dirtiedTasks > 0) {
             // TODO Handle this better
             //return 'ok';

@@ -9,7 +9,7 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
             return util.simpleResponse(err.toString());
         }
     });
-    
+
     app.post('/api/msg', function (req) {
         util.log_request(req);
         try {
@@ -39,7 +39,7 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
 
     app.post("/api/reset-password", function (req) {
         var res = mongoUtil.getUserByEmailInternal(req.params.email);
-        if (res.id) {
+        if (typeof res === 'object') {
             var newHash = util.generatePasswordResetHash();
             mongoUtil.storePasswordResetHash(res.data._id, newHash);
             mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, newHash));
@@ -51,16 +51,5 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
     app.post('/api/authenticate', function (req) {
         // The middle ware takes care of forbidden states, once we get here, all is OK.
         return util.simpleResponse('ok');
-    });
-
-    app.post('/api/password-reset-check', function (req) {
-        var res = mongoUtil.verifyPasswordResetLink(req.params.userId, req.params.passwordResetHash);
-        return util.simpleResponse(res);
-    });
-
-    app.post('/api/activate', function (req) {
-        util.log_request(req);
-        var res = mongoUtil.activateUser(req.params.password, req.params.userId, req.params.passwordResetHash);
-        return util.simpleResponse(res);
     });
 };

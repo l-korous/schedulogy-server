@@ -64,8 +64,16 @@ exports.initialize = function (util, mongoResources) {
 
     exports.updateUser = function (user) {
         try {
-            if (user._id)
+            if (!user._id)
+                util.log.error('Missing user._id in updateUser');
+            else {
                 user._id = new Packages.org.bson.types.ObjectId(user._id);
+                var oldUser = users.findOne(user._id).data;
+                for (var key in oldUser) {
+                    if (!user[key])
+                        user[key] = oldUser[key];
+                }
+            }
 
             users.save(user);
             return 'ok';
@@ -116,11 +124,11 @@ exports.initialize = function (util, mongoResources) {
         }
     };
 
-    exports.removeUser = function (userId) {
+    exports.removeUser = function (btime, userId) {
         var resource = resources.findOne({user: userId});
-        var removeResourceRes = mongoResources.removeResource(resource.id);
+        var removeResourceRes = mongoResources.removeResource(btime, resource.id);
         if (removeResourceRes === 'ok') {
-            users.remove({_id: userId});
+            users.remove({_id: new Packages.org.bson.types.ObjectId(userId)});
             return 'ok';
         }
         else
@@ -146,5 +154,40 @@ exports.initialize = function (util, mongoResources) {
         catch (msg) {
             return msg ? msg : '';
         }
+    };
+
+    exports.verifyPasswordResetLink = function (userId, passwordResetHash) {
+        try {
+            var existingUser = users.findOne(new Packages.org.bson.types.ObjectId(userId));
+
+            if (!existingUser) {
+                util.log.error('verifyPasswordResetLink: (!) existing');
+                return '!existing';
+            }
+            else {
+                if (existingUser.data.passwordResetHash === '') {
+                    util.log.error('verifyPasswordResetLink: (!) used');
+                    return 'used';
+                }
+                else if (existingUser.data.passwordResetHash === passwordResetHash)
+                    return 'ok';
+                else
+                    return 'password';
+            }
+        }
+        catch (e) {
+            return 'error';
+        }
+    };
+
+    exports.activateUser = function (password, userId, passwordResetHash) {
+        var linkCheck = exports.verifyPasswordResetLink(userId, passwordResetHash);
+        if (linkCheck === 'ok') {
+            var passwordHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
+            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {active: 1, password: passwordHash, passwordResetHash: ''}});
+            return exports.getUserById(userId);
+        }
+        else
+            return linkCheck;
     };
 };

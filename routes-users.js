@@ -43,7 +43,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
 
     app.del('/api/user/:userId', function (req, userId) {
         util.log_request(req);
-        var res = mongoUsers.removeUser(userId);
+        var res = mongoUsers.removeUser(req.params.btime, userId);
         if (res === 'ok')
             return {
                 body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
@@ -93,5 +93,24 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         util.log_request(req);
         var res = mongoUsers.setPassword(req.session.data.userId, req.params.password);
         return util.simpleResponse(res);
+    });
+
+    app.post('/api/password-reset-check', function (req) {
+        var res = mongoUsers.verifyPasswordResetLink(req.params.userId, req.params.passwordResetHash);
+        return util.simpleResponse(res);
+    });
+
+    app.post('/api/activate', function (req) {
+        util.log_request(req);
+        var res = mongoUsers.activateUser(req.params.password, req.params.userId, req.params.passwordResetHash);
+        if (typeof res === 'object') {
+            return {
+                body: [JSON.stringify(res)],
+                headers: settings.defaultHeaderJson,
+                status: 200
+            };
+        }
+        else
+            return util.simpleResponse(res);
     });
 };

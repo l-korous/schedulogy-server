@@ -9,6 +9,7 @@ exports.initialize = function (settings, util) {
     exports.solve = function (problemJson) {
         var calculator = new Calculator;
 
+        util.log.info('Calculator starting to calculate');
         var solution = calculator.calculate(JSON.stringify(problemJson), settings.solverTimeout);
 
         util.cdir(solution, true);

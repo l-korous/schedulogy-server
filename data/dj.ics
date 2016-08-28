@@ -1,0 +1,1140 @@
+BEGIN:VCALENDAR
+PRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN
+VERSION:2.0
+METHOD:PUBLISH
+X-CALSTART:20160828T000000
+X-CALEND:20160926T133000Z
+X-CLIPSTART:20160827T220000Z
+X-CLIPEND:20160926T220000Z
+X-WR-RELCALID:{00000135-9B04-7E23-4ABD-B072094DC5E1}
+X-WR-CALNAME:Darja Gogunova
+X-PRIMARY-CALENDAR:TRUE
+X-OWNER;CN="Darja Gogunova":mailto:darja@snapshot.travel
+X-MS-OLK-WKHRSTART;TZID="Central European Standard Time":070000
+X-MS-OLK-WKHREND;TZID="Central European Standard Time":200000
+X-MS-OLK-WKHRDAYS:MO,TU,WE,TH,FR
+BEGIN:VTIMEZONE
+TZID:Central European Standard Time
+BEGIN:STANDARD
+DTSTART:16011028T030000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010325T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+ATTENDEE;CN="Bartosz Raczek";RSVP=TRUE:mailto:Bartosz.Raczek@euvic.pl
+ATTENDEE;CN="Sebastien Januskiewicz";RSVP=TRUE:mailto:sebastien@snapshot.tr
+	avel
+ATTENDEE;CN="Flavia Pioltelli";RSVP=TRUE:mailto:flavia@snapshot.travel
+ATTENDEE;CN="Piotr Kowalski";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:Piotr.Ko
+	walski@euvic.pl
+ATTENDEE;CN="David Turnbull";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:david@sn
+	apshot.travel
+ATTENDEE;CN="Tomasz Krzysteczko";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:Toma
+	sz.Krzysteczko@euvic.pl
+CATEGORIES:DMA
+CLASS:PUBLIC
+CREATED:20160523T092712Z
+DESCRIPTION:\n\n-----Original Appointment-----\nFrom: Agata Goraus [mailto:
+	Agata.Goraus@euvic.pl] \nSent: Friday\, November 27\, 2015 11:59 AM\nTo: A
+	gata Goraus\; Bartosz Raczek\; Darja Gogunova\; Sebastien Januskiewicz\; F
+	lavia Pioltelli\nCc: Piotr Kowalski\; David Turnbull\; Tomasz Krzysteczko\
+	nSubject: DMA Product Meeting\nWhen: Occurs every 2 week(s) on Monday effe
+	ctive 3/14/2016 from 2:00 PM to 3:30 PM (UTC+01:00) Sarajevo\, Skopje\, Wa
+	rsaw\, Zagreb.\nWhere: Skype\n\n\nAgenda:\n\nhttps://conhos.atlassian.net/
+	wiki/display/Product/DMA+Product+Call+Meeting+Notes\n\n  _________________
+	_______________  \nZ dumą informujemy\, że po 10 latach na rynku spółk
+	a LGBS Polska Sp. z o.o. zmieniła nazwę na EUVIC Sp. z o.o.. Więcej inf
+	ormacji na naszej nowej stronie www.euvic.pl <http://www.euvic.pl> . \nWe 
+	are proud to inform you that after 10 years of performing on the IT market
+	\, the LGBS Poland Sp. z o.o. company has changed its name to EUVIC Sp z o
+	.o. More information you can get on www.euvic.pl <http://www.euvic.pl> .\n
+DTEND;TZID="Central European Standard Time":20160829T153000
+DTSTAMP:20160304T084808Z
+DTSTART;TZID="Central European Standard Time":20160829T140000
+LAST-MODIFIED:20160823T081757Z
+LOCATION:Skype
+ORGANIZER;CN="Agata Goraus":mailto:Agata.Goraus@euvic.pl
+PRIORITY:5
+RRULE:FREQ=WEEKLY;COUNT=3;INTERVAL=2;BYDAY=MO;WKST=MO
+SEQUENCE:19
+SUMMARY;LANGUAGE=en-ie:FW: DMA Product Meeting
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000E0A347DE0429D101000000000000000
+	010000000146B028F439C8C42BAE26570E01B5B67
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="pl"></SPAN><SPAN LANG="
+	en-us"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="pl"></SPAN><SPAN LANG="en-us"
+	><FONT FACE="Calibri">-----Original Appointment-----<BR>\n</FONT></SPAN><S
+	PAN LANG="pl"><B></B></SPAN><B><SPAN LANG="en-us"><FONT FACE="Calibri">Fro
+	m:</FONT></SPAN></B><SPAN LANG="pl"></SPAN><SPAN LANG="en-us"><FONT FACE="
+	Calibri"> Agata Goraus [</FONT></SPAN><SPAN LANG="pl"></SPAN><A HREF="mail
+	to:Agata.Goraus@euvic.pl"><SPAN LANG="pl"><U></U></SPAN><U><SPAN LANG="en-
+	us"><FONT COLOR="#0563C1" FACE="Calibri">mailto:Agata.Goraus@euvic.pl</FON
+	T></SPAN></U><SPAN LANG="pl"></SPAN></A><SPAN LANG="pl"></SPAN><SPAN LANG=
+	"en-us"><FONT FACE="Calibri">]<BR>\n</FONT></SPAN><SPAN LANG="pl"><B></B><
+	/SPAN><B><SPAN LANG="en-us"><FONT FACE="Calibri">Sent:</FONT></SPAN></B><S
+	PAN LANG="pl"></SPAN><SPAN LANG="en-us"><FONT FACE="Calibri"> Friday\, Nov
+	ember 27\, 2015 11:59 AM<BR>\n</FONT></SPAN><SPAN LANG="pl"><B></B></SPAN>
+	<B><SPAN LANG="en-us"><FONT FACE="Calibri">To:</FONT></SPAN></B><SPAN LANG
+	="pl"></SPAN><SPAN LANG="en-us"><FONT FACE="Calibri"> Agata Goraus\; Barto
+	sz Raczek\; Darja Gogunova\; Sebastien Januskiewicz\; Flavia Pioltelli<BR>
+	\n</FONT></SPAN><SPAN LANG="pl"><B></B></SPAN><B><SPAN LANG="en-us"><FONT 
+	FACE="Calibri">Cc:</FONT></SPAN></B><SPAN LANG="pl"></SPAN><SPAN LANG="en-
+	us"><FONT FACE="Calibri"> Piotr Kowalski\; David Turnbull\; Tomasz Krzyste
+	czko<BR>\n</FONT></SPAN><SPAN LANG="pl"><B></B></SPAN><B><SPAN LANG="en-us
+	"><FONT FACE="Calibri">Subject:</FONT></SPAN></B><SPAN LANG="pl"></SPAN><S
+	PAN LANG="en-us"><FONT FACE="Calibri"> DMA Product Meeting<BR>\n</FONT></S
+	PAN><SPAN LANG="pl"><B></B></SPAN><B><SPAN LANG="en-us"><FONT FACE="Calibr
+	i">When:</FONT></SPAN></B><SPAN LANG="pl"></SPAN><SPAN LANG="en-us"><FONT 
+	FACE="Calibri"> Occurs every 2 week(s) on Monday effective 3/14/2016 from 
+	2:00 PM to 3:30 PM (UTC+01:00) Sarajevo\, Skopje\, Warsaw\, Zagreb.<BR>\n<
+	/FONT></SPAN><SPAN LANG="pl"><B></B></SPAN><B><SPAN LANG="en-us"><FONT FAC
+	E="Calibri">Where:</FONT></SPAN></B><SPAN LANG="pl"></SPAN><SPAN LANG="en-
+	us"><FONT FACE="Calibri"> Skype</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG
+	="pl"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="pl"><FONT FACE="Calibri">Agend
+	a:</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="pl"></SPAN><A HREF="https:/
+	/conhos.atlassian.net/wiki/display/Product/DMA+Product+Call+Meeting+Notes"
+	><SPAN LANG="pl"><U><FONT COLOR="#0563C1" FACE="Calibri">https://conhos.at
+	lassian.net/wiki/display/Product/DMA+Product+Call+Meeting+Notes</FONT></U>
+	</SPAN><SPAN LANG="pl"></SPAN></A><SPAN LANG="pl"></SPAN></P>\n\n<P DIR=LT
+	R><SPAN LANG="pl"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="pl"></SPAN><SPAN L
+	ANG="pl"></SPAN><SPAN LANG="pl"><U><FONT COLOR="#000000" FACE="Times New R
+	oman">  ________________________________  </FONT></U></SPAN></P>\n\n<P D
+	IR=LTR><SPAN LANG="pl"></SPAN><SPAN LANG="pl"></SPAN><SPAN LANG="pl"><FONT
+	 COLOR="#000000" FACE="Times New Roman CE">Z dumą informujemy\, że po 10
+	 latach na rynku spółka LGBS Polska Sp. z o.o. zmieniła nazwę na EUVIC
+	 Sp. z o.o.. Więcej informacji na naszej nowej stronie</FONT></SPAN><SPAN
+	 LANG="pl"> </SPAN><A HREF="http://www.euvic.pl"><SPAN LANG="pl"></SPAN><S
+	PAN LANG="pl"></SPAN><SPAN LANG="pl"><U><FONT COLOR="#0563C1" FACE="Times 
+	New Roman">www.euvic.pl</FONT></U></SPAN><SPAN LANG="pl"></SPAN></A><SPAN 
+	LANG="pl"></SPAN><SPAN LANG="pl"></SPAN><SPAN LANG="pl"><FONT COLOR="#0000
+	00" FACE="Times New Roman">.</FONT></SPAN><SPAN LANG="pl"></SPAN><SPAN LAN
+	G="pl"></SPAN><SPAN LANG="pl"><FONT FACE="Times New Roman"> </FONT></SPAN>
+	</P>\n\n<P DIR=LTR><SPAN LANG="pl"></SPAN><SPAN LANG="pl"></SPAN><SPAN LAN
+	G="pl"><FONT COLOR="#000000" FACE="Times New Roman">We are proud to inform
+	 you that after 10 years of performing on the IT market\, the LGBS Poland 
+	Sp. z o.o. company has changed its name to EUVIC Sp z o.o. More informatio
+	n you can get on</FONT></SPAN><SPAN LANG="pl"> </SPAN><A HREF="http://www.
+	euvic.pl"><SPAN LANG="pl"></SPAN><SPAN LANG="pl"></SPAN><SPAN LANG="pl"><U
+	><FONT COLOR="#0563C1" FACE="Times New Roman">www.euvic.pl</FONT></U></SPA
+	N><SPAN LANG="pl"></SPAN></A><SPAN LANG="pl"></SPAN><SPAN LANG="pl"></SPAN
+	><SPAN LANG="pl"><FONT COLOR="#000000" FACE="Times New Roman">.</FONT></SP
+	AN><SPAN LANG="pl"></SPAN></P>\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160129T095813Z
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+CLASS:PUBLIC
+CREATED:20160823T081820Z
+DESCRIPTION:Agenda:\n \nhttps://conhos.atlassian.net/wiki/display/Product/D
+	MA+Product+Call+Meeting+Notes\n \n
+DTEND:20160830T133000Z
+DTSTAMP:20160822T073522Z
+DTSTART:20160830T120000Z
+LAST-MODIFIED:20160823T081757Z
+LOCATION:Skype
+PRIORITY:5
+RECURRENCE-ID:20160829T120000Z
+SEQUENCE:36
+SUMMARY;LANGUAGE=en-us:DMA Product Meeting
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000E0A347DE0429D101000000000000000
+	010000000146B028F439C8C42BAE26570E01B5B67
+X-ALT-DESC;FMTTYPE=text/html:<html><head><meta http-equiv="Content-Type" co
+	ntent="text/html\; charset=iso-8859-2"><meta name="Generator" content="Mic
+	rosoft Exchange Server"><!-- converted from rtf --><style><!-- .EmailQuote
+	 { margin-left: 1pt\; padding-left: 4pt\; border-left: #800000 2px solid\;
+	 } --></Style></Head><body><font face="Calibri" size="2"><span style="font
+	-size:11pt\;"><div>Agenda:</Div><div> </Div><div><a href="https://conhos.a
+	tlassian.net/wiki/display/Product/DMA+Product+Call+Meeting+Notes"><font co
+	lor="#0563C1"><u>https://conhos.atlassian.net/wiki/display/Product/DMA+Pro
+	duct+Call+Meeting+Notes</U></Font></A></Div><div> </Div></Span></Font></Bo
+	dy></Html>
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+CLASS:PUBLIC
+CREATED:20160405T171727Z
+DESCRIPTION:\n
+DTEND;VALUE=DATE:20160924
+DTSTAMP:20160828T123343Z
+DTSTART;VALUE=DATE:20160912
+LAST-MODIFIED:20160405T171647Z
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:Holiday
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E0080000000010F4A2BD6F8FD101000000000000000
+	01000000098AE812769194446A13720F3242FFFBC
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"></SPAN></P>\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:OOF
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-AUTOFILLLOCATION:TRUE
+X-MS-OLK-CONFTYPE:0
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Piotr Kowalski";ROLE=OPT-PARTICIPANT;RSVP=TRUE;PARTSTAT=DECLIN
+	ED:mailto:piotr@snapshot.travel
+ATTENDEE;CN="Dominik Pinter";RSVP=TRUE;PARTSTAT=DECLINED:mailto:dominik@sna
+	pshot.travel
+ATTENDEE;CN="Sebastien Januskiewicz";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:seb
+	astien@snapshot.travel
+ATTENDEE;CN="Mandy Schulze";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:mandy@snapsh
+	ot.travel
+ATTENDEE;CN="Martin Soler";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:martin@snapsh
+	ot.travel
+ATTENDEE;CN="Flavia Pioltelli (flavia@snapshot.travel)";RSVP=TRUE:invalid:n
+	omail
+ATTENDEE;CN="Lukas Korous";ROLE=OPT-PARTICIPANT;RSVP=TRUE;PARTSTAT=ACCEPTED
+	:mailto:lukas.korous@snapshot.travel
+ATTENDEE;CN="Iris Steinmetz";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:iris@snapsh
+	ot.travel
+ATTENDEE;CN="Linda Girrbach (linda@snapshot.travel)";RSVP=TRUE;PARTSTAT=ACC
+	EPTED:invalid:nomail
+CATEGORIES:PM
+CLASS:PUBLIC
+CREATED:20160126T101713Z
+DESCRIPTION:As agreed\, this meeting is to get ourselves aligned in terms o
+	f product interdependencies and roadmaps. All common projects to be discus
+	sed here as well.\n\nhttps://conhos.atlassian.net/wiki/display/PM/Product+
+	Alignment+Meetings here is our meeting agenda/notes space\n
+DTEND;TZID="Central European Standard Time":20160901T150000
+DTSTAMP:20160524T113640Z
+DTSTART;TZID="Central European Standard Time":20160901T140000
+LAST-MODIFIED:20160824T130150Z
+LOCATION:Skype or in person when possible
+ORGANIZER;CN="Darja Gogunova":mailto:darja@snapshot.travel
+PRIORITY:5
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=TH
+SEQUENCE:9
+SUMMARY;LANGUAGE=en-us:Product Update
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000B073E0A02A58D101000000000000000
+	01000000076A65E55E24B1F448759ACF2C9CBE307
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">As agreed\, 
+	this meeting is to get ourselves aligned in terms of product interdependen
+	cies and roadmaps. All common projects to be discussed here as well.</FONT
+	></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><A HREF="https://conh
+	os.atlassian.net/wiki/display/PM/Product+Alignment+Meetings"><SPAN LANG="e
+	n-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"><U><FONT COLOR="
+	#0563C1" SIZE=2 FACE="Arial">https://conhos.atlassian.net/wiki/display/PM/
+	Product+Alignment+Meetings</FONT></U></SPAN><SPAN LANG="en-us"></SPAN></A>
+	<SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"><FO
+	NT SIZE=2 FACE="Arial"> here is our meeting agenda/notes space</FONT></SPA
+	N><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"><
+	/SPAN></P>\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTLASTSEQUENCE:33
+X-MS-OLK-APPTSEQTIME:20160407T101208Z
+X-MS-OLK-AUTOFILLLOCATION:FALSE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="David Turnbull";RSVP=TRUE:mailto:david@snapshot.travel
+ATTENDEE;CN="Bianca Courtenay";RSVP=TRUE:mailto:bianca@snapshot.travel
+ATTENDEE;CN="Mandy Schulze";RSVP=TRUE:mailto:mandy@snapshot.travel
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+ATTENDEE;CN="Flavia Pioltelli";RSVP=TRUE:mailto:flavia@snapshot.travel
+ATTENDEE;CN="Sebastien Januskiewicz";RSVP=TRUE:mailto:sebastien@snapshot.tr
+	avel
+ATTENDEE;CN="Sylvia Frosch";RSVP=TRUE:mailto:sylvia@snapshot.travel
+ATTENDEE;CN="Isabel Eisenach";RSVP=TRUE:mailto:isabel@snapshot.travel
+ATTENDEE;CN="Hannes Wiese";RSVP=TRUE:mailto:hannes@snapshot.travel
+ATTENDEE;CN="Linda Girrbach";RSVP=TRUE:mailto:linda@snapshot.travel
+ATTENDEE;CN="Julia Dalmadi";RSVP=TRUE:mailto:julia@snapshot.travel
+ATTENDEE;CN="Malte Herich";RSVP=TRUE:mailto:malte@snapshot.travel
+ATTENDEE;CN="Michael Esser";RSVP=TRUE:mailto:michael.esser@snapshot.travel
+ATTENDEE;CN="Kael Mougeolle";RSVP=TRUE:mailto:kael@snapshot.travel
+ATTENDEE;CN="Ekaterina Svirina";RSVP=TRUE:mailto:ekaterina@snapshot.travel
+ATTENDEE;CN="Franca Bertram";RSVP=TRUE:mailto:franca@snapshot.travel
+ATTENDEE;CN="Calisha Allsworth";RSVP=TRUE:mailto:calisha.allsworth@snapshot
+	.travel
+ATTENDEE;CN="Clay Bassford";RSVP=TRUE:mailto:clay@snapshot.travel
+ATTENDEE;CN="Sam Turner";RSVP=TRUE:mailto:sam@snapshot.travel
+ATTENDEE;CN="Itai Peleg";RSVP=TRUE:mailto:itai@snapshot.travel
+ATTENDEE;CN="Iris Steinmetz";RSVP=TRUE:mailto:iris@snapshot.travel
+ATTENDEE;CN="Antonios Salapatas";RSVP=TRUE:mailto:demos@snapshot.travel
+ATTENDEE;CN="Frederic Zuchuat";ROLE=OPT-PARTICIPANT;RSVP=TRUE:invalid:nomai
+	l
+CATEGORIES:HR
+CLASS:PUBLIC
+CREATED:20160426T103439Z
+DESCRIPTION:ORGANIZED BY\n\n06.07.2016 FLAVIA and FRED\n\n
+DTEND;TZID="Central European Standard Time":20160914T103000
+DTSTAMP:20160627T081328Z
+DTSTART;TZID="Central European Standard Time":20160914T093000
+LAST-MODIFIED:20160817T090631Z
+LOCATION:Staff room
+ORGANIZER;CN="Lena Zahradnik":mailto:lena@snapshot.travel
+PRIORITY:5
+RRULE:FREQ=WEEKLY;COUNT=1;INTERVAL=2;BYDAY=WE;WKST=MO
+SEQUENCE:29
+SUMMARY;LANGUAGE=en-ie:Update: SnapShot Berlin office Breakfast
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000804835B13255D101000000000000000
+	0100000005552BFE0072F42469A7D5A600BF3B248
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head>\n<meta http-equiv=
+	"Content-Type" content="text/html\; charset=us-ascii"><meta name="Generato
+	r" content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Defi
+	nitions */\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3 
+	5 4 6 3 2 4\;}\n@font-face\n	{font-family:Calibri\;\n	panose-1:2 15 5 2 2 
+	2 4 3 2 4\;}\n/* Style Definitions */\np.MsoNormal\, li.MsoNormal\, div.Ms
+	oNormal\n	{margin:0cm\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n	f
+	ont-family:"Calibri"\,sans-serif\;\n	mso-fareast-language:EN-US\;}\na:link
+	\, span.MsoHyperlink\n	{mso-style-priority:99\;\n	color:#0563C1\;\n	text-d
+	ecoration:underline\;}\na:visited\, span.MsoHyperlinkFollowed\n	{mso-style
+	-priority:99\;\n	color:#954F72\;\n	text-decoration:underline\;}\np.msonorm
+	al0\, li.msonormal0\, div.msonormal0\n	{mso-style-name:msonormal\;\n	mso-m
+	argin-top-alt:auto\;\n	margin-right:0cm\;\n	mso-margin-bottom-alt:auto\;\n
+		margin-left:0cm\;\n	font-size:12.0pt\;\n	font-family:"Times New Roman"\,s
+	erif\;}\nspan.E-MailFormatvorlage18\n	{mso-style-type:personal-compose\;\n
+		font-family:"Calibri"\,sans-serif\;\n	color:windowtext\;}\n.MsoChpDefault
+	\n	{mso-style-type:export-only\;\n	font-size:10.0pt\;\n	font-family:"Calib
+	ri"\,sans-serif\;\n	mso-fareast-language:EN-US\;}\n@page WordSection1\n	{s
+	ize:612.0pt 792.0pt\;\n	margin:72.0pt 72.0pt 72.0pt 72.0pt\;}\ndiv.WordSec
+	tion1\n	{page:WordSection1\;}\n--></style><!--[if gte mso 9]><xml>\n<o:sha
+	pedefaults v:ext="edit" spidmax="1026" />\n</xml><![endif]--><!--[if gte m
+	so 9]><xml>\n<o:shapelayout v:ext="edit">\n<o:idmap v:ext="edit" data="1" 
+	/>\n</o:shapelayout></xml><![endif]--></head><body lang="DE" link="#0563C1
+	" vlink="#954F72"><div class="WordSection1"><p class="MsoNormal"><span lan
+	g="EN-US">ORGANIZED BY<o:p></o:p></span></p><p class="MsoNormal"><span lan
+	g="EN-US">06.07.2016 FLAVIA and FRED<o:p></o:p></span></p></div></body></h
+	tml>
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160426T103321Z
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+ATTENDEE;CN="Julia Dalmadi";RSVP=TRUE:mailto:julia@snapshot.travel
+ATTENDEE;CN="Mandy Schulze";RSVP=TRUE:mailto:mandy@snapshot.travel
+ATTENDEE;CN="Sebastien Januskiewicz";RSVP=TRUE:mailto:sebastien@snapshot.tr
+	avel
+ATTENDEE;CN="David Turnbull";RSVP=TRUE:mailto:david@snapshot.travel
+ATTENDEE;CN="Jan Mika";RSVP=TRUE:invalid:nomail
+ATTENDEE;CN="Malte Herich";RSVP=TRUE:mailto:malte@snapshot.travel
+ATTENDEE;CN="Michael Esser";RSVP=TRUE:mailto:michael.esser@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160111T074807Z
+DESCRIPTION:\n\n
+DTEND;TZID="Central European Standard Time":20160905T100000
+DTSTAMP:20160111T074320Z
+DTSTART;TZID="Central European Standard Time":20160905T090000
+LAST-MODIFIED:20160826T130548Z
+LOCATION:Product Office
+ORGANIZER;CN="Flavia Pioltelli":mailto:flavia@snapshot.travel
+PRIORITY:5
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO
+SEQUENCE:1
+SUMMARY;LANGUAGE=en-ie:Stand Up meeting Monday
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000104A14134B4CD101000000000000000
+	01000000005259BBBE955E546BAB50280BB8DF71D
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MS-OLK-APPTSEQTIME:20160111T073549Z
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Calisha Allsworth";RSVP=TRUE:mailto:calisha.allsworth@snapshot
+	.travel
+ATTENDEE;CN="Kael Mougeolle";RSVP=TRUE:mailto:kael@snapshot.travel
+ATTENDEE;CN="Sam Turner";RSVP=TRUE:mailto:sam@snapshot.travel
+ATTENDEE;CN="Hannes Wiese";RSVP=TRUE:mailto:hannes@snapshot.travel
+ATTENDEE;CN="Mandy Schulze";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:mandy@sna
+	pshot.travel
+ATTENDEE;CN="Bianca Courtenay";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:bianca
+	@snapshot.travel
+ATTENDEE;CN="Sebastien Januskiewicz";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:
+	sebastien@snapshot.travel
+ATTENDEE;CN="Clay Bassford";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:clay@snap
+	shot.travel
+ATTENDEE;CN="Ekaterina Svirina";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:ekate
+	rina@snapshot.travel
+ATTENDEE;CN="Sylvia Frosch";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:sylvia@sn
+	apshot.travel
+ATTENDEE;CN="David Turnbull";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:david@sn
+	apshot.travel
+ATTENDEE;CN="Isabel Eisenach";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:isabel@
+	snapshot.travel
+ATTENDEE;CN="Julia Dalmadi";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:julia@sna
+	pshot.travel
+ATTENDEE;CN="Michael Esser";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:michael.e
+	sser@snapshot.travel
+ATTENDEE;CN="Franca Bertram";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:franca@s
+	napshot.travel
+ATTENDEE;CN="Malte Herich";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:malte@snap
+	shot.travel
+ATTENDEE;CN="Claudia Ebbers";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:claudia@
+	snapshot.travel
+ATTENDEE;CN="Linda Girrbach";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:linda@sn
+	apshot.travel
+ATTENDEE;CN="Darja Gogunova";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:darja@sn
+	apshot.travel
+ATTENDEE;CN="Flavia Pioltelli";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:flavia
+	@snapshot.travel
+ATTENDEE;CN="Stefan Tweraser";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:stefan@
+	snapshot.travel
+ATTENDEE;CN="Itai Peleg";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:itai@snapsho
+	t.travel
+ATTENDEE;CN="Frederic Zuchuat";ROLE=OPT-PARTICIPANT;RSVP=TRUE:invalid:nomai
+	l
+ATTENDEE;CN="Kathleen Ritaine";ROLE=OPT-PARTICIPANT;RSVP=TRUE:invalid:nomai
+	l
+ATTENDEE;CN="Antonios Salapatas";ROLE=OPT-PARTICIPANT;RSVP=TRUE:mailto:demo
+	s@snapshot.travel
+CATEGORIES:Orga
+CLASS:PUBLIC
+CREATED:20160104T094318Z
+DESCRIPTION:The goal of this short update meeting is to exchange key inform
+	ation concerning everybody in the office as well as to give an update on t
+	he overall successes/activities in SnapShot.\n\n \n\n(think events\, visit
+	ors\, holidays\, out of office\, office “housekeeping”\, new customers
+	\, new partners etc. etc.)\n\n \n\nLet’s try to keep the meeting short a
+	nd sweet \n\n \n\n
+DTEND;TZID="Central European Standard Time":20160905T103000
+DTSTAMP:20160406T104421Z
+DTSTART;TZID="Central European Standard Time":20160905T100000
+LAST-MODIFIED:20160826T130547Z
+LOCATION:staff room
+ORGANIZER;CN="Lena Zahradnik":mailto:lena@snapshot.travel
+PRIORITY:5
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO
+SEQUENCE:5
+SUMMARY;LANGUAGE=en-ie:Monday Morning Meeting
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E008000000006013190ADC46D101000000000000000
+	0100000009FF823F68828BC4AAE2EF8FBF57D060C
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head>\n<meta http-equiv=
+	"Content-Type" content="text/html\; charset=us-ascii"><meta name="Generato
+	r" content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Defi
+	nitions */\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3 
+	5 4 6 3 2 4\;}\n@font-face\n	{font-family:Calibri\;\n	panose-1:2 15 5 2 2 
+	2 4 3 2 4\;}\n/* Style Definitions */\np.MsoNormal\, li.MsoNormal\, div.Ms
+	oNormal\n	{margin:0cm\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n	f
+	ont-family:"Calibri"\,sans-serif\;}\na:link\, span.MsoHyperlink\n	{mso-sty
+	le-priority:99\;\n	color:#0563C1\;\n	text-decoration:underline\;}\na:visit
+	ed\, span.MsoHyperlinkFollowed\n	{mso-style-priority:99\;\n	color:#954F72\
+	;\n	text-decoration:underline\;}\np.msonormal0\, li.msonormal0\, div.msono
+	rmal0\n	{mso-style-name:msonormal\;\n	mso-margin-top-alt:auto\;\n	margin-r
+	ight:0cm\;\n	mso-margin-bottom-alt:auto\;\n	margin-left:0cm\;\n	font-size:
+	12.0pt\;\n	font-family:"Times New Roman"\,serif\;}\nspan.E-MailFormatvorla
+	ge18\n	{mso-style-type:personal-compose\;\n	font-family:"Calibri"\,sans-se
+	rif\;\n	color:windowtext\;}\n.MsoChpDefault\n	{mso-style-type:export-only\
+	;\n	font-size:10.0pt\;\n	font-family:"Calibri"\,sans-serif\;}\n@page WordS
+	ection1\n	{size:612.0pt 792.0pt\;\n	margin:72.0pt 72.0pt 72.0pt 72.0pt\;}\
+	ndiv.WordSection1\n	{page:WordSection1\;}\n--></style><!--[if gte mso 9]><
+	xml>\n<o:shapedefaults v:ext="edit" spidmax="1026" />\n</xml><![endif]--><
+	!--[if gte mso 9]><xml>\n<o:shapelayout v:ext="edit">\n<o:idmap v:ext="edi
+	t" data="1" />\n</o:shapelayout></xml><![endif]--></head><body lang="DE" l
+	ink="#0563C1" vlink="#954F72"><div class="WordSection1"><p class="MsoNorma
+	l"><span lang="EN-US">The goal of this short update meeting is to exchange
+	 key information concerning everybody in the office as well as to give an 
+	update on the overall successes/activities in SnapShot.<o:p></o:p></span><
+	/p><p class="MsoNormal"><span lang="EN-US"><o:p>&nbsp\;</o:p></span></p><p
+	 class="MsoNormal"><span lang="EN-US">(think events\, visitors\, holidays\
+	, out of office\, office &#8220\;housekeeping&#8221\;\, new customers\, ne
+	w partners etc. etc.)<o:p></o:p></span></p><p class="MsoNormal"><span lang
+	="EN-US"><o:p>&nbsp\;</o:p></span></p><p class="MsoNormal"><span lang="EN-
+	US">Let&#8217\;s try to keep the meeting short and sweet <o:p></o:p></span
+	></p><p class="MsoNormal"><span lang="EN-US"><o:p>&nbsp\;</o:p></span></p>
+	</div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160104T093824Z
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN=H5341-GM@accor.com;RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:H5341-GM@
+	accor.com
+ATTENDEE;CN="Martin Soler";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:martin@snapsh
+	ot.travel
+CLASS:PUBLIC
+CREATED:20160811T132200Z
+DESCRIPTION:Hi Philip\,\n\nThank you for the call and apologies that for no
+	t being able to speak to you.\n\nI am very much looking forward to greetin
+	g you in our office and talking about communication in hotels.\n\nWe can\,
+	 of course\, speak German if you prefer :)\n\nWarm regards\,\nDarja\n\n\n
+DTEND;TZID="Central European Standard Time":20160907T120000
+DTSTAMP:20160811T142017Z
+DTSTART;TZID="Central European Standard Time":20160907T110000
+LAST-MODIFIED:20160811T150836Z
+LOCATION:SnapShot GmbH\, Kurfuerstendamm 212\, 10719 Berlin
+ORGANIZER;CN="Darja Gogunova":mailto:darja@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:Meeting with SnapShot
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000C0A24119E4F3D101000000000000000
+	010000000561A8FCF08C7A7408A1713A6D118C4D0
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Hi Philip\,<
+	/FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Aria
+	l">Thank you for the call and apologies that</FONT></SPAN><SPAN LANG="en-u
+	s"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"> <FONT SIZE=2 FACE=
+	"Arial">for not being able to speak to you.</FONT></SPAN></P>\n\n<P DIR=LT
+	R><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">I am very much looking forw
+	ard to greeting you in our office and talking about</FONT></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"> <FONT SIZE=
+	2 FACE="Arial">communication in hotels.</FONT></SPAN></P>\n\n<P DIR=LTR><S
+	PAN LANG="en-us"><FONT SIZE=2 FACE="Arial">We can\, of course\, speak Germ
+	an if you prefer</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"
+	></SPAN><SPAN LANG="en-us"> <FONT FACE="Wingdings" SIZE=2>J</FONT></SPAN><
+	SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SP
+	AN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Warm re
+	gards\,</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FA
+	CE="Arial">Darja</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"
+	></SPAN><SPAN LANG="en-us"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"></
+	SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN></P>\n\n<P DIR=LT
+	R><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"><
+	/SPAN></P>\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160811T142017Z
+X-MS-OLK-AUTOFILLLOCATION:FALSE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+CLASS:PUBLIC
+CREATED:20160815T064942Z
+DESCRIPTION:\n
+DTEND;VALUE=DATE:20160905
+DTSTAMP:20160828T123347Z
+DTSTART;VALUE=DATE:20160828
+LAST-MODIFIED:20160823T075336Z
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:Working from Brno
+TRANSP:TRANSPARENT
+UID:040000008200E00074C5B7101A82E00800000000C0FB61EBD1F6D101000000000000000
+	010000000973D9313B877924F9CDC33BC0B4BE51D
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"></SPAN></P>\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:WORKINGELSEWHERE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-CONFTYPE:0
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="David Gregor";RSVP=TRUE:mailto:david.gregor@snapshot.travel
+ATTENDEE;CN="Peter Skoda";RSVP=TRUE:mailto:peter@snapshot.travel
+ATTENDEE;CN="Lukas Korous";RSVP=TRUE;PARTSTAT=ACCEPTED;X-MS-OLK-RESPTIME=20
+	160817T105500Z:mailto:lukas.korous@snapshot.travel
+ATTENDEE;CN="Marek Kubis";RSVP=TRUE:mailto:marek.kubis@snapshot.travel
+ATTENDEE;CN="Jiri Bernovsky";RSVP=TRUE:mailto:jiri.bernovsky@snapshot.trave
+	l
+ATTENDEE;CN="Vlastimil Kaluza";RSVP=TRUE:mailto:vlastimil@snapshot.travel
+ATTENDEE;CN="Linda Girrbach";RSVP=TRUE:mailto:linda@snapshot.travel
+ATTENDEE;CN="Tomas Metelka";RSVP=TRUE:mailto:tomas.metelka@snapshot.travel
+ATTENDEE;CN="Ivan Mjartan";RSVP=TRUE:mailto:ivan@snapshot.travel
+ATTENDEE;CN="Matej Zverina";RSVP=TRUE:mailto:matej@snapshot.travel
+ATTENDEE;CN="Radek Matej";RSVP=TRUE:mailto:radek@nikdo.cz
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+CATEGORIES:Fabric
+CLASS:PUBLIC
+CREATED:20160817T105526Z
+DESCRIPTION:Placeholder meeting for recurring Technical Grooming session. \
+	n
+DTEND;TZID="Central European Standard Time":20160831T150000
+DTSTAMP:20160817T104518Z
+DTSTART;TZID="Central European Standard Time":20160831T130000
+LAST-MODIFIED:20160824T130302Z
+LOCATION:Brno Garden
+ORGANIZER;CN="Tomas Vrabec":mailto:tomas@snapshot.travel
+PRIORITY:5
+RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=WE
+SEQUENCE:5
+SUMMARY;LANGUAGE=en-ie:Technical Grooming (periodical)
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000804B40B709ECD101000000000000000
+	010000000E983E4E5C51A274499B3FEFA338C9406
+X-ALT-DESC;FMTTYPE=text/html:<html><head>\n<meta http-equiv="Content-Type" 
+	content="text/html\; charset=us-ascii">\n<meta content="text/html\; charse
+	t=us-ascii">\n<meta name="ProgId" content="Word.Document">\n<meta name="Ge
+	nerator" content="Microsoft Word 15">\n<meta name="Originator" content="Mi
+	crosoft Word 15">\n<link rel="File-List" href="cid:filelist.xml@01D1EC09.B
+	13F46F0"><style>\n<!--\n@font-face\n	{font-family:"Cambria Math"}\n@font-f
+	ace\n	{font-family:Calibri}\np.MsoNormal\, li.MsoNormal\, div.MsoNormal\n	
+	{margin:0in\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n	font-family
+	:"Calibri"\,sans-serif}\na:link\, span.MsoHyperlink\n	{color:#0563C1\;\n	t
+	ext-decoration:underline}\na:visited\, span.MsoHyperlinkFollowed\n	{color:
+	#954F72\;\n	text-decoration:underline}\nspan.EmailStyle17\n	{font-family:"
+	Calibri"\,sans-serif\;\n	color:windowtext}\n.MsoChpDefault\n	{font-family:
+	"Calibri"\,sans-serif}\n@page WordSection1\n	{margin:1.0in 1.0in 1.0in 1.0
+	in}\ndiv.WordSection1\n	{}\n-->\n</style>\n</head>\n<body lang="EN-US" lin
+	k="#0563C1" vlink="#954F72" style="">\n<div class="WordSection1">\n<p clas
+	s="MsoNormal">Placeholder meeting for recurring Technical Grooming session
+	.\n</p>\n</div>\n</body>\n</html>\n
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160817T104518Z
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160818T065719Z
+DESCRIPTION:\n
+DTEND;TZID="Central European Standard Time":20160829T170000
+DTSTAMP:20160818T065321Z
+DTSTART;TZID="Central European Standard Time":20160829T153000
+LAST-MODIFIED:20160818T065323Z
+LOCATION:Brno
+ORGANIZER;CN="Lukas Korous":mailto:lukas.korous@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-ie:User Profile / User Creation
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E008000000009B12A92C1DF9D101000000000000000
+	010000000445CB293D9BAFF41B908977B6DF5F370
+X-ALT-DESC;FMTTYPE=text/html:
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MS-OLK-APPTSEQTIME:20160818T065321Z
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Michael Heinze";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:michael@sna
+	pshot.travel
+ATTENDEE;CN="Lukas Korous";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:lukas.korous@
+	snapshot.travel
+CLASS:PUBLIC
+CREATED:20160823T114104Z
+DESCRIPTION:Agenda TBD\n\n-	Current status of product development\n-	Roadma
+	p and scope of Purple Unicorn\, going forward\n-	Action bar in AC\n-	Fabri
+	c APIs - https://conhos.atlassian.net/wiki/display/FAB/DRAFT+-+Interface+t
+	o+Data+Platform\n		\n
+DTEND;TZID="Central European Standard Time":20160831T120000
+DTSTAMP:20160823T114100Z
+DTSTART;TZID="Central European Standard Time":20160831T103000
+LAST-MODIFIED:20160824T064701Z
+LOCATION:Skype
+ORGANIZER;CN="Darja Gogunova":mailto:darja@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:Focus Group/ Discussion
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000B09869FC43FDD101000000000000000
+	0100000009FA66B4578D1194EBF7B34C79C7ACC35
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Agenda TBD</
+	FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG
+	="en-us"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="A
+	rial">-&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;</FONT></SPAN><SPAN LANG=
+	"en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN L
+	ANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"> <FONT SIZ
+	E=2 FACE="Arial">Current status of product development</FONT></SPAN></P>\n
+	\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">-&nbsp\;&nbsp\;&
+	nbsp\;&nbsp\;&nbsp\;&nbsp\;</FONT></SPAN><SPAN LANG="en-us"> <FONT SIZE=2 
+	FACE="Arial">Roadmap and scope of Purple Unicorn\, going forward</FONT></S
+	PAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">-&nbsp
+	\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;</FONT></SPAN><SPAN LANG="en-us"> <FO
+	NT SIZE=2 FACE="Arial">Action bar in AC</FONT></SPAN></P>\n\n<P DIR=LTR><S
+	PAN LANG="en-us"><FONT SIZE=2 FACE="Arial">-&nbsp\;&nbsp\;&nbsp\;&nbsp\;&n
+	bsp\;&nbsp\;</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></S
+	PAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"> <FONT SIZE=2 FACE="Arial
+	">Fabric APIs -</FONT></SPAN><SPAN LANG="en-us"> </SPAN><A HREF="https://c
+	onhos.atlassian.net/wiki/display/FAB/DRAFT+-+Interface+to+Data+Platform"><
+	SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"><U><
+	FONT COLOR="#0563C1" SIZE=2 FACE="Arial">https://conhos.atlassian.net/wiki
+	/display/FAB/DRAFT+-+Interface+to+Data+Platform</FONT></U></SPAN><SPAN LAN
+	G="en-us"></SPAN></A><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><
+	SPAN LANG="en-us"></SPAN></P>\n<UL DIR=LTR><UL DIR=LTR>\n<P DIR=LTR><SPAN 
+	LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN></
+	P>\n</UL></UL>\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160823T114100Z
+X-MS-OLK-AUTOFILLLOCATION:FALSE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Flavia Pioltelli";RSVP=TRUE:mailto:flavia@snapshot.travel
+ATTENDEE;CN="Łukasz Strączek";RSVP=TRUE:mailto:Lukasz.Straczek@euvic.pl
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+ATTENDEE;CN="Sebastien Januskiewicz";RSVP=TRUE:mailto:sebastien@snapshot.tr
+	avel
+ATTENDEE;CN="Michał Adamczyk";RSVP=TRUE:mailto:Michal.Adamczyk@euvic.pl
+ATTENDEE;CN="Vlastimil Kaluza";RSVP=TRUE:mailto:vlastimil@snapshot.travel
+ATTENDEE;CN="Linda Girrbach";RSVP=TRUE:mailto:linda@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160824T132113Z
+DESCRIPTION: \n\n
+DTEND;TZID="Central European Standard Time":20160829T150000
+DTSTAMP:20160824T103523Z
+DTSTART;TZID="Central European Standard Time":20160829T143000
+LAST-MODIFIED:20160824T103526Z
+ORGANIZER;CN="Lukas Korous":mailto:lukas.korous@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-ie:OAutn 2.0 Follow-up
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E0080000000020B0C7FB03FED101000000000000000
+	010000000E388EB4D20514842994037058D93FF92
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head>\n<meta http-equiv=
+	"Content-Type" content="text/html\; charset=iso-8859-2"><meta name="Genera
+	tor" content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font De
+	finitions */\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 
+	3 5 4 6 3 2 4\;}\n@font-face\n	{font-family:Calibri\;\n	panose-1:2 15 5 2 
+	2 2 4 3 2 4\;}\n/* Style Definitions */\np.MsoNormal\, li.MsoNormal\, div.
+	MsoNormal\n	{margin:0in\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n
+		font-family:"Calibri"\,sans-serif\;}\na:link\, span.MsoHyperlink\n	{mso-s
+	tyle-priority:99\;\n	color:#0563C1\;\n	text-decoration:underline\;}\na:vis
+	ited\, span.MsoHyperlinkFollowed\n	{mso-style-priority:99\;\n	color:#954F7
+	2\;\n	text-decoration:underline\;}\np.msonormal0\, li.msonormal0\, div.mso
+	normal0\n	{mso-style-name:msonormal\;\n	mso-margin-top-alt:auto\;\n	margin
+	-right:0in\;\n	mso-margin-bottom-alt:auto\;\n	margin-left:0in\;\n	font-siz
+	e:12.0pt\;\n	font-family:"Times New Roman"\,serif\;}\nspan.EmailStyle18\n	
+	{mso-style-type:personal-compose\;\n	font-family:"Calibri"\,sans-serif\;\n
+		color:windowtext\;}\n.MsoChpDefault\n	{mso-style-type:export-only\;\n	fon
+	t-size:10.0pt\;\n	font-family:"Calibri"\,sans-serif\;}\n@page WordSection1
+	\n	{size:8.5in 11.0in\;\n	margin:1.0in 1.0in 1.0in 1.0in\;}\ndiv.WordSecti
+	on1\n	{page:WordSection1\;}\n--></style><!--[if gte mso 9]><xml>\n<o:shape
+	defaults v:ext="edit" spidmax="1026" />\n</xml><![endif]--><!--[if gte mso
+	 9]><xml>\n<o:shapelayout v:ext="edit">\n<o:idmap v:ext="edit" data="1" />
+	\n</o:shapelayout></xml><![endif]--></head><body lang="EN-US" link="#0563C
+	1" vlink="#954F72"><div class="WordSection1"><p class="MsoNormal"><o:p>&nb
+	sp\;</o:p></p></div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Sebastien Januskiewicz";RSVP=TRUE:mailto:sebastien@snapshot.tr
+	avel
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+ATTENDEE;CN="Martin Soler";RSVP=TRUE:mailto:martin@snapshot.travel
+ATTENDEE;CN="Flavia Pioltelli";RSVP=TRUE:mailto:flavia@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160826T143105Z
+DESCRIPTION:Hi All\,\n\n \n\ntentative invitation only\, waiting for one up
+	date\, hopefully getting it on Monday morning.\n\nThere might be no need f
+	or this meeting after all. Will let you know.\n\n \n\nLinda\n\n
+DTEND;TZID="Central European Standard Time":20160829T140000
+DTSTAMP:20160826T143056Z
+DTSTART;TZID="Central European Standard Time":20160829T133000
+LAST-MODIFIED:20160826T143105Z
+LOCATION:Skype
+ORGANIZER;CN="Linda Girrbach":mailto:linda@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-ie:Team Product 
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000F0E4453EB0FFD101000000000000000
+	010000000A629AABF6CF40946A78437BF614FD6D0
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head>\n<meta http-equiv=
+	"Content-Type" content="text/html\; charset=us-ascii"><meta name="Generato
+	r" content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Defi
+	nitions */\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3 
+	5 4 6 3 2 4\;}\n@font-face\n	{font-family:Calibri\;\n	panose-1:2 15 5 2 2 
+	2 4 3 2 4\;}\n/* Style Definitions */\np.MsoNormal\, li.MsoNormal\, div.Ms
+	oNormal\n	{margin:0in\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n	f
+	ont-family:"Calibri"\,sans-serif\;\n	mso-fareast-language:EN-US\;}\na:link
+	\, span.MsoHyperlink\n	{mso-style-priority:99\;\n	color:#0563C1\;\n	text-d
+	ecoration:underline\;}\na:visited\, span.MsoHyperlinkFollowed\n	{mso-style
+	-priority:99\;\n	color:#954F72\;\n	text-decoration:underline\;}\np.msonorm
+	al0\, li.msonormal0\, div.msonormal0\n	{mso-style-name:msonormal\;\n	mso-m
+	argin-top-alt:auto\;\n	margin-right:0in\;\n	mso-margin-bottom-alt:auto\;\n
+		margin-left:0in\;\n	font-size:12.0pt\;\n	font-family:"Times New Roman"\,s
+	erif\;}\nspan.EmailStyle18\n	{mso-style-type:personal-compose\;\n	font-fam
+	ily:"Calibri"\,sans-serif\;\n	color:windowtext\;}\n.MsoChpDefault\n	{mso-s
+	tyle-type:export-only\;\n	font-size:10.0pt\;\n	font-family:"Calibri"\,sans
+	-serif\;\n	mso-fareast-language:EN-US\;}\n@page WordSection1\n	{size:8.5in
+	 11.0in\;\n	margin:1.0in 1.0in 1.0in 1.0in\;}\ndiv.WordSection1\n	{page:Wo
+	rdSection1\;}\n--></style><!--[if gte mso 9]><xml>\n<o:shapedefaults v:ext
+	="edit" spidmax="1026" />\n</xml><![endif]--><!--[if gte mso 9]><xml>\n<o:
+	shapelayout v:ext="edit">\n<o:idmap v:ext="edit" data="1" />\n</o:shapelay
+	out></xml><![endif]--></head><body lang="DE" link="#0563C1" vlink="#954F72
+	"><div class="WordSection1"><p class="MsoNormal">Hi All\,<o:p></o:p></p><p
+	 class="MsoNormal"><o:p>&nbsp\;</o:p></p><p class="MsoNormal"><span lang="
+	EN-US">tentative invitation only\, waiting for one update\, hopefully gett
+	ing it on Monday morning.<o:p></o:p></span></p><p class="MsoNormal"><span 
+	lang="EN-US">There might be no need for this meeting after all. Will let y
+	ou know.<o:p></o:p></span></p><p class="MsoNormal"><span lang="EN-US"><o:p
+	>&nbsp\;</o:p></span></p><p class="MsoNormal"><span lang="EN-US">Linda<o:p
+	></o:p></span></p></div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Darja Gogunova";RSVP=TRUE:mailto:darja@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160826T110116Z
+DESCRIPTION: \n\n
+DTEND;TZID="Central European Standard Time":20160831T180000
+DTSTAMP:20160826T110113Z
+DTSTART;TZID="Central European Standard Time":20160831T130000
+LAST-MODIFIED:20160826T110116Z
+LOCATION:Brno
+ORGANIZER;CN="Dominik Pinter":mailto:dominik@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-ie:Product management - follow up
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000E0EC74EC99FFD101000000000000000
+	010000000DAA3A0D9E0935643B9D3A5E060D17D86
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head>\n<meta http-equiv=
+	"Content-Type" content="text/html\; charset=us-ascii"><meta name="Generato
+	r" content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Defi
+	nitions */\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3 
+	5 4 6 3 2 4\;}\n@font-face\n	{font-family:Calibri\;\n	panose-1:2 15 5 2 2 
+	2 4 3 2 4\;}\n/* Style Definitions */\np.MsoNormal\, li.MsoNormal\, div.Ms
+	oNormal\n	{margin:0in\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n	f
+	ont-family:"Calibri"\,sans-serif\;}\na:link\, span.MsoHyperlink\n	{mso-sty
+	le-priority:99\;\n	color:#0563C1\;\n	text-decoration:underline\;}\na:visit
+	ed\, span.MsoHyperlinkFollowed\n	{mso-style-priority:99\;\n	color:#954F72\
+	;\n	text-decoration:underline\;}\np.msonormal0\, li.msonormal0\, div.msono
+	rmal0\n	{mso-style-name:msonormal\;\n	mso-margin-top-alt:auto\;\n	margin-r
+	ight:0in\;\n	mso-margin-bottom-alt:auto\;\n	margin-left:0in\;\n	font-size:
+	12.0pt\;\n	font-family:"Times New Roman"\,serif\;}\nspan.EmailStyle18\n	{m
+	so-style-type:personal-compose\;\n	font-family:"Calibri"\,sans-serif\;\n	c
+	olor:windowtext\;}\n.MsoChpDefault\n	{mso-style-type:export-only\;\n	font-
+	size:10.0pt\;\n	font-family:"Calibri"\,sans-serif\;}\n@page WordSection1\n
+		{size:8.5in 11.0in\;\n	margin:1.0in 1.0in 1.0in 1.0in\;}\ndiv.WordSection
+	1\n	{page:WordSection1\;}\n--></style><!--[if gte mso 9]><xml>\n<o:shapede
+	faults v:ext="edit" spidmax="1026" />\n</xml><![endif]--><!--[if gte mso 9
+	]><xml>\n<o:shapelayout v:ext="edit">\n<o:idmap v:ext="edit" data="1" />\n
+	</o:shapelayout></xml><![endif]--></head><body lang="EN-US" link="#0563C1"
+	 vlink="#954F72"><div class="WordSection1"><p class="MsoNormal"><o:p>&nbsp
+	\;</o:p></p></div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Erik Vanek";RSVP=TRUE;PARTSTAT=ACCEPTED:mailto:erik.vanek@snap
+	shot.travel
+CLASS:PUBLIC
+CREATED:20160825T171345Z
+DESCRIPTION:Hi Erik\,\n\nI would like to talk to you a little bit about Sna
+	pShot\, our product offer and why are we working on what we are working on
+	 (not just Fabric teams). This should give you a better idea of what we ar
+	e trying to achieve and get a “bigger picture”. \n\nAlso\, looking for
+	ward to getting to know you a bit better.\n\nWarm regards\,\nDarja\n
+DTEND;TZID="Central European Standard Time":20160830T123000
+DTSTAMP:20160825T171341Z
+DTSTART;TZID="Central European Standard Time":20160830T120000
+LAST-MODIFIED:20160826T062612Z
+LOCATION:Brno 4P
+ORGANIZER;CN="Darja Gogunova":mailto:darja@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:SnapShot Products\, Fabric Vision
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000A05DA1CA04FFD101000000000000000
+	0100000000BDABEB7FC80984ABF3FBEFE4DDFD06D
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Hi Erik\,</F
+	ONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial"
+	>I would like to talk to you a little bit about SnapShot\, our product off
+	er and why are we working on what we are working on (not just Fabric teams
+	). This should give you a better idea of what we are trying to achieve and
+	 get a “bigger picture</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG
+	="en-us"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">”. </FONT><
+	/SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Also
+	\, looking forward to getting to know you a bit better.</FONT></SPAN></P>\
+	n<BR>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Warm rega
+	rds\,</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE
+	="Arial">Darja</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"><
+	/SPAN><SPAN LANG="en-us"></SPAN></P>\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160825T171341Z
+X-MS-OLK-AUTOFILLLOCATION:FALSE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Vlastimil Kaluza (vlastimil@snapshot.travel)";RSVP=TRUE;PARTST
+	AT=ACCEPTED:invalid:nomail
+ATTENDEE;CN="Lukas Korous";RSVP=TRUE:mailto:lukas.korous@snapshot.travel
+ATTENDEE;CN="Brno 4P";CUTYPE=RESOURCE;ROLE=NON-PARTICIPANT;RSVP=TRUE;PARTST
+	AT=ACCEPTED:mailto:brno-4p@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160825T134818Z
+DESCRIPTION:Let’s start a series of conversations about sharing to Fabric
+	. The idea is to take it step by step and slowly prepare all requirements 
+	considering all pro’s and cons.\n\nOur initial brainstorm in this story:
+	 https://conhos.atlassian.net/browse/FAB-215\n\nCurrent idea is to go firs
+	t with option 2.\n\nLukas\, you are our Feature Owner\, in case you were w
+	ondering \;)\n\n\n
+DTEND;TZID="Central European Standard Time":20160830T120000
+DTSTAMP:20160825T134813Z
+DTSTART;TZID="Central European Standard Time":20160830T110000
+LAST-MODIFIED:20160825T151254Z
+LOCATION:Brno 4P
+ORGANIZER;CN="Darja Gogunova":mailto:darja@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:Share from SA and DMA to Fabric
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000C0DDC716E8FED101000000000000000
+	01000000020578E40EF977B4283EAAA0D094E56AE
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion rmj.rmm.rup.rpr">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted 
+	from text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"></SPAN><SPAN LAN
+	G="en-us"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Let’s star
+	t a series of conversations about sharing to Fabric. The idea is to take i
+	t step by step and slowly prepare all requirements considering all pro</FO
+	NT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="
+	en-us"><FONT SIZE=2 FACE="Arial">’s and cons.</FONT></SPAN></P>\n\n<P DI
+	R=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Our initial brainstorm 
+	in this story:</FONT></SPAN><SPAN LANG="en-us"> </SPAN><A HREF="https://co
+	nhos.atlassian.net/browse/FAB-215"><SPAN LANG="en-us"></SPAN><SPAN LANG="e
+	n-us"></SPAN><SPAN LANG="en-us"><U><FONT COLOR="#0563C1" SIZE=2 FACE="Aria
+	l">https://conhos.atlassian.net/browse/FAB-215</FONT></U></SPAN><SPAN LANG
+	="en-us"></SPAN></A><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN><S
+	PAN LANG="en-us"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2
+	 FACE="Arial">Current idea is to go first with option 2.</FONT></SPAN></P>
+	\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">Lukas\, you ar
+	e our Feature Own</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us
+	"></SPAN><SPAN LANG="en-us"><FONT SIZE=2 FACE="Arial">er\, in case you wer
+	e wondering \;)</FONT></SPAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us">
+	</SPAN><SPAN LANG="en-us"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"></S
+	PAN><SPAN LANG="en-us"></SPAN><SPAN LANG="en-us"></SPAN></P>\n\n</BODY>\n<
+	/HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTSEQTIME:20160825T134813Z
+X-MS-OLK-AUTOFILLLOCATION:TRUE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+ATTENDEE;CN="Fabric Team";RSVP=TRUE:mailto:fabricteam@snapshot.travel
+CLASS:PUBLIC
+CREATED:20160825T100415Z
+DESCRIPTION:-          QA: Prepare Demo \n\n-          QA: Please prepare t
+	ime boxed items for Planning\n\n-          Vlastik: Please let know amount
+	 of hours I can count with\n\n-          All: Be sure that all vacations a
+	re placed in calendar for next 2 weeks\n\n
+DTEND;TZID="Central European Standard Time":20160829T120000
+DTSTAMP:20160825T093434Z
+DTSTART;TZID="Central European Standard Time":20160829T103000
+LAST-MODIFIED:20160825T093444Z
+LOCATION:Brno Garden
+ORGANIZER;CN="Tomas Vrabec":mailto:tomas@snapshot.travel
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-ie:FAB & NAV\, Sprint 5 Demo & Sprint 6 Planning
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E00800000000308228A7C4FED101000000000000000
+	0100000008E0047514328134D8F2AE3CF8FF1F2CE
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head>\n<meta http-equiv=
+	"Content-Type" content="text/html\; charset=us-ascii"><meta name="Generato
+	r" content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Defi
+	nitions */\n@font-face\n	{font-family:Wingdings\;\n	panose-1:5 0 0 0 0 0 0
+	 0 0 0\;}\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3 5
+	 4 6 3 2 4\;}\n@font-face\n	{font-family:Calibri\;\n	panose-1:2 15 5 2 2 2
+	 4 3 2 4\;}\n/* Style Definitions */\np.MsoNormal\, li.MsoNormal\, div.Mso
+	Normal\n	{margin:0in\;\n	margin-bottom:.0001pt\;\n	font-size:11.0pt\;\n	fo
+	nt-family:"Calibri"\,sans-serif\;}\na:link\, span.MsoHyperlink\n	{mso-styl
+	e-priority:99\;\n	color:#0563C1\;\n	text-decoration:underline\;}\na:visite
+	d\, span.MsoHyperlinkFollowed\n	{mso-style-priority:99\;\n	color:#954F72\;
+	\n	text-decoration:underline\;}\np.MsoListParagraph\, li.MsoListParagraph\
+	, div.MsoListParagraph\n	{mso-style-priority:34\;\n	margin-top:0in\;\n	mar
+	gin-right:0in\;\n	margin-bottom:0in\;\n	margin-left:.5in\;\n	margin-bottom
+	:.0001pt\;\n	font-size:11.0pt\;\n	font-family:"Calibri"\,sans-serif\;}\np.
+	msonormal0\, li.msonormal0\, div.msonormal0\n	{mso-style-name:msonormal\;\
+	n	mso-margin-top-alt:auto\;\n	margin-right:0in\;\n	mso-margin-bottom-alt:a
+	uto\;\n	margin-left:0in\;\n	font-size:12.0pt\;\n	font-family:"Times New Ro
+	man"\,serif\;}\nspan.EmailStyle19\n	{mso-style-type:personal-compose\;\n	f
+	ont-family:"Calibri"\,sans-serif\;\n	color:windowtext\;}\n.MsoChpDefault\n
+		{mso-style-type:export-only\;\n	font-size:10.0pt\;\n	font-family:"Calibri
+	"\,sans-serif\;}\n@page WordSection1\n	{size:8.5in 11.0in\;\n	margin:1.0in
+	 1.0in 1.0in 1.0in\;}\ndiv.WordSection1\n	{page:WordSection1\;}\n/* List D
+	efinitions */\n@list l0\n	{mso-list-id:2122145733\;\n	mso-list-type:hybrid
+	\;\n	mso-list-template-ids:1778680606 -1987296634 67698691 67698693 676986
+	89 67698691 67698693 67698689 67698691 67698693\;}\n@list l0:level1\n	{mso
+	-level-start-at:0\;\n	mso-level-number-format:bullet\;\n	mso-level-text:-\
+	;\n	mso-level-tab-stop:none\;\n	mso-level-number-position:left\;\n	text-in
+	dent:-.25in\;\n	font-family:"Calibri"\,sans-serif\;\n	mso-fareast-font-fam
+	ily:Calibri\;\n	mso-bidi-font-family:"Times New Roman"\;}\n@list l0:level2
+	\n	{mso-level-number-format:bullet\;\n	mso-level-text:o\;\n	mso-level-tab-
+	stop:none\;\n	mso-level-number-position:left\;\n	text-indent:-.25in\;\n	fo
+	nt-family:"Courier New"\;}\n@list l0:level3\n	{mso-level-number-format:bul
+	let\;\n	mso-level-text:\\F0A7\;\n	mso-level-tab-stop:none\;\n	mso-level-nu
+	mber-position:left\;\n	text-indent:-.25in\;\n	font-family:Wingdings\;}\n@l
+	ist l0:level4\n	{mso-level-number-format:bullet\;\n	mso-level-text:\\F0B7\
+	;\n	mso-level-tab-stop:none\;\n	mso-level-number-position:left\;\n	text-in
+	dent:-.25in\;\n	font-family:Symbol\;}\n@list l0:level5\n	{mso-level-number
+	-format:bullet\;\n	mso-level-text:o\;\n	mso-level-tab-stop:none\;\n	mso-le
+	vel-number-position:left\;\n	text-indent:-.25in\;\n	font-family:"Courier N
+	ew"\;}\n@list l0:level6\n	{mso-level-number-format:bullet\;\n	mso-level-te
+	xt:\\F0A7\;\n	mso-level-tab-stop:none\;\n	mso-level-number-position:left\;
+	\n	text-indent:-.25in\;\n	font-family:Wingdings\;}\n@list l0:level7\n	{mso
+	-level-number-format:bullet\;\n	mso-level-text:\\F0B7\;\n	mso-level-tab-st
+	op:none\;\n	mso-level-number-position:left\;\n	text-indent:-.25in\;\n	font
+	-family:Symbol\;}\n@list l0:level8\n	{mso-level-number-format:bullet\;\n	m
+	so-level-text:o\;\n	mso-level-tab-stop:none\;\n	mso-level-number-position:
+	left\;\n	text-indent:-.25in\;\n	font-family:"Courier New"\;}\n@list l0:lev
+	el9\n	{mso-level-number-format:bullet\;\n	mso-level-text:\\F0A7\;\n	mso-le
+	vel-tab-stop:none\;\n	mso-level-number-position:left\;\n	text-indent:-.25i
+	n\;\n	font-family:Wingdings\;}\nol\n	{margin-bottom:0in\;}\nul\n	{margin-b
+	ottom:0in\;}\n--></style><!--[if gte mso 9]><xml>\n<o:shapedefaults v:ext=
+	"edit" spidmax="1026" />\n</xml><![endif]--><!--[if gte mso 9]><xml>\n<o:s
+	hapelayout v:ext="edit">\n<o:idmap v:ext="edit" data="1" />\n</o:shapelayo
+	ut></xml><![endif]--></head><body lang="EN-US" link="#0563C1" vlink="#954F
+	72"><div class="WordSection1"><p class="MsoListParagraph" style="text-inde
+	nt:-.25in\;mso-list:l0 level1 lfo2"><![if !supportLists]><span style="mso-
+	list:Ignore">-<span style="font:7.0pt &quot\;Times New Roman&quot\;">&nbsp
+	\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\; </span></span><
+	![endif]>QA: Prepare Demo <o:p></o:p></p><p class="MsoListParagraph" style
+	="text-indent:-.25in\;mso-list:l0 level1 lfo2"><![if !supportLists]><span 
+	style="mso-list:Ignore">-<span style="font:7.0pt &quot\;Times New Roman&qu
+	ot\;">&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\; </sp
+	an></span><![endif]>QA: Please prepare time boxed items for Planning<o:p><
+	/o:p></p><p class="MsoListParagraph" style="text-indent:-.25in\;mso-list:l
+	0 level1 lfo2"><![if !supportLists]><span style="mso-list:Ignore">-<span s
+	tyle="font:7.0pt &quot\;Times New Roman&quot\;">&nbsp\;&nbsp\;&nbsp\;&nbsp
+	\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\; </span></span><![endif]>Vlastik: Ple
+	ase let know amount of hours I can count with<o:p></o:p></p><p class="MsoL
+	istParagraph" style="text-indent:-.25in\;mso-list:l0 level1 lfo2"><![if !s
+	upportLists]><span style="mso-list:Ignore">-<span style="font:7.0pt &quot\
+	;Times New Roman&quot\;">&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;&nbsp\;
+	&nbsp\;&nbsp\; </span></span><![endif]>All: Be sure that all vacations are
+	 placed in calendar for next 2 weeks<o:p></o:p></p></div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR

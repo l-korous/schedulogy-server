@@ -25,7 +25,7 @@ var mongoTasks = require('./mongo-tasks.js');
 mongoTasks.initialize(settings, util);
 
 var mongoIcal = require('./mongo-ical.js');
-mongoIcal.initialize(app, settings, util, moment, mongoTasks);
+mongoIcal.initialize(app, settings, util, moment, mongoTasks, mongoResources);
 
 var mongoUtil = require('./mongo-util.js');
 mongoUtil.initialize(util);

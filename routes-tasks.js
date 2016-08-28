@@ -6,8 +6,12 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
             var btime_startOfDay_moment = moment.unix(btime).utc().startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(-utcOffset, 'm');
             var btime_startOfDay = btime_startOfDay_moment.unix();
             var btime_startOfWeekOffset = -moment.unix(btime).utc().startOf('week').add(-utcOffset, 'm').diff(btime_startOfDay_moment, 'm') / settings.minGranularity;
-            var result = solver.solve(mongoTasks.getProblemJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantId));
-
+            try {
+                var result = solver.solve(mongoTasks.getProblemJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantId));
+            }
+            catch (e) {
+                util.log.error(e);
+            }
             if (result) {
                 mongoTasks.storeSlnData(result, btime_startOfDay);
                 mongoTasks.markFixedAsNonDirty(tenantId);
@@ -54,7 +58,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     app.post('/api/task/checkConstraints', function (req, what) {
         util.log_request(req);
         var task = req.postParams;
-        
+
         var toReturn = mongoTasks.recalculateConstraint(task, req.params.btime, false);
         return {
             body: [toReturn ? JSON.stringify(toReturn) : ''],
@@ -79,8 +83,9 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
             if (file.value.length > (settings.maxICalSize * 1024 * 1024))
                 res = 'File too large, maximum size is ' + settings.maxICalSize + 'MB.';
             else {
-                mongoIcal.processIcalFile(file.value, req.session.data.tenantId, req.session.data.userId, req.headers.btime);
-                return returnSchedule(req.headers.btime, req.headers.utcoffset, req.session.data.tenantId);
+                res = mongoIcal.processIcalFile(file.value, req.session.data.tenantId, req.session.data.userId, req.headers.btime);
+                if (res === 'ok')
+                    return returnSchedule(req.headers.btime, req.headers.utcoffset, req.session.data.tenantId);
             }
         }
 

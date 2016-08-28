@@ -101,10 +101,6 @@ exports.initialize = function (settings, moment) {
         log.debug('** slotToTime - hourMinutes: ' + hourMinutes);
         var total = weekMinutes + dayMinutes + hourMinutes;
         log.debug('** slotToTime - total: ' + total);
-        // Over the weekend.
-        if (btime.clone().add(dayMinutes + hourMinutes, 'm') > endOfWeek)
-            total += 2 * 1440;
-        log.debug('** slotToTime - total: ' + total);
         var result = btime.clone().add(total, 'm');
         log.debug('* slotToTime finishes with: ' + result + '.');
         return result.unix();

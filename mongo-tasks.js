@@ -7,13 +7,20 @@ exports.initialize = function (settings, util) {
     var resources = db.getCollection('resource');
 
     var floatingTaskIsUnscheduled = function (floatingTask, btime) {
-        if (floatingTask.dirty)
+        if (floatingTask.dirty) {
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
             return true;
-        if (!floatingTask.start)
+        }
+        if (!floatingTask.start) {
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
             return true;
-        if (floatingTask.start >= btime)
+        }
+        if (floatingTask.start >= btime) {
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
             return true;
+        }
 
+        util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false');
         return false;
     };
 
@@ -74,10 +81,11 @@ exports.initialize = function (settings, util) {
             // The actual BTime is imposed as a hard preference.
             var bTimeActualSlot = util.timeToSlot(btime, btime_startOfDay);
             for (var i = 0; i < bTimeActualSlot; i++)
-                timePreferences.push({s: i});
+                timePreferences.push(i);
 
-// $gte: btime is a bug probably in the Mongo driver.
+            // $gte: btime is a bug probably in the Mongo driver.
             tasks.find({resource: resource.id, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}}).forEach(function (fixedTask) {
+                util.log.debug('Fixed task to TimePreferences: ' + fixedTask.data.title);
                 var start = fixedTask.data.start;
                 var end = util.getUnixEnd(fixedTask.data);
 
@@ -87,7 +95,7 @@ exports.initialize = function (settings, util) {
                 // This has a very important implication - if leftBound === rightBound, then we do not add anything.
                 // This applies for tasks, that fall out of this Resource constrainted days/times.
                 for (var i = leftBound; i < rightBound; i++) {
-                    timePreferences.push({s: i});
+                    timePreferences.push(i);
                 }
             });
 
@@ -116,6 +124,7 @@ exports.initialize = function (settings, util) {
             var toPrint = floatingTask.data;
             toPrint.startString = moment.unix(floatingTask.data.start).toString();
             toPrint.diffBTime = toPrint.start - btime;
+            util.cdir(toPrint);
             // Skipping past tasks. But not skipping unscheduled tasks.
             var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data);
             if (scheduleTask) {
@@ -200,7 +209,7 @@ exports.initialize = function (settings, util) {
         solArray.forEach(function (solutionEl) {
             var start = util.slotToTime(solutionEl.StartTime, btime);
             // TODO - This will have to be changed if we start supporting multiple resources per task.
-            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {resource: solutionEl.Resource, start: start.toString(), dirty: false}});
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {resource: solutionEl.Resource, start: parseInt(start), dirty: false}});
         });
     };
 
@@ -247,12 +256,20 @@ exports.initialize = function (settings, util) {
         var toReturn = 0;
         if (clear)
             constraintsUtilArray = [];
+        var taskId = null;
         // This is for the case that task itself is not stored in DB.
-        if (!task._id || constraintsUtilArray.indexOf(task._id.toString()) === -1) {
+        // An ugly way of finding whether the task has _id (task here can be a JS object, or java object, that is why we have to do this).
+        try {
+            taskId = task._id.toString();
+        }
+        catch (e) {
+            taskId = null;
+        }
+        if (!taskId || constraintsUtilArray.indexOf(taskId) === -1) {
             toReturn += getStartConstraintFromDeps(task, btime);
             if (toReturn)
                 util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
-            constraintsUtilArray.push(task._id);
+            constraintsUtilArray.push(taskId);
         }
 
         tasks.find({resource: task.resource, due: {$lte: task.due, $gte: btime - 1}, type: 'floating'}).forEach(function (taskWithLeqDue) {
@@ -282,8 +299,30 @@ exports.initialize = function (settings, util) {
     var getEndConstraint = function (task, btime) {
         util.log.debug('getEndConstraint starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
-        constraintsUtilArray = [task._id];
-        var dependentTasks = task._id ? tasks.find({needs: task._id.toString()}).toArray() : task.blocks;
+        var taskId = null;
+        constraintsUtilArray = [];
+        // An ugly way of finding whether the task has _id (task here can be a JS object, or java object, that is why we have to do this).
+        try {
+            taskId = task._id.toString();
+            constraintsUtilArray.push(taskId);
+        }
+        catch (e) {
+            taskId = null;
+        }
+
+        var dependentTasks = [];
+
+        if (taskId)
+            dependentTasks = tasks.find({needs: taskId}).toArray();
+        else if(task.blocks) {
+            var blockOIDs = [];
+            
+            task.blocks.forEach(function (bl) {
+                blockOIDs.push(new Packages.org.bson.types.ObjectId(bl));
+            });
+            dependentTasks = tasks.find({_id: {$in: blockOIDs}}).toArray();
+        }
+
         dependentTasks.forEach(function (dependentTask) {
             util.log.debug('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
             var depLatestStartTimestartTime = util.getUnixStart(dependentTask);
@@ -319,7 +358,7 @@ exports.initialize = function (settings, util) {
     };
 
     exports.recalculateConstraints = function (btime, tenantId) {
-        // $gte: btime is a bug probably in the Mongo driver.
+        // $gte: having to have "-1" here is a bug probably in the Mongo driver.
         tasks.find({tenant: tenantId, start: {$gte: btime - 1}}).forEach(function (task) {
             exports.recalculateConstraint(task.data, btime, true);
         });
@@ -331,6 +370,33 @@ exports.initialize = function (settings, util) {
 
     exports.getTasks = function (object) {
         return tasks.find(object);
+    };
+
+    exports.markFloatingDirty = function (task, floatingDirtyRollbackValues) {
+        util.log.debug('markFloatingDirty starts : ' + task.title);
+        task.blocks && task.blocks.forEach(function (dependentTaskId) {
+            var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
+            if (dependentTask.data.type === 'floating' && floatingDirtyRollbackValues.findIndex(function (testTask) {
+                return testTask._id.toString() === dependentTaskId;
+            }) === -1) {
+                floatingDirtyRollbackValues.push({_id: new Packages.org.bson.types.ObjectId(dependentTaskId), data: dependentTask.data});
+                dependentTask.data.dirty = true;
+                tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
+                exports.markFloatingDirty(dependentTask.data, floatingDirtyRollbackValues);
+            }
+        });
+
+        task.needs && task.needs.forEach(function (prerequisiteTaskId) {
+            var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
+            if (prerequisiteTask.data.type === 'floating' && floatingDirtyRollbackValues.findIndex(function (testTask) {
+                return testTask._id.toString() === prerequisiteTaskId;
+            }) === -1) {
+                floatingDirtyRollbackValues.push({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId), data: prerequisiteTask.data});
+                prerequisiteTask.data.dirty = true;
+                tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId)}, prerequisiteTask.data);
+                exports.markFloatingDirty(prerequisiteTask.data, floatingDirtyRollbackValues);
+            }
+        });
     };
 
     exports.storeTask = function (task, tenantId, userId, rollbackTaskValues) {
@@ -394,6 +460,14 @@ exports.initialize = function (settings, util) {
             dependentTask.data.needs.push(task._id.toString());
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
         });
+
+        // TODO - this replicates some work done by the previous block, nothing dramatic, but could be improved.
+        // We need to have a special array for the recursivity to work properly.
+        var floatingDirtyRollbackValues = [];
+        if (task.type === 'floating' && task.dirty)
+            exports.markFloatingDirty(task, floatingDirtyRollbackValues);
+        
+        rollbackTaskValues = rollbackTaskValues.concat(floatingDirtyRollbackValues);
     };
     exports.removeTask = function (taskId) {
         tasks.find({needs: taskId}).forEach(function (dependentTask) {
