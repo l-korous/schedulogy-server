@@ -1,9 +1,9 @@
 exports.initialize = function (app, mongoResources, util, settings) {
     var http = require('ringo/utils/http');
 
-    app.del('/api/resource/:resourceId', function (req, resourceId, replacementResourceId) {
+    app.del('/api/resource/:resourceId', function (req, resourceId) {
         util.log_request(req);
-        var res = mongoResources.removeResource(req.params.btime, resourceId, replacementResourceId);
+        var res = mongoResources.removeResource(req.params.btime, resourceId, req.params.replacementResourceId);
         if (res === 'ok')
             return {
                 body: [mongoResources.getResources({tenant: req.session.data.tenantId})],

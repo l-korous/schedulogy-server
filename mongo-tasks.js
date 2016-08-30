@@ -99,6 +99,26 @@ exports.initialize = function (settings, util) {
                 }
             });
 
+            tasks.find({resource: resource.id, type: 'floating'}).forEach(function (floatingTask) {
+                // We are interested here in floating tasks that will NOT be scheduled - they need to be respected though - no other task can be scheduled in their slots.
+                var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data);
+                // 
+                if (!scheduleTask) {
+                    util.log.debug('Floating task to TimePreferences: ' + floatingTask.data.title);
+                    var start = floatingTask.data.start;
+                    var end = util.getUnixEnd(floatingTask.data);
+
+                    // start might be before btime_startOfDay, that is why we need to use the max fn.
+                    var leftBound = Math.max(0, util.timeToSlot(start, btime_startOfDay));
+                    var rightBound = util.timeToSlot(end, btime_startOfDay);
+                    // This has a very important implication - if leftBound === rightBound, then we do not add anything.
+                    // This applies for tasks, that fall out of this Resource constrainted days/times.
+                    for (var i = leftBound; i < rightBound; i++) {
+                        timePreferences.push(i);
+                    }
+                }
+            });
+
             toReturn.push({
                 id: resource.id,
                 name: resource.data.user ? resource.data.user.toString() : resource.data.name,
@@ -121,10 +141,6 @@ exports.initialize = function (settings, util) {
         };
 
         tasks.find({tenant: tenantIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
-            var toPrint = floatingTask.data;
-            toPrint.startString = moment.unix(floatingTask.data.start).toString();
-            toPrint.diffBTime = toPrint.start - btime;
-            util.cdir(toPrint);
             // Skipping past tasks. But not skipping unscheduled tasks.
             var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data);
             if (scheduleTask) {
@@ -314,9 +330,9 @@ exports.initialize = function (settings, util) {
 
         if (taskId)
             dependentTasks = tasks.find({needs: taskId}).toArray();
-        else if(task.blocks) {
+        else if (task.blocks) {
             var blockOIDs = [];
-            
+
             task.blocks.forEach(function (bl) {
                 blockOIDs.push(new Packages.org.bson.types.ObjectId(bl));
             });
@@ -448,25 +464,22 @@ exports.initialize = function (settings, util) {
 
         tasks.save(task);
 
+        // TODO - this replicates some work done by the next block, nothing dramatic, but could be improved.
+        // We need to have a special array for the recursivity to work properly.
+        var floatingDirtyRollbackValues = [];
+        if (task.dirty)
+            exports.markFloatingDirty(task, floatingDirtyRollbackValues);
+
         task.blocks && task.blocks.forEach(function (dependentTaskId) {
-            util.log.debug('About to mark ' + dependentTaskId + ' as dirty through task.blocks.');
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
-            rollbackTaskValues.push({_id: new Packages.org.bson.types.ObjectId(dependentTaskId), data: dependentTask.data});
             var index = dependentTask.data.needs.findIndex(function (dep) {
                 return dep === task._id;
             });
             dependentTask.data.needs.splice(index, 1);
-            dependentTask.data.dirty = true;
             dependentTask.data.needs.push(task._id.toString());
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
         });
 
-        // TODO - this replicates some work done by the previous block, nothing dramatic, but could be improved.
-        // We need to have a special array for the recursivity to work properly.
-        var floatingDirtyRollbackValues = [];
-        if (task.type === 'floating' && task.dirty)
-            exports.markFloatingDirty(task, floatingDirtyRollbackValues);
-        
         rollbackTaskValues = rollbackTaskValues.concat(floatingDirtyRollbackValues);
     };
     exports.removeTask = function (taskId) {

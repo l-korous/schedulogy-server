@@ -5,7 +5,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
         if (mongoTasks.mustSchedule(btime, tenantId)) {
             var btime_startOfDay_moment = moment.unix(btime).utc().startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(-utcOffset, 'm');
             var btime_startOfDay = btime_startOfDay_moment.unix();
-            var btime_startOfWeekOffset = -moment.unix(btime).utc().startOf('week').add(-utcOffset, 'm').diff(btime_startOfDay_moment, 'm') / settings.minGranularity;
+            var btime_startOfWeekOffset = -moment.unix(btime).utc().startOf('isoWeek').add(-utcOffset, 'm').diff(btime_startOfDay_moment, 'm') / settings.minGranularity;
             try {
                 var result = solver.solve(mongoTasks.getProblemJson(btime, btime_startOfDay, btime_startOfWeekOffset, tenantId));
             }

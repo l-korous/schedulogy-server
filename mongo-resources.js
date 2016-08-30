@@ -1,4 +1,4 @@
-exports.initialize = function (util) {
+exports.initialize = function (util, mongoTasks) {
     var mongo = require('ringo-mongodb');
     var client = new mongo.MongoClient('localhost', 27017);
     var db = client.getDB('schedulogy');
@@ -25,12 +25,16 @@ exports.initialize = function (util) {
     };
     
     exports.markResourceTasksAsDirty = function (btime, resourceId, replacementResourceId) {
-        util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + '.');
+        util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + ', replacementResourceId = ' + replacementResourceId + '.');
         var dirtiedTasks = 0;
 
+        var floatingDirtyRollbackValues = [];
         tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
+            
+            mongoTasks.markFloatingDirty(task.data, floatingDirtyRollbackValues);
+            
             if (replacementResourceId)
                 task.data.resource = replacementResourceId;
             tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
@@ -40,10 +44,15 @@ exports.initialize = function (util) {
         tasks.find({type: 'floating', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
             task.data.dirty = true;
+            
+            mongoTasks.markFloatingDirty(task.data, floatingDirtyRollbackValues);
+            
             if (replacementResourceId) {
+                util.log.debug('markResourceTasksAsDirty - about to look for the old resource in admissibleResources: ' + resourceId);
                 var index = task.data.admissibleResources.findIndex(function (dep) {
                     return dep === resourceId;
                 });
+                util.log.debug('markResourceTasksAsDirty - found index: ' + index);
                 task.data.admissibleResources.splice(index, 1);
                 task.data.admissibleResources.push(replacementResourceId);
             }
@@ -59,7 +68,7 @@ exports.initialize = function (util) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
-                var dirtiedTasks = markResourceTasksAsDirty(btime, resource._id);
+                var dirtiedTasks = exports.markResourceTasksAsDirty(btime, resource._id);
                 if (dirtiedTasks > 0) {
                     // TODO Handle this better
                     // return 'ok';
@@ -77,7 +86,7 @@ exports.initialize = function (util) {
     };
 
     exports.removeResource = function (btime, resourceId, replacementResourceId) {
-        var dirtiedTasks = markResourceTasksAsDirty(btime, resourceId, replacementResourceId);
+        var dirtiedTasks = exports.markResourceTasksAsDirty(btime, resourceId, replacementResourceId);
         if (dirtiedTasks > 0) {
             // TODO Handle this better
             //return 'ok';
