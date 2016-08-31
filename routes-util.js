@@ -38,7 +38,7 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
     });
 
     app.post("/api/reset-password", function (req) {
-        var res = mongoUtil.getUserByEmailInternal(req.params.email);
+        var res = mongoUsers.getUserByEmailInternal(req.params.email);
         if (typeof res === 'object') {
             var newHash = util.generatePasswordResetHash();
             mongoUtil.storePasswordResetHash(res.data._id, newHash);
