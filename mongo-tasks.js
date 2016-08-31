@@ -479,8 +479,8 @@ exports.initialize = function (settings, util) {
             dependentTask.data.needs.push(task._id.toString());
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
         });
-
-        rollbackTaskValues = rollbackTaskValues.concat(floatingDirtyRollbackValues);
+        if(rollbackTaskValues)
+            rollbackTaskValues = rollbackTaskValues.concat(floatingDirtyRollbackValues);
     };
     exports.removeTask = function (taskId) {
         tasks.find({needs: taskId}).forEach(function (dependentTask) {
