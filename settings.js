@@ -23,7 +23,7 @@ exports.settings = {
     smtpEncrypt: true,
     smtpUsername: 'util.314@gmail.com',
     smtpPassword: 'utili+t8k',
-    msgReceiver: 'lukas@schedulogy.com',
+    msgReceiver: 'info@schedulogy.com',
     optionAllowedResponse: {
         body: [],
         headers: {

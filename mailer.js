@@ -6,8 +6,7 @@ exports.initialize = function (settings) {
             host: settings.smtpHost,
             port: settings.smtpPort,
             encrypt: settings.smtpEncrypt,
-            username: settings.smtpUsername,
-            password: settings.smtpPassword,
+            from: settings.msgReceiver,
             to: to,
             subject: subject,
             text: text
@@ -19,8 +18,7 @@ exports.initialize = function (settings) {
             host: settings.smtpHost,
             port: settings.smtpPort,
             encrypt: settings.smtpEncrypt,
-            username: settings.smtpUsername,
-            password: settings.smtpPassword,
+            from: settings.msgReceiver,
             to: to,
             subject: subject,
             html: html
