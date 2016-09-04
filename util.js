@@ -147,4 +147,21 @@ exports.initialize = function (settings, moment) {
     exports.getUnixDuration = function (task) {
         return  60 * (task.dur * (task.type === 'fixedAllDay' ? 1440 : settings.minGranularity));
     };
+
+    var unixToCronSingle = function (unixDateTime) {
+        var momentDT = moment.unix(unixDateTime).utc();
+        var toReturn = momentDT.year().toString() + " " + momentDT.month().toString() + " " + momentDT.date().toString() + " " + momentDT.hour().toString() + " " + momentDT.minute().toString();
+        return toReturn;
+    };
+
+    exports.unixToCron = function (unixDateTimes) {
+        var toReturn = [];
+        if (Array.isArray(unixDateTimes))
+            unixDateTimes.forEach(function (unixDateTime) {
+                toReturn.push(unixToCronSingle(unixDateTime));
+            });
+        else
+            toReturn.push(unixToCronSingle(unixDateTimes));
+        return toReturn;
+    };
 };

@@ -1,7 +1,4 @@
-exports.initialize = function (util, mongoTasks) {
-    var mongo = require('ringo-mongodb');
-    var client = new mongo.MongoClient('localhost', 27017);
-    var db = client.getDB('schedulogy');
+exports.initialize = function (util, mongoTasks, db) {
     var tasks = db.getCollection('task');
     var resources = db.getCollection('resource');
 
@@ -64,7 +61,7 @@ exports.initialize = function (util, mongoTasks) {
         return dirtiedTasks;
     };
 
-    exports.storeResource = function (resource, tenantId, btime) {
+    exports.storeResource = function (resource, userId, tenantId, btime) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
@@ -80,6 +77,8 @@ exports.initialize = function (util, mongoTasks) {
 
         if (!resource.tenant)
             resource.tenant = tenantId;
+        if(!resource.user)
+            resource.user = userId;
 
         resources.save(resource);
         return 'ok';

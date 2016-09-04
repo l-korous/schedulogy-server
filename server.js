@@ -1,4 +1,5 @@
 var {Application} = require('stick');
+
 var app = exports.app = new Application();
 app.configure('route');
 app.configure('params');
@@ -7,17 +8,30 @@ var secrets = require('./secrets.js').secrets;
 
 var moment = require('./bower_components/moment/moment.js');
 
+var {scheduler} = require("./lib/scheduler/main.js");
+scheduler.start();
+
+var dbSetup = require('./db.js');
+dbSetup.initialize();
+var db = dbSetup.db;
+
 var util = require('./util.js');
 util.initialize(settings, moment);
 
+var mailer = require('./mailer.js');
+mailer.initialize(settings);
+
+var notifications = require('./notifications.js');
+notifications.initialize(settings, scheduler, mailer, db, util, moment);
+
 var mongoTasks = require('./mongo-tasks.js');
-mongoTasks.initialize(settings, util);
+mongoTasks.initialize(settings, util, db, notifications, moment);
 
 var mongoResources = require('./mongo-resources.js');
-mongoResources.initialize(util, mongoTasks);
+mongoResources.initialize(util, mongoTasks, db);
 
 var mongoUsers = require('./mongo-users.js');
-mongoUsers.initialize(util, mongoResources);
+mongoUsers.initialize(util, mongoResources, db);
 
 var auth = require('./auth.js');
 auth.initialize(settings, secrets, util, moment, mongoUsers);
@@ -25,16 +39,13 @@ app.configure(auth);
 app.configure('session');
 
 var mongoIcal = require('./mongo-ical.js');
-mongoIcal.initialize(app, settings, util, moment, mongoTasks, mongoResources);
+mongoIcal.initialize(app, settings, util, moment, mongoTasks, mongoResources, db);
 
 var mongoUtil = require('./mongo-util.js');
-mongoUtil.initialize(util);
+mongoUtil.initialize(util, db);
 
 var solver = require('./solver.js');
 solver.initialize(settings, util);
-
-var mailer = require('./mailer.js');
-mailer.initialize(settings);
 
 var routesTasks = require('./routes-tasks.js');
 routesTasks.initialize(app, mongoTasks, solver, util, settings, mailer, moment, mongoIcal);

@@ -1,7 +1,4 @@
-exports.initialize = function (util, mongoResources) {
-    var mongo = require('ringo-mongodb');
-    var client = new mongo.MongoClient('localhost', 27017);
-    var db = client.getDB('schedulogy');
+exports.initialize = function (util, mongoResources, db) {
     var users = db.getCollection('user');
     var resources = db.getCollection('resource');
     var tenants = db.getCollection('tenant');
@@ -83,7 +80,7 @@ exports.initialize = function (util, mongoResources) {
         }
     };
 
-    exports.createUser = function (userData) {
+    exports.createUser = function (userData, utcOffset) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
             util.log.error('createUser: existing');
@@ -117,7 +114,8 @@ exports.initialize = function (util, mongoResources) {
                     tenant: userData.tenant,
                     type: 'user',
                     user: userData._id.toString(),
-                    name: userData.username ? userData.username : userData.email
+                    name: userData.username ? userData.username : userData.email,
+                    utcOffset: utcOffset
                 });
                 return users.findOne({_id: userData._id});
             }

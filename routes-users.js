@@ -3,7 +3,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
 
     app.post("/api/register", function (req) {
         util.log_request(req);
-        var res = mongoUsers.createUser(req.params);
+        var res = mongoUsers.createUser(req.params, req.headers.utcoffset);
         if (res.id) {
             mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
 
@@ -28,7 +28,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
                 return util.simpleResponse(res);
         }
         else {
-            var res = mongoUsers.createUser(req.params);
+            var res = mongoUsers.createUser(req.params, req.headers.utcoffset);
             if (res.id) {
                 mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
                 return {

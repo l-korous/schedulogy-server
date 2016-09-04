@@ -1,8 +1,4 @@
-exports.initialize = function (settings, util) {
-    var mongo = require('ringo-mongodb');
-    var moment = require('./bower_components/moment/moment.js');
-    var client = new mongo.MongoClient('localhost', 27017);
-    var db = client.getDB('schedulogy');
+exports.initialize = function (settings, util, db, notifications, moment) {
     var tasks = db.getCollection('task');
     var resources = db.getCollection('resource');
 
@@ -225,7 +221,12 @@ exports.initialize = function (settings, util) {
         solArray.forEach(function (solutionEl) {
             var start = util.slotToTime(solutionEl.StartTime, btime);
             // TODO - This will have to be changed if we start supporting multiple resources per task.
-            tasks.update({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)}, {$set: {resource: solutionEl.Resource, start: parseInt(start), dirty: false}});
+            var task = tasks.findOne({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)});
+            task.data.resource = solutionEl.Resource;
+            task.data.start = parseInt(start);
+            task.data.dirty = false;
+            tasks.save(task.data);
+            notifications.reinit(task.data);
         });
     };
 
@@ -238,6 +239,7 @@ exports.initialize = function (settings, util) {
     };
 
     var constraintsUtilArray = [];
+
     // For a single task, calculate the amount of time necessary to complete all its dependencies.
     // While not counting durations of tasks that are (already) in constraintsUtilArray and at the same time updating the array.
     var getStartConstraintFromDeps = function (task, btime) {
@@ -260,6 +262,7 @@ exports.initialize = function (settings, util) {
         util.log.debug('getStartConstraintFromDeps finishes with: ' + toReturn);
         return toReturn;
     };
+
     // For a single task, calculate the amount of time (in hours now) necessary to complete:
     // - all its dependencies
     // - all tasks with due date before this task (with dependencies)
@@ -308,6 +311,7 @@ exports.initialize = function (settings, util) {
         util.log.debug('getStartConstraint finishes with: ' + toReturn);
         return toReturn;
     };
+
     // For a single task, calculate the earliest time when this task must be done to satisfy all dependencies:
     // all dependent fixed tasks (NOT supported now, only floating tasks can be dependent)
     // all dependent floating tasks
@@ -479,9 +483,15 @@ exports.initialize = function (settings, util) {
             dependentTask.data.needs.push(task._id.toString());
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
         });
-        if(rollbackTaskValues)
+        if (rollbackTaskValues)
             rollbackTaskValues = rollbackTaskValues.concat(floatingDirtyRollbackValues);
+
+        // Send notifications - for non-floating tasks (in case of floating we do not yet know the resource to send the notification to)
+        // For floating this is done after solving (as of 20160903 - in this file, in fn storeSlnData).
+        if (task.type !== 'floating')
+            notifications.reinit(task);
     };
+
     exports.removeTask = function (taskId) {
         tasks.find({needs: taskId}).forEach(function (dependentTask) {
             var index = dependentTask.data.needs.findIndex(function (dep) {
@@ -506,18 +516,13 @@ exports.initialize = function (settings, util) {
             exports.removeTask(task.id);
         });
     };
-    exports.getClientJson = function (tenantId) {
-        var toReturn = "{\"tasks\": [";
-        var first_task = true;
 
+    exports.getClientJson = function (tenantId, btime) {
+        var tasksArray = [];
+        var dirtyTasks = [];
         var resourceNames = {};
 
-        tasks.find({tenant: tenantId}).forEach(function (task) {
-            if (!first_task)
-                toReturn += ",";
-            else
-                first_task = false;
-
+        tasks.find({tenant: tenantId, dirty: false}).forEach(function (task) {
             task.data.blocks = [];
             tasks.find({needs: task.id}).forEach(function (dependentTask) {
                 task.data.blocks.push(dependentTask.id);
@@ -533,8 +538,50 @@ exports.initialize = function (settings, util) {
             if (task.data.resource && resourceNames[task.data.resource])
                 task.data.resourceName = resourceNames[task.data.resource];
 
+            tasksArray.push(task);
+        });
+
+        tasks.find({tenant: tenantId, type: 'floating', dirty: true, due: {$gte: btime - 1}}).forEach(function (task) {
+            task.data.blocks = [];
+            tasks.find({needs: task.id}).forEach(function (dependentTask) {
+                task.data.blocks.push(dependentTask.id);
+            });
+
+            if (!resourceNames[task.data.resource]) {
+                var resource = resources.findOne(new Packages.org.bson.types.ObjectId(task.data.resource));
+                // Resource might have been deleted, in that case, either resourceName has been stored directly for the task, or it is empty.
+                if (resource)
+                    resourceNames[task.data.resource] = resource.data.name;
+            }
+
+            if (task.data.resource && resourceNames[task.data.resource])
+                task.data.resourceName = resourceNames[task.data.resource];
+
+            dirtyTasks.push(task);
+        });
+
+        var toReturn = "{\"tasks\": [";
+        var first_task = true;
+        tasksArray.forEach(function (task) {
+            if (!first_task)
+                toReturn += ",";
+            else
+                first_task = false;
+
             toReturn += task.toJSON();
         });
+
+        toReturn += "], \"dirtyTasks\": [";
+        first_task = true;
+        dirtyTasks.forEach(function (task) {
+            if (!first_task)
+                toReturn += ",";
+            else
+                first_task = false;
+
+            toReturn += task.toJSON();
+        });
+
         toReturn += "]}";
         return toReturn;
     };

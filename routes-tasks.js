@@ -19,7 +19,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
             }
             else {
                 rollbackTaskValues && mongoTasks.resetTasks(rollbackTaskValues, tenantId);
-                mongoTasks.removeTasks({dirty: true}, tenantId);
+                mongoTasks.markFixedAsNonDirty(tenantId);
             }
         }
         else {
@@ -29,7 +29,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
         }
 
         return {
-            body: [mongoTasks.getClientJson(tenantId)],
+            body: [mongoTasks.getClientJson(tenantId, btime)],
             headers: settings.defaultHeaderJson,
             status: result ? 200 : 400
         };

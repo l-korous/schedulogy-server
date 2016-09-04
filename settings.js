@@ -41,5 +41,15 @@ exports.settings = {
         text += '. \r\n \r\n \r\n Please enjoy SCHEDULOGY and contact us at info@schedulogy.com with any questions you have.';
         text += '. \r\n \r\n \r\n SCHEDULOGY team';
         return text;
-    }
+    },
+    defaultNotificationSetup: function (task) {
+        // 15-min ahead notification.
+        if (task.type !== 'fixedAllDay')
+            return [task.start - (15 * 60)];
+        // One-day ahead notification.
+        else
+            return [task.start - (24 * 60 * 60)];
+    },
+    notificationFormat: 'MMM, Do H:mm UTCZ',
+    notificationUrl: clientUrl
 };

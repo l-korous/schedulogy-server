@@ -17,7 +17,8 @@ exports.initialize = function (app, mongoResources, util, settings) {
     app.post('/api/resource', function (req) {
         util.log_request(req);
         var resource = req.postParams;
-        var res = mongoResources.storeResource(resource, req.session.data.tenantId, req.params.btime);
+        resource.utcOffset = req.headers.utcoffset;
+        var res = mongoResources.storeResource(resource, req.session.data.userId, req.session.data.tenantId, req.params.btime);
         if (res === 'ok')
             return {
                 body: [mongoResources.getResources({tenant: req.session.data.tenantId})],

@@ -1,10 +1,7 @@
-exports.initialize = function (app, settings, util, moment, mongoTasks, mongoResources) {
+exports.initialize = function (app, settings, util, moment, mongoTasks, mongoResources, db) {
     var tempFiles = require('ringo/utils/files');
     var fs = require('fs');
-    var mongo = require('ringo-mongodb');
     var moment = require('./bower_components/moment/moment.js');
-    var client = new mongo.MongoClient('localhost', 27017);
-    var db = client.getDB('schedulogy');
     var resources = db.getCollection('resource');
 
     addToClasspath("./cpsolver/dist/backport-util-concurrent-3.1.jar");
