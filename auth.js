@@ -6,7 +6,7 @@ exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
     exports.generateToken = function (user) {
         var issuer = "schedulogy.com";
         var iat = moment().unix();
-        var exp = iat + 60 * 60 * 24;
+        var exp = iat + settings.tokenTTLinDays * 60 * 60 * 24;
         var x = new java.util.HashMap();
         x.put("iss", issuer);
         x.put("iat", iat);

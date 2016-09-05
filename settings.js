@@ -3,6 +3,7 @@ var clientUrl = 'http://localhost:8100';
 exports.settings = {
     weeks: 26,
     solverTimeout: 5,
+    tokenTTLinDays: 5,
     daysPerWeek: 7,
     hoursPerDay: 24,
     minGranularity: 30,
