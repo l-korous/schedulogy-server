@@ -20,44 +20,50 @@ exports.initialize = function (util, mongoTasks, db) {
         toReturn += "]}";
         return toReturn;
     };
-    
-    exports.markResourceTasksAsDirty = function (btime, resourceId, replacementResourceId) {
-        util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + ', replacementResourceId = ' + replacementResourceId + '.');
+
+    exports.markResourceTasksAsDirtyOrDelete = function (btime, resourceId, replacementResourceId) {
+        util.log.debug('markResourceTasksAsDirtyOrDelete starts with resource = ' + resourceId + ', replacementResourceId = ' + replacementResourceId + '.');
+
+        if (!replacementResourceId) {
+            tasks.remove({resource: resourceId});
+            util.log.debug('markResourceTasksAsDirtyOrDelete deleted all tasks.');
+            return;
+        }
+
         var dirtiedTasks = 0;
 
-        var floatingDirtyRollbackValues = [];
+        var floatingDirtyUtilArray = [];
         tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
-            util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
+            util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
             task.data.dirty = true;
-            
-            mongoTasks.markFloatingDirty(task.data, floatingDirtyRollbackValues);
-            
-            if (replacementResourceId)
-                task.data.resource = replacementResourceId;
+
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
+            mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
+
+            task.data.resource = replacementResourceId;
             tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
             dirtiedTasks++;
         });
 
         tasks.find({type: 'floating', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
-            util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
+            util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
             task.data.dirty = true;
-            
-            mongoTasks.markFloatingDirty(task.data, floatingDirtyRollbackValues);
-            
-            if (replacementResourceId) {
-                util.log.debug('markResourceTasksAsDirty - about to look for the old resource in admissibleResources: ' + resourceId);
-                var index = task.data.admissibleResources.findIndex(function (dep) {
-                    return dep === resourceId;
-                });
-                util.log.debug('markResourceTasksAsDirty - found index: ' + index);
-                task.data.admissibleResources.splice(index, 1);
-                task.data.admissibleResources.push(replacementResourceId);
-            }
+
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
+
+            util.log.debug('markResourceTasksAsDirtyOrDelete - about to look for the old resource in admissibleResources: ' + resourceId);
+            var index = task.data.admissibleResources.findIndex(function (dep) {
+                return dep === resourceId;
+            });
+            util.log.debug('markResourceTasksAsDirtyOrDelete - found index: ' + index);
+            task.data.admissibleResources.splice(index, 1);
+            task.data.admissibleResources.push(replacementResourceId);
+
             tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
             dirtiedTasks++;
         });
 
-        util.log.debug('markResourceTasksAsDirty ends with dirtiedTasks = ' + dirtiedTasks + '.');
+        util.log.debug('markResourceTasksAsDirtyOrDelete ends with dirtiedTasks = ' + dirtiedTasks + '.');
         return dirtiedTasks;
     };
 
@@ -65,19 +71,19 @@ exports.initialize = function (util, mongoTasks, db) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
-                var dirtiedTasks = exports.markResourceTasksAsDirty(btime, resource._id);
+                var dirtiedTasks = exports.markResourceTasksAsDirtyOrDelete(btime, resource._id);
                 if (dirtiedTasks > 0) {
                     // TODO Handle this better
                     // return 'ok';
                 }
             }
-            
+
             resource._id = new Packages.org.bson.types.ObjectId(resource._id);
         }
 
         if (!resource.tenant)
             resource.tenant = tenantId;
-        if(!resource.user)
+        if (!resource.user)
             resource.user = userId;
 
         resources.save(resource);
@@ -85,18 +91,12 @@ exports.initialize = function (util, mongoTasks, db) {
     };
 
     exports.removeResource = function (btime, resourceId, replacementResourceId) {
-        var dirtiedTasks = exports.markResourceTasksAsDirty(btime, resourceId, replacementResourceId);
+        var dirtiedTasks = exports.markResourceTasksAsDirtyOrDelete(btime, resourceId, replacementResourceId);
         if (dirtiedTasks > 0) {
             // TODO Handle this better
             //return 'ok';
         }
         resources.remove({_id: new Packages.org.bson.types.ObjectId(resourceId)});
         return 'ok';
-    };
-
-    exports.resetResources = function (resourcesToResetTo) {
-        resourcesToResetTo.forEach(function (rollbackResource) {
-            resources.update({_id: rollbackResource._id}, rollbackResource.data);
-        });
     };
 };

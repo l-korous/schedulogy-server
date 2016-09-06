@@ -135,7 +135,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                 saveImportedTask(component, tenantId, userId, resource.id, btime, registry);
             }
             // We also need to mark all floating tasks for this resource as dirty.
-            mongoResources.markResourceTasksAsDirty(btime, resource.id);
+            mongoResources.markResourceTasksAsDirtyOrDelete(btime, resource.id);
             return 'ok';
         }
         else {

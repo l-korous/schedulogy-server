@@ -1,7 +1,7 @@
 exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, moment, mongoIcal) {
     var http = require('ringo/utils/http');
 
-    var returnSchedule = function (btime, utcOffset, tenantId, rollbackTaskValues) {
+    var returnSchedule = function (btime, utcOffset, tenantId) {
         if (mongoTasks.mustSchedule(btime, tenantId)) {
             var btime_startOfDay_moment = moment.unix(btime).utc().startOf('day').add(settings.startSlot * settings.minGranularity, 'm').add(-utcOffset, 'm');
             var btime_startOfDay = btime_startOfDay_moment.unix();
@@ -17,10 +17,8 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
                 mongoTasks.markFixedAsNonDirty(tenantId);
                 mongoTasks.recalculateConstraints(btime, tenantId);
             }
-            else {
-                rollbackTaskValues && mongoTasks.resetTasks(rollbackTaskValues, tenantId);
+            else
                 mongoTasks.markFixedAsNonDirty(tenantId);
-            }
         }
         else {
             result = 'ok';
@@ -50,9 +48,8 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     app.post('/api/task', function (req) {
         util.log_request(req);
         var task = req.postParams;
-        var rollbackTaskValues = [];
-        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId, rollbackTaskValues);
-        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.tenantId, rollbackTaskValues);
+        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId);
+        return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.tenantId);
     });
 
     app.post('/api/task/checkConstraints', function (req, what) {

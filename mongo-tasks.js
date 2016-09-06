@@ -29,10 +29,12 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         var dirtyFixed = false;
 
         tasks.find({tenant: tenantId, type: 'floating'}).forEach(function (floatingTask) {
-            var currentTaskIsUnscheduled = floatingTaskIsUnscheduled(floatingTask.data);
+            var currentTaskIsUnscheduled = floatingTaskIsUnscheduled(floatingTask.data, btime);
             if (currentTaskIsUnscheduled) {
-                var floatingDirtyRollbackValues = [];
-                exports.markFloatingDirty(floatingTask.data, floatingDirtyRollbackValues);
+                floatingTask.data.dirty = true;
+                tasks.update({_id: new Packages.org.bson.types.ObjectId(floatingTask.data._id)}, floatingTask.data);
+                var floatingDirtyUtilArray = [];
+                exports.markFloatingDirtyViaDependence(floatingTask.data, floatingDirtyUtilArray);
             }
             unscheduledFloating = unscheduledFloating || currentTaskIsUnscheduled;
 
@@ -103,7 +105,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
             tasks.find({resource: resource.id, type: 'floating'}).forEach(function (floatingTask) {
                 // We are interested here in floating tasks that will NOT be scheduled - they need to be respected though - no other task can be scheduled in their slots.
-                var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data);
+                var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data, btime);
                 // 
                 if (!scheduleTask) {
                     util.log.debug('Floating task to TimePreferences: ' + floatingTask.data.title);
@@ -144,7 +146,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         tasks.find({tenant: tenantIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
             // Skipping past tasks. But not skipping unscheduled tasks.
-            var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data);
+            var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data, btime);
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime_startOfDay);
                 var activity = {
@@ -230,6 +232,9 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             var task = tasks.findOne({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)});
             task.data.resource = solutionEl.Resource;
             task.data.start = parseInt(start);
+            // This is very important - only for floating tasks we store the end, and we only do that to be able to detect overlaps
+            // between new / changed fixed tasks and floating tasks to identify those floating tasks that need to be recalculated.
+            task.data.end = util.getUnixEnd(task.data);
             task.data.dirty = false;
             tasks.save(task.data);
             notifications.reinit(task.data);
@@ -398,34 +403,59 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         return tasks.find(object);
     };
 
-    exports.markFloatingDirty = function (task, floatingDirtyRollbackValues) {
-        util.log.debug('markFloatingDirty starts : ' + task.title);
+    exports.markFloatingDirtyViaDependence = function (task, floatingDirtyUtilArray) {
+        util.log.debug('markFloatingDirtyViaDependence starts : ' + task.title);
+
+        var isInUtilArray = function (taskId) {
+            return floatingDirtyUtilArray.indexOf(taskId) > -1;
+        };
+
         task.blocks && task.blocks.forEach(function (dependentTaskId) {
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
-            if (dependentTask.data.type === 'floating' && floatingDirtyRollbackValues.findIndex(function (testTask) {
-                return testTask._id.toString() === dependentTaskId;
-            }) === -1) {
-                floatingDirtyRollbackValues.push({_id: new Packages.org.bson.types.ObjectId(dependentTaskId), data: dependentTask.data});
+            if (dependentTask.data.type === 'floating' && !isInUtilArray(dependentTaskId)) {
+                floatingDirtyUtilArray.push(dependentTaskId);
                 dependentTask.data.dirty = true;
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
-                exports.markFloatingDirty(dependentTask.data, floatingDirtyRollbackValues);
+                exports.markFloatingDirtyViaDependence(dependentTask.data, floatingDirtyUtilArray);
             }
         });
 
         task.needs && task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
-            if (prerequisiteTask.data.type === 'floating' && floatingDirtyRollbackValues.findIndex(function (testTask) {
-                return testTask._id.toString() === prerequisiteTaskId;
-            }) === -1) {
-                floatingDirtyRollbackValues.push({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId), data: prerequisiteTask.data});
+            if (prerequisiteTask.data.type === 'floating' && !isInUtilArray(prerequisiteTaskId)) {
+                floatingDirtyUtilArray.push(prerequisiteTaskId);
                 prerequisiteTask.data.dirty = true;
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId)}, prerequisiteTask.data);
-                exports.markFloatingDirty(prerequisiteTask.data, floatingDirtyRollbackValues);
+                exports.markFloatingDirtyViaDependence(prerequisiteTask.data, floatingDirtyUtilArray);
             }
         });
     };
 
-    exports.storeTask = function (task, tenantId, userId, rollbackTaskValues) {
+    exports.markFloatingDirtyViaOverlap = function (unixStart, unixEnd, resourceId) {
+        util.log.debug('markFloatingDirtyViaOverlap starts : ' + unixStart + ', ' + unixEnd + ', ' + resourceId);
+        
+        var markDirty = function(task) {
+            task.data.dirty = true;
+            tasks.update({_id: task.id}, task.data);
+        };
+        
+        // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
+        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixStart + 1}, end: {$gte: unixStart - 1}}).forEach(function(task) {
+            markDirty(task);
+        });
+        
+        // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
+        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$gte: unixStart - 1}, end: {$lte: unixEnd + 1}}).forEach(function(task) {
+            markDirty(task);
+        });
+        
+        // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
+        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixEnd + 1}, end: {$gte: unixEnd - 1}}).forEach(function(task) {
+            markDirty(task);
+        });
+    };
+
+    exports.storeTask = function (task, tenantId, userId) {
         // Update
         if (task._id) {
             task._id = new Packages.org.bson.types.ObjectId(task._id);
@@ -456,8 +486,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
                     task.dirty = true;
             }
-            if (task.dirty)
-                rollbackTaskValues.push({_id: task._id, data: oldTask});
         }
         // New task
         else
@@ -476,9 +504,13 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         // TODO - this replicates some work done by the next block, nothing dramatic, but could be improved.
         // We need to have a special array for the recursivity to work properly.
-        var floatingDirtyRollbackValues = [];
-        if (task.dirty)
-            exports.markFloatingDirty(task, floatingDirtyRollbackValues);
+        var floatingDirtyUtilArray = [];
+        if (task.dirty) {
+            exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray);
+            if(task.type !== 'floating')
+                exports.markFloatingDirtyViaOverlap(task.start, util.getUnixEnd(task), task.resource);
+            
+        }
 
         task.blocks && task.blocks.forEach(function (dependentTaskId) {
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
@@ -489,8 +521,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             dependentTask.data.needs.push(task._id.toString());
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
         });
-        if (rollbackTaskValues)
-            rollbackTaskValues = rollbackTaskValues.concat(floatingDirtyRollbackValues);
 
         // Send notifications - for non-floating tasks (in case of floating we do not yet know the resource to send the notification to)
         // For floating this is done after solving (as of 20160903 - in this file, in fn storeSlnData).
@@ -507,13 +537,15 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTask.id)}, dependentTask.data);
         });
 
-        tasks.remove({_id: new Packages.org.bson.types.ObjectId(taskId)});
-    };
-
-    exports.resetTasks = function (tasksToResetTo) {
-        tasksToResetTo.forEach(function (rollbackTask) {
-            tasks.update({_id: rollbackTask._id}, rollbackTask.data);
+        tasks.find({blocks: taskId}).forEach(function (prerequisiteTask) {
+            var index = prerequisiteTask.data.blocks.findIndex(function (dep) {
+                return dep === taskId;
+            });
+            prerequisiteTask.data.blocks.splice(index, 1);
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTask.id)}, prerequisiteTask.data);
         });
+
+        tasks.remove({_id: new Packages.org.bson.types.ObjectId(taskId)});
     };
 
     exports.removeTasks = function (searchObject, tenantId) {
