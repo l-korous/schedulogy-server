@@ -43,6 +43,15 @@ exports.settings = {
         text += '. \r\n \r\n \r\n SCHEDULOGY team';
         return text;
     },
+    resetPasswordSubject: 'Password Reset for SCHEDULOGY',
+    resetPasswordUrl: clientUrl + '/#/password-reset',
+    resetPasswordText: function (userId, passwordResetHash) {
+        var text = 'Reset your password for SCHEDULOGY \r\n \r\n \r\n Please visit ';
+        text += this.mailSetupUrl + '?id=' + passwordResetHash + '&user=' + userId;
+        text += '. \r\n \r\n \r\n Please enjoy SCHEDULOGY and contact us at info@schedulogy.com with any questions you have.';
+        text += '. \r\n \r\n \r\n SCHEDULOGY team';
+        return text;
+    },
     defaultNotificationSetup: function (task) {
         // 15-min ahead notification.
         if (task.type !== 'fixedAllDay')
