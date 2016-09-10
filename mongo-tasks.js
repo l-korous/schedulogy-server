@@ -310,15 +310,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 constraintsUtilArray.push(taskWithLeqDue.id);
             }
         });
-        // Fixed tasks do not have dependences.
-        tasks.find({resource: task.resource, start: {$lte: task.due, $gte: btime - 1}, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (taskWithLeqStart) {
-            if (constraintsUtilArray.indexOf(taskWithLeqStart.id) === -1) {
-                toReturn += util.getUnixDuration(taskWithLeqStart.data);
-                if (toReturn)
-                    util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
-                constraintsUtilArray.push(taskWithLeqStart.id);
-            }
-        });
         util.log.debug('getStartConstraint finishes with: ' + toReturn);
         return toReturn;
     };
