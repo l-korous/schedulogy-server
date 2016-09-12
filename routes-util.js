@@ -27,9 +27,12 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
         util.log_request(req);
         var res = mongoUtil.verifyUserCredentialsReturnUser(req.params);
         if (typeof res === 'object') {
+	    var headerToReturn = settings.defaultHeaderJson;
+	    headerToReturn['Set-Cookie'] = 'schedulogyAppAccessed=1; Domain=.schedulogy.com; Path=/; Max-Age=' + 7 * 86400 + ';';
             return {
+		
                 body: ['{"token":"' + auth.generateToken(res) + '", "runIntro":' + res.runIntro + '}'],
-                headers: settings.defaultHeaderJson,
+                headers: headerToReturn,
                 status: 200
             };
         }

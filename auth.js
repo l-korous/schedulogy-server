@@ -51,10 +51,9 @@ exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
                 util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
                 return toReturn;
             }
-            if (!req.session.data.userId) {
                 if (!req.headers.authorization || !req.headers.xuser)
                     return util.simpleResponse('missingAuth', 403);
-                else {
+             if (!req.session.data.userId) {
                     var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
                     if (auth_res.msg === 'ok') {
                         req.session.data.userId = req.headers.xuser;
@@ -68,7 +67,6 @@ exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
                         return util.simpleResponse(auth_res.msg, 403);
                     }
                 }
-            }
             else {
                 var toReturn = next(req);
                 util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
