@@ -1,0 +1,70 @@
+server {
+	listen 80;
+	listen 443 ssl;
+
+	ssl_certificate  /etc/ssl/private/schedulogy.crt;
+	ssl_certificate_key /etc/ssl/private/schedulogy.key;
+
+	server_name schedulogy.com;
+	rewrite ^(.*) https://www.schedulogy.com$1 permanent;
+	return 301 https://www.schedulogy.com$request_uri;
+}
+
+server {
+	listen 80;
+	server_name www.schedulogy.com;
+	return 301 https://www.schedulogy.com$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	listen [::]:443;
+	server_name www.schedulogy.com;
+
+	ssl_certificate  /etc/ssl/private/www-schedulogy.crt;
+	ssl_certificate_key /etc/ssl/private/www-schedulogy.key;
+
+	location / {
+		if ($http_cookie ~ 'schedulogyAppAccessed=1') {
+			rewrite ^(.*) https://www.schedulogy.com/app;
+			break;
+		}
+	}
+
+	
+	location /home {
+		alias /var/www/schedulogy-web;
+		index index.html;
+	}
+	
+	root /var/www/schedulogy-web;
+	index index.html;
+	
+
+	location ~* /api/.*.js$ {
+		deny all;
+		return 404;
+	}
+
+	location /api {
+		expires -1;
+		proxy_pass http://localhost:8080;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_cache_bypass $http_upgrade;
+	}
+
+
+	location /app {
+		alias /var/www/schedulogy-client/www/;
+		expires -1;
+		index index.html;
+	}
+	
+	location ~ /(app/js/|app/templates/|app/css/|app/bower.json|app/index-dev.html) {
+		deny all;
+		return 404;
+	}
+}
