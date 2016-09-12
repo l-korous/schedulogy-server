@@ -222,12 +222,12 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         return toReturn;
     };
 
-    exports.storeSlnData = function (outputJsonString, btime) {
-        util.log.debug('storeSlnData starts with btime = ' + moment.unix(btime).toString() + '.');
+    exports.storeSlnData = function (outputJsonString, btime_startOfDay) {
+        util.log.debug('storeSlnData starts with btime_startOfDay = ' + moment.unix(btime_startOfDay).toString() + '.');
         var outputJson = JSON.parse(outputJsonString);
         var solArray = outputJson.solution;
         solArray.forEach(function (solutionEl) {
-            var start = util.slotToTime(solutionEl.StartTime, btime);
+            var start = util.slotToTime(solutionEl.StartTime, btime_startOfDay);
             // TODO - This will have to be changed if we start supporting multiple resources per task.
             var task = tasks.findOne({_id: new Packages.org.bson.types.ObjectId(solutionEl.id)});
             task.data.resource = solutionEl.Resource;

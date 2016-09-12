@@ -78,11 +78,9 @@ exports.initialize = function (settings, moment) {
         return result;
     };
     exports.slotToTime = function (slot, btimeUnix) {
-        var btime = moment.unix(btimeUnix);
-        log.debug('* slotToTime starts with slot = ' + slot + ', btime = ' + btime.toString() + '.');
-        var endOfDay = settings.endSlot - exports.ToSlots(btime);
-        log.debug('** slotToTime - endOfDay: ' + endOfDay);
-        var endOfWeek = btime.clone().add(1, 'w').startOf('isoWeek').add(settings.endSlot * settings.minGranularity, 'm');
+        var btime_startOfDay = moment.unix(btimeUnix);
+        log.debug('* slotToTime starts with slot = ' + slot + ', btime = ' + btime_startOfDay.toString() + '.');
+        var endOfWeek = btime_startOfDay.clone().add(1, 'w').startOf('isoWeek').add(settings.endSlot * settings.minGranularity, 'm');
         log.debug('** slotToTime - endOfWeek: ' + endOfWeek);
         var weekMinutes = Math.floor(slot / (settings.daysPerWeek * settings.hoursPerDay * settings.slotsPerHour)) * 7 * 1440;
         log.debug('** slotToTime - weekMinutes: ' + weekMinutes);
@@ -92,16 +90,11 @@ exports.initialize = function (settings, moment) {
         log.debug('** slotToTime - dayMinutes: ' + dayMinutes);
         var slotModDays = slot % (settings.hoursPerDay * settings.slotsPerHour);
         log.debug('** slotToTime - slotModDays: ' + slotModDays);
-        if (slotModDays > endOfDay - 1) {
-            dayMinutes += ((24 * settings.slotsPerHour) - (settings.endSlot - settings.startSlot)) * settings.minGranularity;
-            slotModDays -= endOfDay;
-        }
-        log.debug('** slotToTime - slotModDays: ' + slotModDays);
         var hourMinutes = slotModDays * settings.minGranularity;
         log.debug('** slotToTime - hourMinutes: ' + hourMinutes);
         var total = weekMinutes + dayMinutes + hourMinutes;
         log.debug('** slotToTime - total: ' + total);
-        var result = btime.clone().add(total, 'm');
+        var result = btime_startOfDay.clone().add(total, 'm');
         log.debug('* slotToTime finishes with: ' + result + '.');
         return result.unix();
     };
