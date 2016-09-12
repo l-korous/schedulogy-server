@@ -47,7 +47,10 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
     };
 
     var createBody = function (task) {
-        return task.description ? (task.description + '\r\n\r\n') : 'See in SCHEDULOGY - ' + settings.notificationUrl + '.';
+        var toReturn = task.title + '\r\n\r\n';
+        if(task.desc)
+            toReturn += task.desc + '\r\n\r\n';
+        toReturn += 'See in SCHEDULOGY - ' + settings.notificationUrl + '.';
     };
 
     // This always try to remove the scheduler task, which might not be present - in which case the attempt to remove does not fail, but does nothing.
