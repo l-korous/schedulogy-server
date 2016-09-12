@@ -51,6 +51,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
         if(task.desc)
             toReturn += task.desc + '\r\n\r\n';
         toReturn += 'See in SCHEDULOGY - ' + settings.notificationUrl + '.';
+        return toReturn;
     };
 
     // This always try to remove the scheduler task, which might not be present - in which case the attempt to remove does not fail, but does nothing.
