@@ -18,14 +18,20 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
     importPackage(java.io);
 
     var getCalendar = function (inputData, userId) {
-        var fileName = userId.toString() + (new moment()).unix();
-        util.log.info('Saved iCal file: ' + fileName);
-        var tempFile = tempFiles.createTempFile(fileName, ".ical");
-        fs.write(tempFile, inputData);
+        try {
+            var fileName = userId.toString() + (new moment()).unix();
+            util.log.info('Saved iCal file: ' + fileName);
+            var tempFile = tempFiles.createTempFile(fileName, ".ical");
+            fs.write(tempFile, inputData);
 
-        var fin = new FileInputStream(tempFile);
-        var builder = new CalendarBuilder();
-        return {calendar: builder.build(fin), registry: builder.getRegistry()};
+            var fin = new FileInputStream(tempFile);
+            var builder = new CalendarBuilder();
+            return {calendar: builder.build(fin), registry: builder.getRegistry()};
+        }
+        catch (e) {
+            util.log.error('Exception: ' + e);
+            throw(e);
+        }
     };
 
     var saveImportedTask = function (component, tenantId, userId, resourceId, btime, registry) {
@@ -107,7 +113,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                         occurenceStart.zone(taskStart.zone());
                         occurenceStart.hour(taskStart.hour());
                         occurenceStart.minute(taskStart.minute());
-                        
+
                         // Add duration to get the end.
                         var occurenceEnd = occurenceStart.clone().add(duration * (type === 'fixed' ? settings.minGranularity : 1440), 'minutes');
                         console.log(date);
@@ -123,23 +129,28 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
     };
 
     exports.processIcalFile = function (inputData, tenantId, userId, btime) {
-        var allData = getCalendar(inputData, userId);
-        var calendar = allData.calendar;
-        var registry = allData.registry;
+        try {
+            var allData = getCalendar(inputData, userId);
+            var calendar = allData.calendar;
+            var registry = allData.registry;
 
-        // The user's resource is the one where all tasks are put at the moment.
-        var resource = resources.findOne({user: userId, type: 'user'});
-        if (resource) {
-            for (var i = calendar.getComponents().iterator(); i.hasNext(); ) {
-                var component = i.next();
-                saveImportedTask(component, tenantId, userId, resource.id, btime, registry);
+            // The user's resource is the one where all tasks are put at the moment.
+            var resource = resources.findOne({user: userId, type: 'user'});
+            if (resource) {
+                for (var i = calendar.getComponents().iterator(); i.hasNext(); ) {
+                    var component = i.next();
+                    saveImportedTask(component, tenantId, userId, resource.id, btime, registry);
+                }
+                // We also need to mark all floating tasks for this resource as dirty.
+                mongoResources.markResourceTasksAsDirtyOrDelete(btime, resource.id);
+                return 'ok';
             }
-            // We also need to mark all floating tasks for this resource as dirty.
-            mongoResources.markResourceTasksAsDirtyOrDelete(btime, resource.id);
-            return 'ok';
+            else {
+                util.log.error('No resource in processIcalFile');
+                return 'error';
+            }
         }
-        else {
-            util.log.error('No resource in processIcalFile');
+        catch (e) {
             return 'error';
         }
     };
