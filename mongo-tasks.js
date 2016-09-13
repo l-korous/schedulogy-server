@@ -334,9 +334,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         var dependentTasks = [];
 
-        if (taskId)
-            dependentTasks = tasks.find({needs: taskId}).toArray();
-        else if (task.blocks) {
+        if (task.blocks) {
             var blockOIDs = [];
 
             task.blocks.forEach(function (bl) {
@@ -424,24 +422,24 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
     exports.markFloatingDirtyViaOverlap = function (unixStart, unixEnd, resourceId) {
         util.log.debug('markFloatingDirtyViaOverlap starts : ' + unixStart + ', ' + unixEnd + ', ' + resourceId);
-        
-        var markDirty = function(task) {
+
+        var markDirty = function (task) {
             task.data.dirty = true;
             tasks.update({_id: task.id}, task.data);
         };
-        
+
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
-        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixStart + 1}, end: {$gte: unixStart - 1}}).forEach(function(task) {
+        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixStart + 1}, end: {$gte: unixStart - 1}}).forEach(function (task) {
             markDirty(task);
         });
-        
+
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
-        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$gte: unixStart - 1}, end: {$lte: unixEnd + 1}}).forEach(function(task) {
+        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$gte: unixStart - 1}, end: {$lte: unixEnd + 1}}).forEach(function (task) {
             markDirty(task);
         });
-        
+
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
-        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixEnd + 1}, end: {$gte: unixEnd - 1}}).forEach(function(task) {
+        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixEnd + 1}, end: {$gte: unixEnd - 1}}).forEach(function (task) {
             markDirty(task);
         });
     };
@@ -498,9 +496,9 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         var floatingDirtyUtilArray = [];
         if (task.dirty) {
             exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray);
-            if(task.type !== 'floating')
+            if (task.type !== 'floating')
                 exports.markFloatingDirtyViaOverlap(task.start, util.getUnixEnd(task), task.resource);
-            
+
         }
 
         task.blocks && task.blocks.forEach(function (dependentTaskId) {

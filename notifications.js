@@ -48,7 +48,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
     var createBody = function (task) {
         var toReturn = task.title + '\r\n\r\n';
-        if(task.desc)
+        if (task.desc)
             toReturn += task.desc + '\r\n\r\n';
         toReturn += 'See in SCHEDULOGY - ' + settings.notificationUrl + '.';
         return toReturn;
@@ -62,7 +62,8 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
         // If we will notify (indicated here that the array of notifications is non-empty
         if (notificationTimestamps.length) {
             // First delete an old notification (if there is any)
-            scheduler.removeTask(task._id.toString());
+            for (var counter = 1; counter <= 2; counter++)
+                scheduler.removeTask(task._id.toString() + counter.toString());
 
             // Find the e-mail in the storage.
             var data = resourceToData[task.resource];
@@ -74,8 +75,9 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
             // Now we should have email, but if the above call failed, we do not have it (but the error is logged).
             if (data) {
                 var cronTimestamps = util.unixToCron(notificationTimestamps);
+                var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
-                    scheduler.addTask(task._id.toString(), {
+                    scheduler.addTask(task._id.toString() + (counter++).toString(), {
                         schedule: cronTimestamp,
                         run: function () {
                             mailer.mail(data.email, createTitle(task, data.utcOffset), createBody(task));

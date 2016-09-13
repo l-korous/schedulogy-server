@@ -56,11 +56,14 @@ exports.settings = {
     },
     defaultNotificationSetup: function (task) {
         // 15-min ahead notification.
-        if (task.type !== 'fixedAllDay')
+        if (task.type === 'fixed')
             return [task.start - (15 * 60)];
         // One-day ahead notification.
-        else
+        else if (task.type === 'fixedAllDay')
             return [task.start - (24 * 60 * 60)];
+        // 15-min ahead notification + right there at the start (in the case that a task gets scheduled to (almost) right now.
+        else if (task.type === 'floating')
+            return [task.start - (15 * 60), task.start];
     },
     notificationFormat: 'MMM, Do H:mm UTCZ',
     notificationUrl: clientUrl
