@@ -35,7 +35,7 @@ exports.initialize = function (util, mongoResources, db) {
     };
 
     // This takes such an array as is returned e.g. from getUsers()
-    exports.wrapReturnArrayInJson = function (users) {
+    exports.wrapReturnArrayInJson = function (users, additionalParams) {
         var toReturn = "{\"users\": [";
         var first_resource = true;
         users.forEach(function (user) {
@@ -46,7 +46,11 @@ exports.initialize = function (util, mongoResources, db) {
 
             toReturn += JSON.stringify(user);
         });
-        toReturn += "]}";
+        toReturn += "]";
+        if (additionalParams)
+            toReturn += "," + additionalParams;
+        toReturn += "}";
+        
         return toReturn;
     };
 

@@ -94,7 +94,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                     };
 
                     // Save the task. Only if it is not stored already.
-                    mongoTasks.storeTask(taskToStore, tenantId, userId);
+                    mongoTasks.storeTask(taskToStore, tenantId, userId, btime);
                 }
 
                 var recurrence = component.getProperty('RRULE') ? component.getProperty('RRULE') : null;

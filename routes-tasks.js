@@ -48,7 +48,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     app.post('/api/task', function (req) {
         util.log_request(req);
         var task = req.postParams;
-        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId);
+        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId, req.params.btime);
         return returnSchedule(req.params.btime, req.headers.utcoffset, req.session.data.tenantId);
     });
 

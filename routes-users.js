@@ -5,9 +5,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         util.log_request(req);
         var res = mongoUsers.createUser(req.params, req.headers.utcoffset);
         if (res.id) {
-            mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
-
-            res = 'ok';
+            res = mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
         }
         return util.simpleResponse(res);
     });
@@ -30,11 +28,16 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         else {
             var res = mongoUsers.createUser(req.params, req.headers.utcoffset);
             if (res.id) {
-                mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
+                var res_mail = mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
+                if (res_mail !== 'ok')
+                    mongoUsers.removeUser(req.params.btime, res.id);
+
+                var bodyToReturn = [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}), res_mail !== 'ok' ? ('"error":"' + res_mail + '"') : null)];
+
                 return {
-                    body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
+                    body: bodyToReturn,
                     headers: settings.defaultHeaderJson,
-                    status: 200
+                    status: (res_mail === 'ok') ? 200 : 400
                 };
             }
             return util.simpleResponse(res);

@@ -3,6 +3,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
     var resources = db.getCollection('resource');
 
     var floatingTaskIsUnscheduled = function (floatingTask, btime) {
+        if (util.getUnixEnd(floatingTask) <= btime) {
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false');
+            return false;
+        }
+        
         if (floatingTask.dirty) {
             util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
             return true;
@@ -34,7 +39,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 floatingTask.data.dirty = true;
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(floatingTask.data._id)}, floatingTask.data);
                 var floatingDirtyUtilArray = [];
-                exports.markFloatingDirtyViaDependence(floatingTask.data, floatingDirtyUtilArray);
+                exports.markFloatingDirtyViaDependence(floatingTask.data, floatingDirtyUtilArray, btime);
             }
             unscheduledFloating = unscheduledFloating || currentTaskIsUnscheduled;
 
@@ -172,7 +177,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                         var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
                         if (!prerequisiteTask)
                             util.log.error('Error: prerequisite: ' + prerequisiteTaskId + ' not exists for task: ' + floatingTask.data.title);
-                        else if (util.getUnixEnd(prerequisiteTask.data) >= btime) {
+                        else if (util.getUnixEnd(prerequisiteTask.data) > btime) {
                             util.log.debug('-- dependency: ' + JSON.stringify(prerequisiteTask));
                             // Skipping past tasks.
                             var preq_end = util.getUnixEnd(prerequisiteTask.data);
@@ -375,6 +380,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             util.log.debug('recalculateConstraint finishes with constraints [' + constraint.start + ' - ' + constraint.end + '].');
             return constraint;
         }
+        else
+            return {
+                start: null,
+                end: null
+            };
     };
 
     exports.recalculateConstraints = function (btime, tenantId) {
@@ -392,7 +402,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         return tasks.find(object);
     };
 
-    exports.markFloatingDirtyViaDependence = function (task, floatingDirtyUtilArray) {
+    exports.markFloatingDirtyViaDependence = function (task, floatingDirtyUtilArray, btime) {
         util.log.debug('markFloatingDirtyViaDependence starts : ' + task.title);
 
         var isInUtilArray = function (taskId) {
@@ -402,20 +412,24 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         task.blocks && task.blocks.forEach(function (dependentTaskId) {
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
             if (dependentTask.data.type === 'floating' && !isInUtilArray(dependentTaskId)) {
-                floatingDirtyUtilArray.push(dependentTaskId);
-                dependentTask.data.dirty = true;
-                tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
-                exports.markFloatingDirtyViaDependence(dependentTask.data, floatingDirtyUtilArray);
+                if (util.getUnixEnd(dependentTask.data) > btime) {
+                    floatingDirtyUtilArray.push(dependentTaskId);
+                    dependentTask.data.dirty = true;
+                    tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
+                    exports.markFloatingDirtyViaDependence(dependentTask.data, floatingDirtyUtilArray, btime);
+                }
             }
         });
 
         task.needs && task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
             if (prerequisiteTask.data.type === 'floating' && !isInUtilArray(prerequisiteTaskId)) {
+                if (util.getUnixEnd(prerequisiteTask.data) > btime) {
                 floatingDirtyUtilArray.push(prerequisiteTaskId);
                 prerequisiteTask.data.dirty = true;
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId)}, prerequisiteTask.data);
-                exports.markFloatingDirtyViaDependence(prerequisiteTask.data, floatingDirtyUtilArray);
+                exports.markFloatingDirtyViaDependence(prerequisiteTask.data, floatingDirtyUtilArray, btime);
+            }
             }
         });
     };
@@ -444,7 +458,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         });
     };
 
-    exports.storeTask = function (task, tenantId, userId) {
+    exports.storeTask = function (task, tenantId, userId, btime) {
         // Update
         if (task._id) {
             task._id = new Packages.org.bson.types.ObjectId(task._id);
@@ -495,7 +509,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         // We need to have a special array for the recursivity to work properly.
         var floatingDirtyUtilArray = [];
         if (task.dirty) {
-            exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray);
+            exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray, btime);
             if (task.type !== 'floating')
                 exports.markFloatingDirtyViaOverlap(task.start, util.getUnixEnd(task), task.resource);
 

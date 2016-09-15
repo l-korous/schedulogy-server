@@ -37,7 +37,7 @@ exports.initialize = function (util, mongoTasks, db) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
             task.data.dirty = true;
 
-            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
             mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
 
             task.data.resource = replacementResourceId;
