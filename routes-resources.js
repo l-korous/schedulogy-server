@@ -31,7 +31,6 @@ exports.initialize = function (app, mongoResources, util, settings) {
 
     app.get('/api/resource', function (req) {
         util.log_request(req);
-
         var resources = mongoResources.getResources({tenant: req.session.data.tenantId});
         return {
             body: [resources],

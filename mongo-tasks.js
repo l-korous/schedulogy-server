@@ -7,7 +7,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false');
             return false;
         }
-        
+
         if (floatingTask.dirty) {
             util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
             return true;
@@ -16,11 +16,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
             return true;
         }
-        if (floatingTask.start >= btime) {
-            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
-            return true;
-        }
-
+        
         util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false');
         return false;
     };
@@ -254,88 +250,50 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         });
     };
 
-    var constraintsUtilArray = [];
+    // For a single ***floating*** task, calculate the maximum end time of all fixed prerequisites (WITH transitivity).
+    // addOwnDur - if I should return with my own duration. Usually false for the root element, true for other.
+    var getStartConstraintFromFixedDeps = function (task, btime, addOwnDur) {
+        util.log.debug('getStartConstraintFromFixedDeps starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
 
-    // For a single task, calculate the amount of time necessary to complete all its dependencies.
-    // While not counting durations of tasks that are (already) in constraintsUtilArray and at the same time updating the array.
-    var getStartConstraintFromDeps = function (task, btime) {
-        util.log.debug('getStartConstraintFromDeps starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
-        var toReturn = 0;
-        task.needs && task.needs.forEach(function (prerequisiteTaskId) {
-            var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
-            if (!prerequisiteTask) {
-                util.log.error('Error: prerequisite not exists: ' + prerequisiteTaskId);
-                return;
-            }
+        if (task.type !== 'floating')
+            return util.getUnixEnd(task);
+        else {
+            var taskCanStartNoEarlierThan = btime;
+            task.needs && task.needs.forEach(function (prerequisiteTaskId) {
+                var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
+                if (!prerequisiteTask) {
+                    util.log.error('Error: prerequisite not exists for: ' + (task.title ? task.title : '(new)' + task.type));
+                    return;
+                }
 
-            util.log.debug('* getStartConstraintFromDeps - a prerequisite: ' + prerequisiteTask.data.title + '.');
-            if ((constraintsUtilArray.indexOf(prerequisiteTaskId) === -1) && util.getUnixEnd(prerequisiteTask.data) > btime) {
-                constraintsUtilArray.push(prerequisiteTaskId);
-                toReturn += util.getUnixDuration(prerequisiteTask.data) + getStartConstraintFromDeps(prerequisiteTask.data, btime);
-                util.log.debug('* getStartConstraintFromDeps - current toReturn: ' + toReturn + '.');
-            }
-        });
-        util.log.debug('getStartConstraintFromDeps finishes with: ' + toReturn);
-        return toReturn;
+                if (util.getUnixEnd(prerequisiteTask.data) > btime) {
+                    taskCanStartNoEarlierThan = Math.max(taskCanStartNoEarlierThan, getStartConstraintFromFixedDeps(prerequisiteTask.data, btime, true));
+                }
+            });
+            if (addOwnDur)
+                taskCanStartNoEarlierThan += util.getUnixDuration(task);
+
+            util.log.debug('getStartConstraintFromFixedDeps finishes with: ' + taskCanStartNoEarlierThan);
+            return taskCanStartNoEarlierThan;
+        }
     };
 
-    // For a single task, calculate the amount of time (in hours now) necessary to complete:
-    // - all its dependencies
-    // - all tasks with due date before this task (with dependencies)
-    // - all fixed tasks which have to occur before due - dur
-    var getStartConstraint = function (task, btime, clear) {
+    // See getStartConstraintFromFixedDeps
+    var getStartConstraint = function (task, btime) {
         if (task.type !== 'floating')
             util.log.error('getStartConstraint called for a !floating Task.');
 
         util.log.debug('getStartConstraint starts with task = ' + (task.title ? task.title : '(new) ' + task.type) + ', due: ' + moment.unix(task.due).toString() + ', btime = ' + moment.unix(btime).toString() + '.');
-        var toReturn = 0;
-        if (clear)
-            constraintsUtilArray = [];
-        var taskId = null;
-        // This is for the case that task itself is not stored in DB.
-        // An ugly way of finding whether the task has _id (task here can be a JS object, or java object, that is why we have to do this).
-        try {
-            taskId = task._id.toString();
-        }
-        catch (e) {
-            taskId = null;
-        }
-        if (!taskId || constraintsUtilArray.indexOf(taskId) === -1) {
-            toReturn += getStartConstraintFromDeps(task, btime);
-            if (toReturn)
-                util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
-            constraintsUtilArray.push(taskId);
-        }
 
-        tasks.find({resource: task.resource, due: {$lte: task.due, $gte: btime - 1}, type: 'floating'}).forEach(function (taskWithLeqDue) {
-            if (constraintsUtilArray.indexOf(taskWithLeqDue.id) === -1) {
-                toReturn += util.getUnixDuration(taskWithLeqDue.data) + getStartConstraintFromDeps(taskWithLeqDue.data, btime);
-                if (toReturn)
-                    util.log.debug('* getStartConstraint - current toReturn: ' + toReturn + '.');
-                constraintsUtilArray.push(taskWithLeqDue.id);
-            }
-        });
-        util.log.debug('getStartConstraint finishes with: ' + toReturn);
-        return toReturn;
+        return getStartConstraintFromFixedDeps(task, btime, false);
     };
 
     // For a single task, calculate the earliest time when this task must be done to satisfy all dependencies:
     // all dependent fixed tasks (NOT supported now, only floating tasks can be dependent)
-    // all dependent floating tasks
-    // all of them with dependencies (through getStartConstraint)
+    // all dependent floating tasks (WITHOUT dependencies)
     var getEndConstraint = function (task, btime) {
         util.log.debug('getEndConstraint starts with task = ' + (task.title ? task.title : '(new) ' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
         var toReturn = null;
-        var taskId = null;
-        constraintsUtilArray = [];
-        // An ugly way of finding whether the task has _id (task here can be a JS object, or java object, that is why we have to do this).
-        try {
-            taskId = task._id.toString();
-            constraintsUtilArray.push(taskId);
-        }
-        catch (e) {
-            taskId = null;
-        }
 
         var dependentTasks = [];
 
@@ -352,8 +310,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             util.log.debug('* getEndConstraint - found dependent task: ' + dependentTask.data.title + '.');
             var depLatestStartTime = util.getUnixStart(dependentTask.data);
             util.log.debug('* getEndConstraint - dependent task latest start: ' + moment.unix(depLatestStartTime).toString() + '.');
-            depLatestStartTime -= getStartConstraint(dependentTask.data, btime, false);
-            util.log.debug('* getEndConstraint - dependent task latest start (with its deps): ' + moment.unix(depLatestStartTime).toString() + '.');
             if (!toReturn || (depLatestStartTime < toReturn))
                 toReturn = depLatestStartTime;
         });
@@ -368,7 +324,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             var startConstraint = task.type === 'floating' ? getStartConstraint(task, btime, true) : null;
             var endConstraint = getEndConstraint(task, btime);
             var constraint = {
-                start: moment.unix(parseInt(btime) + startConstraint).toISOString(),
+                start: startConstraint ? moment.unix(startConstraint).toISOString() : null,
                 end: endConstraint ? moment.unix(endConstraint).toISOString() : null
             };
 
@@ -377,7 +333,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 tasks.update({_id: new Packages.org.bson.types.ObjectId(task._id)}, task);
             }
 
-            util.log.debug('recalculateConstraint finishes with constraints [' + constraint.start + ' - ' + constraint.end + '].');
+            util.log.debug('recalculateConstraint (' + task.title + ') : [' + constraint.start + ' - ' + constraint.end + '].');
             return constraint;
         }
         else
@@ -425,11 +381,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
             if (prerequisiteTask.data.type === 'floating' && !isInUtilArray(prerequisiteTaskId)) {
                 if (util.getUnixEnd(prerequisiteTask.data) > btime) {
-                floatingDirtyUtilArray.push(prerequisiteTaskId);
-                prerequisiteTask.data.dirty = true;
-                tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId)}, prerequisiteTask.data);
-                exports.markFloatingDirtyViaDependence(prerequisiteTask.data, floatingDirtyUtilArray, btime);
-            }
+                    floatingDirtyUtilArray.push(prerequisiteTaskId);
+                    prerequisiteTask.data.dirty = true;
+                    tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId)}, prerequisiteTask.data);
+                    exports.markFloatingDirtyViaDependence(prerequisiteTask.data, floatingDirtyUtilArray, btime);
+                }
             }
         });
     };
