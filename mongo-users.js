@@ -50,7 +50,7 @@ exports.initialize = function (util, mongoResources, db) {
         if (additionalParams)
             toReturn += "," + additionalParams;
         toReturn += "}";
-        
+
         return toReturn;
     };
 
@@ -126,15 +126,15 @@ exports.initialize = function (util, mongoResources, db) {
         }
     };
 
-    exports.removeUser = function (btime, userId) {
-        var resource = resources.findOne({user: userId});
-        var removeResourceRes = mongoResources.removeResource(btime, resource.id);
-        if (removeResourceRes === 'ok') {
+    // This function assumes that the associated resource has already been deleted.
+    exports.removeUser = function (userId) {
+        try {
             users.remove({_id: new Packages.org.bson.types.ObjectId(userId)});
             return 'ok';
         }
-        else
-            return removeResourceRes;
+        catch (e) {
+            return 'error';
+        }
     };
 
     exports.setUsername = function (userId, username) {

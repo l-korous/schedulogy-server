@@ -30,7 +30,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
             if (res.id) {
                 var res_mail = mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
                 if (res_mail !== 'ok')
-                    mongoUsers.removeUser(req.params.btime, res.id);
+                    mongoUsers.removeUser(res.id);
 
                 var bodyToReturn = [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}), res_mail !== 'ok' ? ('"error":"' + res_mail + '"') : null)];
 
@@ -46,7 +46,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
 
     app.del('/api/user/:userId', function (req, userId) {
         util.log_request(req);
-        var res = mongoUsers.removeUser(req.params.btime, userId);
+        var res = mongoUsers.removeUser(userId);
         if (res === 'ok')
             return {
                 body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
