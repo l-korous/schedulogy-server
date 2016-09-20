@@ -90,7 +90,9 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
     };
 
     exports.remove = function (taskId) {
-        scheduler.removeTask(taskId);
+        // Delete old notification (if there is any)
+        for (var counter = 1; counter <= 2; counter++)
+            scheduler.removeTask(taskId + counter.toString());
     };
 
     init();

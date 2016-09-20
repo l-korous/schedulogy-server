@@ -505,6 +505,8 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         });
 
         tasks.remove({_id: new Packages.org.bson.types.ObjectId(taskId)});
+        
+        notifications.remove(taskId);
     };
 
     exports.removeTasks = function (searchObject, tenantId) {
