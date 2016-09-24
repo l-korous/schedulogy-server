@@ -71,7 +71,7 @@ exports.initialize = function (util, mongoTasks, db) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
-                var dirtiedTasks = exports.markResourceTasksAsDirtyOrDelete(btime, resource._id);
+                var dirtiedTasks = exports.markResourceTasksAsDirtyOrDelete(btime, resource._id, resource._id);
                 if (dirtiedTasks > 0) {
                     // TODO Handle this better
                     // return 'ok';

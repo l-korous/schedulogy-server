@@ -4,20 +4,20 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
     var floatingTaskIsUnscheduled = function (floatingTask, btime) {
         if (util.getUnixEnd(floatingTask) <= btime) {
-            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false');
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false - end <= btime');
             return false;
         }
 
         if (floatingTask.dirty) {
-            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true - dirty');
             return true;
         }
         if (!floatingTask.start) {
-            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true');
+            util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true - no start');
             return true;
         }
         
-        util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false');
+        util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false - default');
         return false;
     };
 
@@ -391,26 +391,29 @@ exports.initialize = function (settings, util, db, notifications, moment) {
     };
 
     exports.markFloatingDirtyViaOverlap = function (unixStart, unixEnd, resourceId) {
-        util.log.debug('markFloatingDirtyViaOverlap starts : ' + unixStart + ', ' + unixEnd + ', ' + resourceId);
+        util.log.debug('markFloatingDirtyViaOverlap starts : ' + moment.unix(unixStart).toString() + ', ' + moment.unix(unixEnd).toString() + ', ' + resourceId);
 
         var markDirty = function (task) {
             task.data.dirty = true;
-            tasks.update({_id: task.id}, task.data);
+            tasks.update({_id: task.data._id}, task.data);
         };
 
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
         tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixStart + 1}, end: {$gte: unixStart - 1}}).forEach(function (task) {
             markDirty(task);
+            util.log.debug('Marked as dirty: ' + task.data.title);
         });
 
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
         tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$gte: unixStart - 1}, end: {$lte: unixEnd + 1}}).forEach(function (task) {
             markDirty(task);
+            util.log.debug('Marked as dirty: ' + task.data.title);
         });
 
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
         tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixEnd + 1}, end: {$gte: unixEnd - 1}}).forEach(function (task) {
             markDirty(task);
+            util.log.debug('Marked as dirty: ' + task.data.title);
         });
     };
 
