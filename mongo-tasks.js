@@ -285,7 +285,9 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         util.log.debug('getStartConstraint starts with task = ' + (task.title ? task.title : '(new) ' + task.type) + ', due: ' + moment.unix(task.due).toString() + ', btime = ' + moment.unix(btime).toString() + '.');
 
-        return getStartConstraintFromFixedDeps(task, btime, false);
+        var toReturn = getStartConstraintFromFixedDeps(task, btime, false);
+        util.log.debug('getStartConstraint finishes with: ' + toReturn);
+        return toReturn;
     };
 
     // For a single task, calculate the earliest time when this task must be done to satisfy all dependencies:
