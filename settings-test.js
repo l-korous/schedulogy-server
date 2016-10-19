@@ -1,4 +1,4 @@
-var clientUrl = 'http://localhost:8100';
+var clientUrl = 'http://54.93.91.141';
 
 exports.settings = {
     weeks: 26,
@@ -14,7 +14,7 @@ exports.settings = {
     maxICalSize: 10,
     // TODO - Are these correct?
     defaultHeaderJson: {
-        'Access-Control-Allow-Origin': "http://localhost:8100",
+        'Access-Control-Allow-Origin': "*",
         'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
         'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset',
@@ -29,7 +29,7 @@ exports.settings = {
     optionAllowedResponse: {
         body: [],
         headers: {
-            'Access-Control-Allow-Origin': "http://localhost:8100",
+            'Access-Control-Allow-Origin': "*",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
             'Access-Control-Allow-Credentials': 'true',
             'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset'

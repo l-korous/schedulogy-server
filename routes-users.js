@@ -5,7 +5,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         util.log_request(req);
         var res = mongoUsers.createUser(req.params, req.headers.utcoffset);
         if (res.id) {
-            res = mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
+            res = mailer.html(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
         }
         return util.simpleResponse(res);
     });
@@ -28,7 +28,7 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
         else {
             var res = mongoUsers.createUser(req.params, req.headers.utcoffset);
             if (res.id) {
-                var res_mail = mailer.mail(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
+                var res_mail = mailer.html(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
                 if (res_mail !== 'ok')
                     mongoUsers.removeUser(res.id);
 

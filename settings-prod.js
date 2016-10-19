@@ -1,4 +1,4 @@
-var clientUrl = 'http://localhost:8100';
+var clientUrl = 'https://www.schedulogy.com/app';
 
 exports.settings = {
     weeks: 26,
@@ -14,22 +14,20 @@ exports.settings = {
     maxICalSize: 10,
     // TODO - Are these correct?
     defaultHeaderJson: {
-        'Access-Control-Allow-Origin': "http://localhost:8100",
+        'Access-Control-Allow-Origin': "https://www.schedulogy.com",
         'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
         'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset',
         'Content-Type': 'application/json'
     },
-    smtpHost: 'smtp.gmail.com',
-    smtpPort: 587,
-    smtpEncrypt: true,
-    smtpUsername: 'util.314@gmail.com',
-    smtpPassword: 'utili+t8k',
-    msgReceiver: 'info@schedulogy.com',
+    smtpHost: 'localhost',
+    smtpPort: 25,
+    smtpEncrypt: false,
+    msgReceiver: 'SCHEDULOGY <info@schedulogy.com>',
     optionAllowedResponse: {
         body: [],
         headers: {
-            'Access-Control-Allow-Origin': "http://localhost:8100",
+            'Access-Control-Allow-Origin': "https://www.schedulogy.com",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
             'Access-Control-Allow-Credentials': 'true',
             'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset'

@@ -43,7 +43,7 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
         if (typeof res === 'object') {
             var newHash = util.generatePasswordResetHash();
             mongoUtil.storePasswordResetHash(res.data._id, newHash);
-            var res = mailer.mail(res.data.email, settings.resetPasswordSubject, settings.resetPasswordText(res.data._id, newHash));
+            var res = mailer.html(res.data.email, settings.resetPasswordSubject, settings.resetPasswordText(res.data._id, newHash));
         }
         return util.simpleResponse(res);
     });
