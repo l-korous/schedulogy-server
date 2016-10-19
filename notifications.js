@@ -60,7 +60,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
         var notificationTimestamps = task.notificationTimestamps ? task.notificationTimestamps : settings.defaultNotificationSetup(task);
 
         // If we will notify (indicated here that the array of notifications is non-empty
-        if (notificationTimestamps.length) {
+        if (notificationTimestamps.length || task.type === 'reminder') {
             // First delete an old notification (if there is any)
             for (var counter = 1; counter <= 2; counter++)
                 scheduler.removeTask(task._id.toString() + counter.toString());
@@ -74,7 +74,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
             // Now we should have email, but if the above call failed, we do not have it (but the error is logged).
             if (data) {
-                var cronTimestamps = util.unixToCron(notificationTimestamps);
+                var cronTimestamps = (task.type === 'reminder' ? settings.reminderCronTimestamps : util.unixToCron(notificationTimestamps));
                 var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
                     scheduler.addTask(task._id.toString() + (counter++).toString(), {

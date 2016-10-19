@@ -16,7 +16,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : true - no start');
             return true;
         }
-        
+
         util.log.debug('floatingTaskIsUnscheduled for: ' + floatingTask.title + ' : false - default');
         return false;
     };
@@ -29,7 +29,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         var scheduledFloating = false;
         var dirtyFixed = false;
 
-        tasks.find({tenant: tenantId, type: 'floating'}).forEach(function (floatingTask) {
+        tasks.find({tenant: tenantId, type: 'task'}).forEach(function (floatingTask) {
             var currentTaskIsUnscheduled = floatingTaskIsUnscheduled(floatingTask.data, btime);
             if (currentTaskIsUnscheduled) {
                 floatingTask.data.dirty = true;
@@ -44,7 +44,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         if (!unscheduledFloating) {
             // $gte: btime is a bug probably in the Mongo driver.
-            tasks.find({tenant: tenantId, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}}).forEach(function (fixedTask) {
+            tasks.find({tenant: tenantId, type: 'event', start: {$gte: btime - 1}}).forEach(function (fixedTask) {
                 dirtyFixed = dirtyFixed || fixedTask.data.dirty;
             });
             if (dirtyFixed && scheduledFloating)
@@ -72,6 +72,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         toReturn.weekEnd = resource.constraints ? resource.constraints[0].value_until - 1 : 6;
         toReturn.dayStart = resource.constraints ? resource.constraints[1].value_since : 0;
         toReturn.dayEnd = resource.constraints ? resource.constraints[1].value_until : settings.endSlot;
+        toReturn.utcOffset = (resource.utcOffset / settings.minuteGranularity);
         return toReturn;
     };
 
@@ -89,7 +90,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 timePreferences.push(i);
 
             // $gte: btime is a bug probably in the Mongo driver.
-            tasks.find({resource: resource.id, type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}}).forEach(function (fixedTask) {
+            tasks.find({resource: resource.id, type: 'event', end: {$gte: btime - 1}}).forEach(function (fixedTask) {
                 util.log.debug('Fixed task to TimePreferences: ' + fixedTask.data.title);
                 var start = fixedTask.data.start;
                 var end = util.getUnixEnd(fixedTask.data);
@@ -104,7 +105,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 }
             });
 
-            tasks.find({resource: resource.id, type: 'floating'}).forEach(function (floatingTask) {
+            tasks.find({resource: resource.id, type: 'task'}).forEach(function (floatingTask) {
                 // We are interested here in floating tasks that will NOT be scheduled - they need to be respected though - no other task can be scheduled in their slots.
                 var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data, btime);
                 // 
@@ -132,7 +133,8 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 weekStart: resData.weekStart,
                 weekEnd: resData.weekEnd,
                 dayStart: resData.dayStart,
-                dayEnd: resData.dayEnd
+                dayEnd: resData.dayEnd,
+                utcOffset: resData.utcOffset
             });
         });
 
@@ -145,13 +147,14 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             Dependencies: []
         };
 
-        tasks.find({tenant: tenantIdInMongo, type: 'floating'}).forEach(function (floatingTask) {
+        tasks.find({tenant: tenantIdInMongo, type: 'task'}).forEach(function (floatingTask) {
             // Skipping past tasks. But not skipping unscheduled tasks.
             var scheduleTask = floatingTaskIsUnscheduled(floatingTask.data, btime);
             if (scheduleTask) {
                 var dueInteger = util.timeToSlot(floatingTask.data.due, btime_startOfDay);
                 var activity = {
-                    l: floatingTask.data.dur,
+                    l: floatingTask.data.dur * (floatingTask.data.allDay ? settings.hoursPerDay * settings.slotsPerHour : 1),
+                    allDay: floatingTask.data.allDay,
                     id: floatingTask.id,
                     ar: [],
                     tp: [{
@@ -177,10 +180,10 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                             util.log.debug('-- dependency: ' + JSON.stringify(prerequisiteTask));
                             // Skipping past tasks.
                             var preq_end = util.getUnixEnd(prerequisiteTask.data);
-                            if (['fixed', 'fixedAllDay'].indexOf(prerequisiteTask.data.type) > -1) {
+                            if (prerequisiteTask.data.type === 'event') {
                                 var fixedPrerequisite = Math.max(0, util.timeToSlot(preq_end, btime_startOfDay));
                                 maxFixedPrerequisite = Math.max(maxFixedPrerequisite, fixedPrerequisite);
-                            } else if (prerequisiteTask.data.type === 'floating') {
+                            } else if (prerequisiteTask.data.type === 'task') {
                                 var dependency = {
                                     id: prerequisiteTaskId + floatingTask.id,
                                     f: prerequisiteTaskId,
@@ -244,7 +247,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
     exports.markFixedAsNonDirty = function (tenantId) {
         // Very important - Ringo.js MongoDB driver does not support updates with option {multi: true}, so we need to update one-by-one.
-        tasks.find({tenant: tenantId, type: {$in: ['fixed', 'fixedAllDay']}}).forEach(function (task) {
+        tasks.find({tenant: tenantId, type: {$in: ['reminder', 'event']}}).forEach(function (task) {
             task.data.dirty = false;
             tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
         });
@@ -255,7 +258,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
     var getStartConstraintFromFixedDeps = function (task, btime, addOwnDur) {
         util.log.debug('getStartConstraintFromFixedDeps starts with task = ' + (task.title ? task.title : '(new)' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
 
-        if (task.type !== 'floating')
+        if (task.type !== 'task')
             return util.getUnixEnd(task);
         else {
             var taskCanStartNoEarlierThan = btime;
@@ -280,7 +283,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
     // See getStartConstraintFromFixedDeps
     var getStartConstraint = function (task, btime) {
-        if (task.type !== 'floating')
+        if (task.type !== 'task')
             util.log.error('getStartConstraint called for a !floating Task.');
 
         util.log.debug('getStartConstraint starts with task = ' + (task.title ? task.title : '(new) ' + task.type) + ', due: ' + moment.unix(task.due).toString() + ', btime = ' + moment.unix(btime).toString() + '.');
@@ -323,7 +326,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         util.log.debug('recalculateConstraint starts with task = ' + (task.title ? task.title : '(new) ' + task.type) + ', btime = ' + moment.unix(btime).toString() + '.');
         if (util.getUnixEnd(task) > btime) {
             // TODO This means that for fixed tasks, we do not have prerequisites, or any bound on start.
-            var startConstraint = task.type === 'floating' ? getStartConstraint(task, btime, true) : null;
+            var startConstraint = task.type === 'task' ? getStartConstraint(task, btime, true) : null;
             var endConstraint = getEndConstraint(task, btime);
             var constraint = {
                 start: startConstraint ? moment.unix(startConstraint).toISOString() : null,
@@ -369,7 +372,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         task.blocks && task.blocks.forEach(function (dependentTaskId) {
             var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
-            if (dependentTask.data.type === 'floating' && !isInUtilArray(dependentTaskId)) {
+            if (dependentTask.data.type === 'task' && !isInUtilArray(dependentTaskId)) {
                 if (util.getUnixEnd(dependentTask.data) > btime) {
                     floatingDirtyUtilArray.push(dependentTaskId);
                     dependentTask.data.dirty = true;
@@ -381,7 +384,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         task.needs && task.needs.forEach(function (prerequisiteTaskId) {
             var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
-            if (prerequisiteTask.data.type === 'floating' && !isInUtilArray(prerequisiteTaskId)) {
+            if (prerequisiteTask.data.type === 'task' && !isInUtilArray(prerequisiteTaskId)) {
                 if (util.getUnixEnd(prerequisiteTask.data) > btime) {
                     floatingDirtyUtilArray.push(prerequisiteTaskId);
                     prerequisiteTask.data.dirty = true;
@@ -401,19 +404,19 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         };
 
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
-        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixStart + 1}, end: {$gte: unixStart - 1}}).forEach(function (task) {
+        tasks.find({type: 'task', dirty: false, resource: resourceId, start: {$lte: unixStart + 1}, end: {$gte: unixStart - 1}}).forEach(function (task) {
             markDirty(task);
             util.log.debug('Marked as dirty: ' + task.data.title);
         });
 
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
-        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$gte: unixStart - 1}, end: {$lte: unixEnd + 1}}).forEach(function (task) {
+        tasks.find({type: 'task', dirty: false, resource: resourceId, start: {$gte: unixStart - 1}, end: {$lte: unixEnd + 1}}).forEach(function (task) {
             markDirty(task);
             util.log.debug('Marked as dirty: ' + task.data.title);
         });
 
         // The -/+ 1 are here to be on the safe-side, there is something fishy with this Mongo client for these operators.
-        tasks.find({type: 'floating', dirty: false, resource: resourceId, start: {$lte: unixEnd + 1}, end: {$gte: unixEnd - 1}}).forEach(function (task) {
+        tasks.find({type: 'task', dirty: false, resource: resourceId, start: {$lte: unixEnd + 1}, end: {$gte: unixEnd - 1}}).forEach(function (task) {
             markDirty(task);
             util.log.debug('Marked as dirty: ' + task.data.title);
         });
@@ -428,7 +431,9 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             task.dirty = false;
             if (oldTask.type !== task.type)
                 task.dirty = true;
-            else if (oldTask.type === 'floating') {
+            if (oldTask.allDay !== task.allDay)
+                task.dirty = true;
+            else if (oldTask.type === 'task') {
                 if (oldTask.due !== task.due)
                     task.dirty = true;
                 else if (oldTask.dur !== task.dur)
@@ -453,13 +458,13 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         }
         // New task
         else
-            task.dirty = true;
+            task.dirty = task.type !== 'reminder';
 
         task.tenant = tenantId;
         task.user = userId;
 
         // By default, users use their own single resource.
-        if (!task.admissibleResources) {
+        if (!task.admissibleResources && task.type == 'task') {
             task.admissibleResources = [];
             task.admissibleResources.push(resources.findOne({type: 'user', user: task.user}).id);
         }
@@ -468,10 +473,10 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         // TODO - this replicates some work done by the next block, nothing dramatic, but could be improved.
         // We need to have a special array for the recursivity to work properly.
-        var floatingDirtyUtilArray = [];
         if (task.dirty) {
+            var floatingDirtyUtilArray = [];
             exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray, btime);
-            if (task.type !== 'floating')
+            if (task.type !== 'task')
                 exports.markFloatingDirtyViaOverlap(task.start, util.getUnixEnd(task), task.resource);
 
         }
@@ -488,8 +493,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         // Send notifications - for non-floating tasks (in case of floating we do not yet know the resource to send the notification to)
         // For floating this is done after solving (as of 20160903 - in this file, in fn storeSlnData).
-        if (task.type !== 'floating')
+        if (task.type === 'reminder' && task.done)
+            notifications.remove(task);
+        else if (task.type !== 'task')
             notifications.reinit(task);
+
     };
 
     exports.removeTask = function (taskId) {
@@ -510,7 +518,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         });
 
         tasks.remove({_id: new Packages.org.bson.types.ObjectId(taskId)});
-        
+
         notifications.remove(taskId);
     };
 
@@ -545,7 +553,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             tasksArray.push(task);
         });
 
-        tasks.find({tenant: tenantId, type: 'floating', dirty: true, due: {$gte: btime - 1}}).forEach(function (task) {
+        tasks.find({tenant: tenantId, type: 'task', dirty: true, due: {$gte: btime - 1}}).forEach(function (task) {
             task.data.blocks = [];
             tasks.find({needs: task.id}).forEach(function (dependentTask) {
                 task.data.blocks.push(dependentTask.id);

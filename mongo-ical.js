@@ -74,8 +74,9 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                 util.log.debug('saveImportedTask - task not exists, creating new...');
 
                 // Handle duration and type
-                var type = ((taskEnd.hour() === 0 && taskStart.hour() === 0) ? 'fixedAllDay' : 'fixed');
-                var duration = ((type === 'fixedAllDay') ? taskEnd.diff(taskStart, 'd') : Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minGranularity));
+                var type = 'event';
+                var allDay = (taskEnd.hour() === 0 && taskStart.hour() === 0);
+                var duration = (allDay ? taskEnd.diff(taskStart, 'd') : Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minuteGranularity));
 
                 function storeTask(taskStartUnix, taskEndUnix) {
                     // Create a JSON with the task to be inserted.
@@ -83,6 +84,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                         iCalUid: uid,
                         type: type,
                         start: taskStartUnix,
+                        allDay: allDay,
                         due: taskEndUnix,
                         needs: [],
                         blocks: [],
@@ -115,7 +117,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                         occurenceStart.minute(taskStart.minute());
 
                         // Add duration to get the end.
-                        var occurenceEnd = occurenceStart.clone().add(duration * (type === 'fixed' ? settings.minGranularity : 1440), 'minutes');
+                        var occurenceEnd = occurenceStart.clone().add(duration * (type === 'event' ? settings.minuteGranularity : 1440), 'minutes');
                         console.log(date);
                         console.log(occurenceStart);
                         console.log(occurenceEnd);

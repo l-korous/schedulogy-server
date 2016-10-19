@@ -33,7 +33,7 @@ exports.initialize = function (util, mongoTasks, db) {
         var dirtiedTasks = 0;
 
         var floatingDirtyUtilArray = [];
-        tasks.find({type: {$in: ['fixed', 'fixedAllDay']}, start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
+        tasks.find({type: 'event', start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
             task.data.dirty = true;
 
@@ -45,7 +45,7 @@ exports.initialize = function (util, mongoTasks, db) {
             dirtiedTasks++;
         });
 
-        tasks.find({type: 'floating', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
+        tasks.find({type: 'task', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
             task.data.dirty = true;
 

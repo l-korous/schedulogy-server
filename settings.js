@@ -6,9 +6,9 @@ exports.settings = {
     tokenTTLinDays: 5,
     daysPerWeek: 7,
     hoursPerDay: 24,
-    minGranularity: 30,
-    // This has to be exactly calculated using minGranularity
-    slotsPerHour: 2, // === (60 / minGranularity)
+    minuteGranularity: 30,
+    // This has to be exactly calculated using minuteGranularity
+    slotsPerHour: 2, // === (60 / minuteGranularity)
     startSlot: 0, // This has to correspond to the above as well.
     endSlot: 48, // This has to correspond to the above as well.
     maxICalSize: 10,
@@ -55,16 +55,13 @@ exports.settings = {
         return text;
     },
     defaultNotificationSetup: function (task) {
-        // 15-min ahead notification.
-        if (task.type === 'fixed')
-            return [task.start - (15 * 60)];
-        // One-day ahead notification.
-        else if (task.type === 'fixedAllDay')
-            return [task.start - (24 * 60 * 60)];
+        if (task.allDay)
+            return [task.start - (24 * 60 * 60), task.start];
         // 15-min ahead notification + right there at the start (in the case that a task gets scheduled to (almost) right now.
-        else if (task.type === 'floating')
+        else
             return [task.start - (15 * 60), task.start];
     },
+    reminderCronTimestamps: ['* * * 0 0 0'],
     notificationFormat: 'MMM, Do H:mm UTCZ',
     notificationUrl: clientUrl
 };
