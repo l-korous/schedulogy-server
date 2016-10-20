@@ -140,6 +140,7 @@ exports.initialize = function (util, mongoResources, db) {
     exports.setUsername = function (userId, username) {
         try {
             users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {username: username}});
+            resources.update({type: 'user', user: userId}, {$set: {name: username}});
             return users.findOne({_id: new Packages.org.bson.types.ObjectId(userId)}).data;
         }
         catch (msg) {

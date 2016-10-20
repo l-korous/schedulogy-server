@@ -21,11 +21,40 @@ exports.initialize = function (util, mongoTasks, db) {
         return toReturn;
     };
 
+    exports.markResourceTasksAsDirty = function (btime, resourceId) {
+        util.log.debug('markResourceTasksAsDirty starts with resource = ' + resourceId + '.');
+
+        var dirtiedTasks = 0;
+
+        var floatingDirtyUtilArray = [];
+        tasks.find({type: 'event', start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
+            util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
+            task.data.dirty = true;
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
+            mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
+            dirtiedTasks++;
+        });
+
+        tasks.find({type: 'task', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
+            util.log.debug('markResourceTasksAsDirty found a task: ' + task.data.title + '.');
+            task.data.dirty = true;
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
+            dirtiedTasks++;
+        });
+
+        util.log.debug('markResourceTasksAsDirty ends with dirtiedTasks = ' + dirtiedTasks + '.');
+        return dirtiedTasks;
+    };
+
     exports.markResourceTasksAsDirtyOrDelete = function (btime, resourceId, replacementResourceId) {
         util.log.debug('markResourceTasksAsDirtyOrDelete starts with resource = ' + resourceId + ', replacementResourceId = ' + replacementResourceId + '.');
 
         if (!replacementResourceId) {
-            tasks.remove({resource: resourceId});
+            tasks.remove({type: {$in: ['event', 'reminder']}, resource: resourceId});
+            util.log.debug('markResourceTasksAsDirtyOrDelete deleted all events & reminders.');
+            tasks.remove({type: 'task', admissibleResources: [resourceId]});
             util.log.debug('markResourceTasksAsDirtyOrDelete deleted all tasks.');
             return;
         }
@@ -33,24 +62,25 @@ exports.initialize = function (util, mongoTasks, db) {
         var dirtiedTasks = 0;
 
         var floatingDirtyUtilArray = [];
-        tasks.find({type: 'event', start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
+        tasks.find({type: 'event', resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
-            task.data.dirty = true;
-
-            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
-            mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
-
+            if (task.start > btime) {
+                task.data.dirty = true;
+                mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
+                mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
+            }
             task.data.resource = replacementResourceId;
             tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
             dirtiedTasks++;
         });
 
-        tasks.find({type: 'task', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
+        tasks.find({type: 'task', admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
-            task.data.dirty = true;
-
-            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
-
+            if (task.start > btime) {
+                task.data.dirty = true;
+                mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
+            }
+            
             util.log.debug('markResourceTasksAsDirtyOrDelete - about to look for the old resource in admissibleResources: ' + resourceId);
             var index = task.data.admissibleResources.findIndex(function (dep) {
                 return dep === resourceId;
@@ -71,7 +101,7 @@ exports.initialize = function (util, mongoTasks, db) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
             if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
-                var dirtiedTasks = exports.markResourceTasksAsDirtyOrDelete(btime, resource._id, resource._id);
+                var dirtiedTasks = exports.markResourceTasksAsDirty(btime, resource._id);
                 if (dirtiedTasks > 0) {
                     // TODO Handle this better
                     // return 'ok';
@@ -91,11 +121,7 @@ exports.initialize = function (util, mongoTasks, db) {
     };
 
     exports.removeResource = function (btime, resourceId, replacementResourceId) {
-        var dirtiedTasks = exports.markResourceTasksAsDirtyOrDelete(btime, resourceId, replacementResourceId);
-        if (dirtiedTasks > 0) {
-            // TODO Handle this better
-            //return 'ok';
-        }
+        exports.markResourceTasksAsDirtyOrDelete(btime, resourceId, replacementResourceId);
         resources.remove({_id: new Packages.org.bson.types.ObjectId(resourceId)});
         return 'ok';
     };

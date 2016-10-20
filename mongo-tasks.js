@@ -90,18 +90,20 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 timePreferences.push(i);
 
             // $gte: btime is a bug probably in the Mongo driver.
-            tasks.find({resource: resource.id, type: 'event', end: {$gte: btime - 1}}).forEach(function (fixedTask) {
-                util.log.debug('Fixed task to TimePreferences: ' + fixedTask.data.title);
-                var start = fixedTask.data.start;
+            tasks.find({resource: resource.id, type: 'event'}).forEach(function (fixedTask) {
                 var end = util.getUnixEnd(fixedTask.data);
+                if (end > btime) {
+                    util.log.debug('Fixed task to TimePreferences: ' + fixedTask.data.title);
+                    var start = fixedTask.data.start;
 
-                // start might be before btime_startOfDay, that is why we need to use the max fn.
-                var leftBound = Math.max(0, util.timeToSlot(start, btime_startOfDay));
-                var rightBound = util.timeToSlot(end, btime_startOfDay);
-                // This has a very important implication - if leftBound === rightBound, then we do not add anything.
-                // This applies for tasks, that fall out of this Resource constrainted days/times.
-                for (var i = leftBound; i < rightBound; i++) {
-                    timePreferences.push(i);
+                    // start might be before btime_startOfDay, that is why we need to use the max fn.
+                    var leftBound = Math.max(0, util.timeToSlot(start, btime_startOfDay));
+                    var rightBound = util.timeToSlot(end, btime_startOfDay);
+                    // This has a very important implication - if leftBound === rightBound, then we do not add anything.
+                    // This applies for tasks, that fall out of this Resource constrainted days/times.
+                    for (var i = leftBound; i < rightBound; i++) {
+                        timePreferences.push(i);
+                    }
                 }
             });
 

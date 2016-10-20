@@ -40,7 +40,11 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
             return;
 
         var taskTitle = component.getProperty('SUMMARY').getValue();
-
+        
+        var comment = component.getProperty('COMMENT') ? component.getProperty('COMMENT').getValue() : '';
+        var desc = comment.substring(13, comment.length)
+        var internalData = (comment.substring(0, 13) === '${SCHEDULOGY}') ? JSON.parse(desc) : {};
+        
         var taskStart = moment.utc(component.getProperty('DTSTART').getValue(), 'YYYYMMDDThhmmss');
         var taskEnd = moment.utc(component.getProperty('DTEND').getValue(), 'YYYYMMDDThhmmss');
         try {
@@ -70,13 +74,15 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
 
             var uid = component.getProperty('UID').getValue();
             var exists = mongoTasks.getSingleTask({user: userId, iCalUid: uid});
+
+            // Save the task. Only if it is not stored already.
             if (!exists) {
                 util.log.debug('saveImportedTask - task not exists, creating new...');
 
                 // Handle duration and type
-                var type = 'event';
-                var allDay = (taskEnd.hour() === 0 && taskStart.hour() === 0);
-                var duration = (allDay ? taskEnd.diff(taskStart, 'd') : Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minuteGranularity));
+                var type = internalData.type ? internalData.type : 'event';
+                var allDay = internalData.allDay ? internalData.allDay : (taskEnd.hour() === 0 && taskStart.hour() === 0);
+                var duration = internalData.dur ? internalData.dur : (allDay ? taskEnd.diff(taskStart, 'd') : Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minuteGranularity));
 
                 function storeTask(taskStartUnix, taskEndUnix) {
                     // Create a JSON with the task to be inserted.
@@ -94,8 +100,6 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                         title: taskTitle,
                         desc: component.getProperty('DESCRIPTION') ? component.getProperty('DESCRIPTION').getValue() : ''
                     };
-
-                    // Save the task. Only if it is not stored already.
                     mongoTasks.storeTask(taskToStore, tenantId, userId, btime);
                 }
 
@@ -105,7 +109,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                     var recurStart = new Date(btime * 1000);
                     var recurEnd = new Date((parseInt(btime) + settings.weeks * 7 * 1440 * 60) * 1000);
                     var dateList = recurrence.getRecur().getDates(recurSeed, recurStart, recurEnd, Value.DATE_TIME);
-                    console.log('dateList: ' + dateList);
+                    util.log.debug('saveImportedTask - dateList: ' + dateList);
                     dateList.toArray().forEach(function (date) {
                         // UTC date
                         var occurenceStart = moment.utc(date, 'YYYYMMDDThhmmss');
@@ -118,14 +122,16 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
 
                         // Add duration to get the end.
                         var occurenceEnd = occurenceStart.clone().add(duration * (type === 'event' ? settings.minuteGranularity : 1440), 'minutes');
-                        console.log(date);
-                        console.log(occurenceStart);
-                        console.log(occurenceEnd);
+                        util.log.debug('saveImportedTask - ' + date);
+                        util.log.debug('saveImportedTask - ' + occurenceStart);
+                        util.log.debug('saveImportedTask - ' + occurenceEnd);
                         storeTask(occurenceStart.unix(), occurenceEnd.unix());
                     });
                 }
-                else
+                else {
+                    util.log.debug('saveImportedTask - Storing single start-end: ' + taskStart + ' - ' + taskEnd);
                     storeTask(taskStart.unix(), taskEnd.unix());
+                }
             }
         }
     };
@@ -144,7 +150,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                     saveImportedTask(component, tenantId, userId, resource.id, btime, registry);
                 }
                 // We also need to mark all floating tasks for this resource as dirty.
-                mongoResources.markResourceTasksAsDirtyOrDelete(btime, resource.id);
+                mongoResources.markResourceTasksAsDirty(btime, resource.id);
                 return 'ok';
             }
             else {
@@ -153,6 +159,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
             }
         }
         catch (e) {
+            util.log.error('processIcalFile: ' + e);
             return 'error';
         }
     };
