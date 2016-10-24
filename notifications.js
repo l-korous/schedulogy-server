@@ -41,8 +41,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
     };
 
     var createTitle = function (task, utcOffset) {
-        var startTime = moment.unix(task.start);
-        startTime.utcOffset(utcOffset);
+        var startTime = moment.unix(task.start).utc().add(utcOffset, 'm');
         return task.title + ' - ' + startTime.format(settings.notificationFormat);
     };
 
@@ -66,21 +65,21 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                 scheduler.removeTask(task._id.toString() + counter.toString());
 
             // Find the e-mail in the storage.
-            var data = resourceToData[task.resource];
+            var resource = resourceToData[task.resource];
 
             // If the e-mail is not in the storage, put it there
-            if (!data)
-                data = addToResourceToData(task.resource);
+            if (!resource)
+                resource = addToResourceToData(task.resource);
 
             // Now we should have email, but if the above call failed, we do not have it (but the error is logged).
-            if (data) {
-                var cronTimestamps = (task.type === 'reminder' ? settings.reminderCronTimestamps : util.unixToCron(notificationTimestamps));
+            if (resource) {
+                var cronTimestamps = (task.type === 'reminder' ? settings.reminderCronTimestamps(resource.utcOffset) : util.unixToCron(notificationTimestamps));
                 var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
                     scheduler.addTask(task._id.toString() + (counter++).toString(), {
                         schedule: cronTimestamp,
                         run: function () {
-                            mailer.mail(data.email, createTitle(task, data.utcOffset), createBody(task));
+                            mailer.mail(resource.email, createTitle(task, resource.utcOffset), createBody(task));
                             scheduler.removeTask(task._id.toString());
                         }
                     });

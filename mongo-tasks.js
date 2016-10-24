@@ -466,7 +466,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         task.user = userId;
 
         // By default, users use their own single resource.
-        if (!task.admissibleResources && task.type == 'task') {
+        if (!task.admissibleResources && task.type === 'task') {
             task.admissibleResources = [];
             task.admissibleResources.push(resources.findOne({type: 'user', user: task.user}).id);
         }
