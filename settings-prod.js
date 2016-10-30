@@ -58,9 +58,10 @@ exports.settings = {
         else
             return [task.start - (15 * 60), task.start];
     },
-    reminderCronTimestamps: function(utcOffset) {
-        return ['* * * ' + String((24-(utcOffset / 60))%24) + ' 0 0'];
+    reminderCronTimestamps: function (task, utcOffset) {
+        return task.done ? [] : ['* * * ' + String((24 - (utcOffset / 60)) % 24) + ' 0 0'];
     },
     notificationFormat: 'MMMM, Do HH:mm',
+    reminderNotificationFormat: 'MMMM, Do',
     notificationUrl: clientUrl
 };

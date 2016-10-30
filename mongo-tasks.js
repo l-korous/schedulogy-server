@@ -475,7 +475,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
         // TODO - this replicates some work done by the next block, nothing dramatic, but could be improved.
         // We need to have a special array for the recursivity to work properly.
-        if (task.dirty) {
+        if (task.dirty && task.type !== 'reminder') {
             var floatingDirtyUtilArray = [];
             exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray, btime);
             if (task.type !== 'task')
@@ -496,10 +496,9 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         // Send notifications - for non-floating tasks (in case of floating we do not yet know the resource to send the notification to)
         // For floating this is done after solving (as of 20160903 - in this file, in fn storeSlnData).
         if (task.type === 'reminder' && task.done)
-            notifications.remove(task);
+            notifications.remove(task._id.toString());
         else if (task.type !== 'task')
             notifications.reinit(task);
-
     };
 
     exports.removeTask = function (taskId) {

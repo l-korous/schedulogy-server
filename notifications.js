@@ -41,8 +41,12 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
     };
 
     var createTitle = function (task, utcOffset) {
-        var startTime = moment.unix(task.start).utc().add(utcOffset, 'm');
-        return task.title + ' - ' + startTime.format(settings.notificationFormat);
+        if (task.type === 'reminder')
+            return task.title + ' - ' + moment.unix(task.start).utc().format(settings.reminderNotificationFormat);
+        else {
+            var startTime = moment.unix(task.start).utc().add(utcOffset, 'm');
+            return task.title + ' - ' + startTime.format(settings.notificationFormat);
+        }
     };
 
     var createBody = function (task) {
@@ -73,16 +77,17 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
             // Now we should have email, but if the above call failed, we do not have it (but the error is logged).
             if (resource) {
-                var cronTimestamps = (task.type === 'reminder' ? settings.reminderCronTimestamps(resource.utcOffset) : util.unixToCron(notificationTimestamps));
+                var cronTimestamps = (task.type === 'reminder' ? settings.reminderCronTimestamps(task, resource.utcOffset) : util.unixToCron(notificationTimestamps));
                 var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
-                    scheduler.addTask(task._id.toString() + (counter++).toString(), {
+                    scheduler.addTask(task._id.toString() + (counter.toString()), {
                         schedule: cronTimestamp,
                         run: function () {
                             mailer.mail(resource.email, createTitle(task, resource.utcOffset), createBody(task));
-                            scheduler.removeTask(task._id.toString());
+                            scheduler.removeTask(task._id.toString() + (counter.toString()));
                         }
                     });
+                    counter++;
                 });
             }
         }

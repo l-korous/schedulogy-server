@@ -9,7 +9,6 @@ exports.initialize = function (util, db) {
             if (user.data.active) {
                 var res = BCrypt.checkpw(credentials.password, user.data.password);
                 if (res) {
-
                     if (user.data.new_user) {
                         user.data.new_user = false;
                         users.save(user.data);
