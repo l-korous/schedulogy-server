@@ -5,46 +5,52 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
     var resourceToData = {};
 
-    var addToResourceToData = function (resourceId) {
+    var addToResourceToData = function (task) {
         var toReturn = {};
-        var res = resources.findOne({_id: new Packages.org.bson.types.ObjectId(resourceId)});
+        var res = resources.findOne({_id: new Packages.org.bson.types.ObjectId(task.resource)});
         if (res) {
-            toReturn.utcOffset = res.data.utcOffset ? res.data.utcOffset : 0;
+            toReturn.timeZone = res.data.timeZone;
             if (res.data.type === 'user') {
                 var user = users.findOne({_id: new Packages.org.bson.types.ObjectId(res.data.user)});
                 if (user) {
                     toReturn.email = user.data.email;
-                    resourceToData[resourceId] = toReturn;
+                    resourceToData[task.resource] = toReturn;
                     return toReturn;
                 }
                 else
-                    util.log.error('User for a resource ' + res._id.toString() + ' not found.');
+                    util.log.error('User for a resource ' + task.resource + ' not found.');
             }
             else {
                 if (res.data.email) {
                     toReturn.email = res.data.email;
-                    resourceToData[resourceId] = toReturn;
+                    resourceToData[task.resource] = toReturn;
                     return toReturn;
                 }
                 else
                     util.log.error('Resource ' + res._id.toString() + ' does not have e-mail.');
             }
         }
-        util.log.error('Resource ' + resourceId + ' not found.');
+        util.log.error('Resource ' + task.resource + ' not found.');
     };
 
     var init = function () {
         var currentTime = moment().unix();
-        tasks.find({dirty: false, start: {$gte: currentTime - 1}}).forEach(function (task) {
+        tasks.find({type: {$in: ['task', 'event']}, dirty: false, start: {$gte: currentTime - 1}}).forEach(function (task) {
             exports.reinit(task.data);
         });
+        tasks.find({type: 'reminder'}).forEach(function (task) {
+            if(!task.data.done)
+                exports.reinit(task.data);
+        });
+        scheduler.logState();
     };
 
-    var createTitle = function (task, utcOffset) {
+    var createTitle = function (task, timeZone) {
         if (task.type === 'reminder')
-            return task.title + ' - ' + moment.unix(task.start).utc().format(settings.reminderNotificationFormat);
+            return task.title;
         else {
-            var startTime = moment.unix(task.start).utc().add(utcOffset, 'm');
+            var utcOffset = moment.tz.zone(timeZone).offset(task.start);
+            var startTime = moment.unix(task.start).utc().add(-utcOffset, 'm');
             return task.title + ' - ' + startTime.format(settings.notificationFormat);
         }
     };
@@ -69,21 +75,29 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                 scheduler.removeTask(task._id.toString() + counter.toString());
 
             // Find the e-mail in the storage.
-            var resource = resourceToData[task.resource];
+            var resourceData = resourceToData[task.resource];
 
             // If the e-mail is not in the storage, put it there
-            if (!resource)
-                resource = addToResourceToData(task.resource);
+            if (!resourceData)
+                resourceData = addToResourceToData(task);
 
             // Now we should have email, but if the above call failed, we do not have it (but the error is logged).
-            if (resource) {
-                var cronTimestamps = (task.type === 'reminder' ? settings.reminderCronTimestamps(task, resource.utcOffset) : util.unixToCron(notificationTimestamps));
+            if (resourceData) {
+                var cronTimestamps;
+                if (task.type === 'reminder') {
+                    var currentDt = moment();
+                    var utcOffset = moment.tz.zone(resourceData.timeZone).offset(currentDt);
+                    cronTimestamps = settings.reminderCronTimestamps(task, utcOffset);
+                }
+                else
+                    cronTimestamps = util.unixToCron(notificationTimestamps);
+                
                 var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
                     scheduler.addTask(task._id.toString() + (counter.toString()), {
                         schedule: cronTimestamp,
                         run: function () {
-                            mailer.mail(resource.email, createTitle(task, resource.utcOffset), createBody(task));
+                            mailer.mail(resourceData.email, createTitle(task, resourceData.timeZone), createBody(task));
                             scheduler.removeTask(task._id.toString() + (counter.toString()));
                         }
                     });

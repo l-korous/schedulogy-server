@@ -17,7 +17,7 @@ exports.settings = {
         'Access-Control-Allow-Origin': "*",
         'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
         'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime',
         'Content-Type': 'application/json'
     },
     smtpHost: 'smtp.gmail.com',
@@ -32,7 +32,7 @@ exports.settings = {
             'Access-Control-Allow-Origin': "*",
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
             'Access-Control-Allow-Credentials': 'true',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime, utcOffset'
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime'
         },
         status: 200
     },
@@ -61,9 +61,8 @@ exports.settings = {
             return [task.start - (15 * 60), task.start];
     },
     reminderCronTimestamps: function (task, utcOffset) {
-        return task.done ? [] : ['* * * ' + String((24 - (utcOffset / 60)) % 24) + ' 0 0'];
+        return task.done ? [] : ['* * * ' + String((24 + (utcOffset / 60)) % 24) + ' 0 0'];
     },
     notificationFormat: 'MMMM, Do HH:mm',
-    reminderNotificationFormat: 'MMMM, Do',
     notificationUrl: clientUrl
 };

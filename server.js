@@ -6,7 +6,8 @@ app.configure('params');
 var settings = require('./settings.js').settings;
 var secrets = require('./secrets.js').secrets;
 
-var moment = require('./bower_components/moment/moment.js');
+var moment = require('./lib/moment/moment.js');
+var momentTimezone = require('./lib/moment/moment-timezone-with-data.js');
 
 var {scheduler} = require("./lib/scheduler/main.js");
 scheduler.start();
@@ -28,7 +29,7 @@ var mongoTasks = require('./mongo-tasks.js');
 mongoTasks.initialize(settings, util, db, notifications, moment);
 
 var mongoResources = require('./mongo-resources.js');
-mongoResources.initialize(util, mongoTasks, db);
+mongoResources.initialize(util, mongoTasks, db, notifications);
 
 var mongoUsers = require('./mongo-users.js');
 mongoUsers.initialize(util, mongoResources, db);

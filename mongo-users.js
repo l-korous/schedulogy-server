@@ -84,7 +84,7 @@ exports.initialize = function (util, mongoResources, db) {
         }
     };
 
-    exports.createUser = function (userData, utcOffset) {
+    exports.createUser = function (userData) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
             util.log.error('createUser: existing');
@@ -119,7 +119,7 @@ exports.initialize = function (util, mongoResources, db) {
                     type: 'user',
                     user: userData._id.toString(),
                     name: userData.username ? userData.username : userData.email,
-                    utcOffset: utcOffset
+                    timeZone: userData.timezone
                 });
                 return users.findOne({_id: userData._id});
             }

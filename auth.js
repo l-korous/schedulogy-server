@@ -1,4 +1,4 @@
-exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
+exports.initialize = function (settings, secrets, util, moment) {
     addToClasspath("./cpsolver/dist/java-jwt-2.1.0.jar");
     importPackage(com.auth0.jwt);
     importPackage(java.util);

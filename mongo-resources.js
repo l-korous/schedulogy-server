@@ -1,4 +1,4 @@
-exports.initialize = function (util, mongoTasks, db) {
+exports.initialize = function (util, mongoTasks, db, notifications) {
     var tasks = db.getCollection('task');
     var resources = db.getCollection('resource');
 
@@ -64,7 +64,7 @@ exports.initialize = function (util, mongoTasks, db) {
         var floatingDirtyUtilArray = [];
         tasks.find({type: 'event', resource: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
-            if (task.start > btime) {
+            if (task.data.start > btime) {
                 task.data.dirty = true;
                 mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
                 mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
@@ -76,11 +76,11 @@ exports.initialize = function (util, mongoTasks, db) {
 
         tasks.find({type: 'task', admissibleResources: resourceId}).forEach(function (task) {
             util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
-            if (task.start > btime) {
+            if (task.data.start > btime) {
                 task.data.dirty = true;
                 mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
             }
-            
+
             util.log.debug('markResourceTasksAsDirtyOrDelete - about to look for the old resource in admissibleResources: ' + resourceId);
             var index = task.data.admissibleResources.findIndex(function (dep) {
                 return dep === resourceId;
@@ -100,12 +100,18 @@ exports.initialize = function (util, mongoTasks, db) {
     exports.storeResource = function (resource, userId, tenantId, btime) {
         if (resource._id) {
             var oldResource = resources.findOne(new Packages.org.bson.types.ObjectId(resource._id)).data;
-            if (JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) {
-                var dirtiedTasks = exports.markResourceTasksAsDirty(btime, resource._id);
-                if (dirtiedTasks > 0) {
-                    // TODO Handle this better
-                    // return 'ok';
-                }
+            if ((JSON.stringify(oldResource.constraints) !== JSON.stringify(resource.constraints)) || (oldResource.timeZone !== resource.timeZone)) {
+                // No need to handle dirtied tasks here (just mark them), frontend refreshes tasks each time a resource is saved.
+                exports.markResourceTasksAsDirty(btime, resource._id);
+            }
+
+            // Additionally, we must reinit all notifications.
+            if (oldResource.timeZone !== resource.timeZone) {
+                tasks.find({resource: resource._id}).forEach(function (task) {
+                    if (task.data.start > btime) {
+                        notifications.reinit(task.data);
+                    }
+                });
             }
 
             resource._id = new Packages.org.bson.types.ObjectId(resource._id);

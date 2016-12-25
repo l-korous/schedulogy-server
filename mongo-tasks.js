@@ -65,21 +65,21 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         return toReturn;
     };
 
-    var getPrimaryResourceConstraints = function (btime_startOfWeekOffset, resource) {
+    var getPrimaryResourceConstraints = function (btime, btime_startOfWeekOffset, resource) {
         var toReturn = {};
         toReturn.btimeOffset = btime_startOfWeekOffset;
         toReturn.weekStart = resource.constraints ? resource.constraints[0].value_since - 1 : 0;
         toReturn.weekEnd = resource.constraints ? resource.constraints[0].value_until - 1 : 6;
         toReturn.dayStart = resource.constraints ? resource.constraints[1].value_since : 0;
         toReturn.dayEnd = resource.constraints ? resource.constraints[1].value_until : settings.endSlot;
-        toReturn.utcOffset = (resource.utcOffset / settings.minuteGranularity);
+        toReturn.utcOffset = (moment.tz.zone(resource.timeZone).offset(btime) / settings.minuteGranularity);
         return toReturn;
     };
 
     var getResourcesJson = function (btime, btime_startOfDay, btime_startOfWeekOffset, tenantIdInMongo) {
         var toReturn = [];
         resources.find({tenant: tenantIdInMongo}).forEach(function (resource) {
-            var resData = getPrimaryResourceConstraints(btime_startOfWeekOffset, resource.data);
+            var resData = getPrimaryResourceConstraints(btime, btime_startOfWeekOffset, resource.data);
 
             // This fills the basic constrains on the resource level.
             var timePreferences = [];
@@ -127,17 +127,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 }
             });
 
-            toReturn.push({
-                id: resource.id,
-                name: resource.data.user ? resource.data.user.toString() : resource.data.name,
-                tp: timePreferences,
-                btimeOffset: resData.btimeOffset,
-                weekStart: resData.weekStart,
-                weekEnd: resData.weekEnd,
-                dayStart: resData.dayStart,
-                dayEnd: resData.dayEnd,
-                utcOffset: resData.utcOffset
-            });
+            resData['id'] = resource.id;
+            resData['name'] = resource.data.user ? resource.data.user.toString() : resource.data.name;
+            resData['tp'] = timePreferences;
+            
+            toReturn.push(resData);
         });
 
         return toReturn;
@@ -459,8 +453,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             }
         }
         // New task
-        else
-            task.dirty = task.type !== 'reminder';
+        else {
+            task.dirty = (task.type !== 'reminder');
+            if(task.type === 'reminder' && (!task.done))
+                task.done = false;
+        }
 
         task.tenant = tenantId;
         task.user = userId;
