@@ -102,22 +102,10 @@ exports.initialize = function (settings, moment) {
     // otherwise 400, unless not given a code as the second parameter
     exports.simpleResponse = function (msg, code) {
         return {
-            body: ['{"msg": "' + msg + '"}'],
+            body: ['{"msg":' + JSON.stringify(msg) + '}'],
             status: msg === 'ok' ? 200 : (code ? code : 400),
             headers: settings.defaultHeaderJson
         };
-    };
-    exports.generatePasswordResetHash = function () {
-        function createRandomString(length)
-        {
-            var text = "";
-            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            for (var i = 0; i < length; i++)
-                text += possible.charAt(Math.floor(Math.random() * possible.length));
-            return text;
-        }
-
-        return createRandomString(32);
     };
     exports.to_utf = function (s) {
         return unescape(encodeURIComponent(s));
@@ -156,5 +144,13 @@ exports.initialize = function (settings, moment) {
         else
             toReturn.push(unixToCronSingle(unixDateTimes));
         return toReturn;
+    };
+
+    exports.createRandomString = function (length) {
+        var text = "";
+        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (var i = 0; i < length; i++)
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        return text;
     };
 };

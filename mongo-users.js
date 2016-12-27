@@ -1,37 +1,54 @@
-exports.initialize = function (util, mongoResources, db) {
+exports.initialize = function (settings, util, mongoResources, db) {
     var users = db.getCollection('user');
-    var resources = db.getCollection('resource');
     var tenants = db.getCollection('tenant');
-    addToClasspath("./cpsolver/dist/jbcrypt-0.3m.jar");
-    importPackage(org.mindrot.jbcrypt);
 
     var filterUser = function (userData) {
         return {
             _id: userData._id.toString(),
             email: userData.email,
             tenant: userData.tenant.toString(),
-            username: userData.username || '',
+            originalTenant: userData.originalTenant.toString(),
             role: userData.role,
-            active: userData.active
+            newUser: userData.newUser
         };
     };
 
-    exports.getUserByEmailInternal = function (email) {
+    var getUserByEmailInternal = function (email) {
         var user = users.findOne({email: email});
-        return user ? user : '!existing';
+        if(user)
+            return user.data;
+        else {
+            var msg = 'User with email "' + email + '" does not exist';
+            util.log.warn(msg);
+            return msg;
+        }
     };
 
-    exports.getUserByIdInternal = function (userId) {
+    exports.getUserByEmail = function (email) {
+        var result = getUserByEmailInternal(email);
+        if (typeof result === 'object')
+            return filterUser(result);
+        else
+            return result;
+    };
+
+    var getUserByIdInternal = function (userId) {
         var user = users.findOne(new Packages.org.bson.types.ObjectId(userId));
-        return user ? user : '!existing';
+        if(user)
+            return user.data;
+        else {
+            var msg = 'User with id "' + userId + '" does not exist';
+            util.log.warn(msg);
+            return msg;
+        }
     };
 
     exports.getUserById = function (userId) {
-        var res = exports.getUserByIdInternal(userId);
-        if (typeof res === 'object')
-            return filterUser(res.data);
+        var result = getUserByIdInternal(userId);
+        if (typeof result === 'object')
+            return filterUser(result);
         else
-            return res;
+            return result;
     };
 
     // This takes such an array as is returned e.g. from getUsers()
@@ -48,7 +65,7 @@ exports.initialize = function (util, mongoResources, db) {
         });
         toReturn += "]";
         if (additionalParams)
-            toReturn += "," + additionalParams;
+            toReturn += ",\"params\": " + JSON.stringify(additionalParams);
         toReturn += "}";
 
         return toReturn;
@@ -63,6 +80,14 @@ exports.initialize = function (util, mongoResources, db) {
         return toReturn;
     };
 
+    exports.getUser = function (object) {
+        var result = users.findOne(object);
+        if (typeof result === 'object')
+            return filterUser(result.data);
+        else
+            return result;
+    };
+
     exports.updateUser = function (user) {
         try {
             if (!user._id)
@@ -71,15 +96,16 @@ exports.initialize = function (util, mongoResources, db) {
                 user._id = new Packages.org.bson.types.ObjectId(user._id);
                 var oldUser = users.findOne(user._id).data;
                 for (var key in oldUser) {
-                    if (!user[key])
+                    if ((!user[key]) && user[key] !== false) {
                         user[key] = oldUser[key];
+                    }
                 }
             }
-
             users.save(user);
             return 'ok';
         }
         catch (e) {
+            util.log.error('updateUser:' + e);
             return 'fail';
         }
     };
@@ -88,42 +114,55 @@ exports.initialize = function (util, mongoResources, db) {
         var existingUser = users.findOne({email: userData.email});
         if (existingUser) {
             util.log.error('createUser: existing');
-            return 'existing';
+            return 'User with email "' + userData.email + '" already exists';
+        }
+
+        // Basic setup
+        userData.newUser = true;
+        userData.active = true;
+        userData.role = 'user';
+
+        // Tenant
+        var tenantData = {
+            name: userData.email,
+            code: util.createRandomString(settings.tenantCodeLength)
+        };
+        var saved = tenants.save(tenantData);
+        if (saved.error) {
+            util.log.error('createTenant: error: ' + saved);
+            users.remove({_id: userData._id});
+            return 'create_tenant_error';
         }
         else {
-            userData.active = 0;
-            userData.new_user = true;
-            userData.passwordResetHash = util.generatePasswordResetHash();
-
-            if (!userData.tenant) {
-                var tenantData = {name: userData.email};
-                var saved = tenants.save(tenantData);
-                if (saved.error) {
-                    util.log.error('createTenant: error: ' + saved);
-                    return 'create_tenant_error';
-                }
-                else {
-                    userData.tenant = tenantData._id.toString();
-                    userData.role = 'admin';
-                }
-            }
-
-            var saved = users.save(userData);
-            if (saved.error) {
-                util.log.error('createUser: error: ' + saved);
-                return 'error';
-            }
-            else {
-                mongoResources.storeResource({
-                    tenant: userData.tenant,
-                    type: 'user',
-                    user: userData._id.toString(),
-                    name: userData.username ? userData.username : userData.email,
-                    timeZone: userData.timezone
-                });
-                return users.findOne({_id: userData._id});
-            }
+            userData.tenant = tenantData._id.toString();
+            userData.originalTenant = tenantData._id.toString();
+            userData.role = 'admin';
         }
+        
+        // Save (with Tenant)
+        var saved = users.save(userData);
+        if (saved.error) {
+            util.log.error('createUser: error: ' + saved);
+            return 'error';
+        }
+
+        // Resource
+        mongoResources.storeResource({
+            tenant: userData.tenant,
+            type: 'user',
+            user: userData._id.toString(),
+            name: userData.email,
+            timeZone: userData.timeZone
+        });
+
+        return users.findOne({_id: userData._id}).data;
+    };
+
+    exports.resetUser = function (userId) {
+        var user = exports.getUserById(userId);
+        user.tenant = user.originalTenant;
+        user.role = 'admin';
+        exports.updateUser(user);
     };
 
     // This function assumes that the associated resource has already been deleted.
@@ -135,62 +174,5 @@ exports.initialize = function (util, mongoResources, db) {
         catch (e) {
             return 'error';
         }
-    };
-
-    exports.setUsername = function (userId, username) {
-        try {
-            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {username: username}});
-            resources.update({type: 'user', user: userId}, {$set: {name: username}});
-            return users.findOne({_id: new Packages.org.bson.types.ObjectId(userId)}).data;
-        }
-        catch (msg) {
-            return msg ? msg : '';
-        }
-    };
-
-    exports.setPassword = function (userId, password) {
-        try {
-            var passwordHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
-            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {password: passwordHash}});
-            return 'ok';
-        }
-        catch (msg) {
-            return msg ? msg : '';
-        }
-    };
-
-    exports.verifyPasswordResetLink = function (userId, passwordResetHash) {
-        try {
-            var existingUser = users.findOne(new Packages.org.bson.types.ObjectId(userId));
-
-            if (!existingUser) {
-                util.log.error('verifyPasswordResetLink: (!) existing');
-                return '!existing';
-            }
-            else {
-                if (existingUser.data.passwordResetHash === '') {
-                    util.log.error('verifyPasswordResetLink: (!) used');
-                    return 'used';
-                }
-                else if (existingUser.data.passwordResetHash === passwordResetHash)
-                    return 'ok';
-                else
-                    return 'password';
-            }
-        }
-        catch (e) {
-            return 'error';
-        }
-    };
-
-    exports.activateUser = function (password, userId, passwordResetHash) {
-        var linkCheck = exports.verifyPasswordResetLink(userId, passwordResetHash);
-        if (linkCheck === 'ok') {
-            var passwordHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
-            users.update({_id: new Packages.org.bson.types.ObjectId(userId)}, {$set: {active: 1, password: passwordHash, passwordResetHash: ''}});
-            return exports.getUserById(userId);
-        }
-        else
-            return linkCheck;
     };
 };

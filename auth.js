@@ -1,4 +1,4 @@
-exports.initialize = function (settings, secrets, util, moment) {
+exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
     addToClasspath("./cpsolver/dist/java-jwt-2.1.0.jar");
     importPackage(com.auth0.jwt);
     importPackage(java.util);
@@ -13,10 +13,10 @@ exports.initialize = function (settings, secrets, util, moment) {
         x.put("exp", exp);
         x.put("exp", exp);
         x.put("uid", user._id.toString());
-        x.put("tid", user.tenant.toString());
+        x.put("tid", user.tenant);
+        x.put("otid", user.originalTenant);
         x.put("uem", user.email);
         x.put("uro", user.role);
-        x.put("uname", user.username || '');
         var signer = new JWTSigner(secrets.jwtSecret);
         var jwt = signer.sign(x);
         return jwt;
@@ -27,15 +27,18 @@ exports.initialize = function (settings, secrets, util, moment) {
             var verifier = new JWTVerifier(secrets.jwtSecret);
             var claims = verifier.verify(token);
             if (claims.get('uid') === userId) {
-                // TODO: consult mongoUsers
-                return {msg: 'ok', tenantId: claims.get('tid')};
+                var user = mongoUsers.getUser({_id: new Packages.org.bson.types.ObjectId(userId), active: true});
+                if(typeof user !== 'object')
+                    return {msg: '!active'};
+                return {msg: 'ok', tenantId: claims.get('tid'), originalTenantId: claims.get('otid')};
             }
             else if (parseInt(claims.get('exp')) < moment().unix())
                 return {msg: 'expired'};
             else
                 return {msg: 'fraud'};
         } catch (e) {
-            return {msg: 'error'};
+            util.log.error(e);
+            return {msg: e};
         }
     };
 
@@ -50,7 +53,7 @@ exports.initialize = function (settings, secrets, util, moment) {
             }
 
             // For login etc., we do not parse the token:
-            if (['/api/password-reset-check', '/api/login', '/api/register', '/api/activate', '/api/reset-password', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
+            if (['/api/loginSocial', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
                 var toReturn = next(req);
                 // Log the response.
                 util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
@@ -58,11 +61,12 @@ exports.initialize = function (settings, secrets, util, moment) {
             }
             if (!req.headers.authorization || !req.headers.xuser)
                 return util.simpleResponse('missingAuth', 403);
-            if (!req.session.data.userId) {
+            if ((!req.session.data.userId) || (!req.session.data.tenantId) || (!req.session.data.originalTenantId)) {
                 var auth_res = exports.checkToken(req.headers.authorization, req.headers.xuser);
                 if (auth_res.msg === 'ok') {
                     req.session.data.userId = req.headers.xuser;
                     req.session.data.tenantId = auth_res.tenantId;
+                    req.session.data.originalTenantId = auth_res.originalTenantId;
                     var toReturn = next(req);
                     util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
                     return toReturn;

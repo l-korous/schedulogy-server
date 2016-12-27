@@ -1,9 +1,9 @@
-exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, mailer, auth) {
+exports.initialize = function (app, mongoUsers, mongoTenants, mongoResources, mongoTasks, util, settings, mailer, auth) {
     app.post('/api/simplemail', function (req) {
         try {
             util.log_request(req);
-            var res = mailer.mail(settings.msgReceiver, 'Message from ' + req.params.email, req.params.msg);
-            return util.simpleResponse(res);
+            var result = mailer.mail(settings.msgReceiver, 'Message from ' + req.params.email, req.params.msg);
+            return util.simpleResponse(result);
         }
         catch (err) {
             return util.simpleResponse(err.toString());
@@ -13,43 +13,80 @@ exports.initialize = function (app, mongoUsers, mongoUtil, util, settings, maile
     app.post('/api/msg', function (req) {
         util.log_request(req);
         try {
-            var user = mongoUsers.getUserByIdInternal(req.session.data.userId);
-            var res = mailer.mail(settings.msgReceiver, 'Message from ' + user.data.email, req.params.msg);
-            return util.simpleResponse(res);
+            var user = mongoUsers.getUserById(req.session.data.userId);
+            var result = mailer.mail(settings.msgReceiver, 'Message from ' + user.email, req.params.msg);
+            return util.simpleResponse(result);
         }
         catch (err) {
             return util.simpleResponse(err.toString());
         }
     });
 
-    app.post('/api/login', function (req) {
+    app.post('/api/inviteToTenant', function (req) {
         util.log_request(req);
-        var res = mongoUtil.verifyUserCredentialsReturnUser(req.params);
-        if (typeof res === 'object') {
-            var headerToReturn = settings.defaultHeaderJson;
-            headerToReturn['Set-Cookie'] = 'schedulogyAppAccessed=1; Domain=.schedulogy.com; Path=/; Max-Age=' + 7 * 86400 + ';';
+        try {
+            var user = mongoUsers.getUserById(req.session.data.userId);
+            var tenant = mongoTenants.getTenantById(user.tenant);
+            var result = mailer.html(req.params.email, settings.mailInvitationSubject, settings.mailInvitationText(user.email, tenant.code));
+            return util.simpleResponse(result);
+        }
+        catch (err) {
+            return util.simpleResponse(err.toString());
+        }
+    });
+
+    app.post('/api/switchTenant', function (req) {
+        util.log_request(req);
+        try {
+            var user = mongoUsers.getUserById(req.session.data.userId);
+            var result = mongoTenants.getTenantByCode(req.params.tenantCode);
+            if (typeof result !== 'object')
+                return util.simpleResponse(result);
+
+            // User
+            var previousTenant = user.tenant;
+            user.tenant = result._id.toString();
+            user.role = ((user.tenant === user.originalTenant) ? 'admin' : 'user');
+            result = mongoUsers.updateUser(user);
+            if (result !== 'ok')
+                return util.simpleResponse(result);
+
+            // Tenant - all remaining users become Admins
+            mongoUsers.getUsers({tenant: previousTenant}).forEach(function (userInTenant) {
+                if (result === 'ok') {
+                    userInTenant.role = 'admin';
+                    result = mongoUsers.updateUser(userInTenant);
+                }
+            });
+            if (result !== 'ok')
+                return util.simpleResponse(result);
+
+            // Resource
+            var resource = mongoResources.getResourceByUserId(req.session.data.userId);
+            resource.tenant = user.tenant;
+            result = mongoResources.storeResource(resource);
+            if (result !== 'ok')
+                return util.simpleResponse(result);
+
+            // Tasks - Events of this Resource will not block anything.
+            mongoTasks.getTasks({type: 'event', resource: resource._id}).forEach(function (task) {
+                task.blocks = [];
+            });
+
+            // Tasks - Tasks where this Resource was admissible are gone.
+            // TODO - improvement DEV-191
+            mongoTasks.removeTasks({type: 'task', admissibleResources: resource._id}, req.session.data.tenantId);
+
+            // Token
+            req.session.data.tenantId = null;
             return {
-                body: ['{"token":"' + auth.generateToken(res) + '", "runIntro":' + res.runIntro + '}'],
-                headers: headerToReturn,
+                body: ['{"token":"' + auth.generateToken(user) + '"}'],
+                headers: settings.defaultHeaderJson,
                 status: 200
             };
         }
-        else
-            return util.simpleResponse(res, 403);
-    });
-
-    app.post("/api/reset-password", function (req) {
-        var res = mongoUsers.getUserByEmailInternal(req.params.email);
-        if (typeof res === 'object') {
-            var newHash = util.generatePasswordResetHash();
-            mongoUtil.storePasswordResetHash(res.data._id, newHash);
-            var res = mailer.html(res.data.email, settings.resetPasswordSubject, settings.resetPasswordText(res.data._id, newHash));
+        catch (err) {
+            return util.simpleResponse(err.toString());
         }
-        return util.simpleResponse(res);
-    });
-
-    app.post('/api/authenticate', function (req) {
-        // The middle ware takes care of forbidden states, once we get here, all is OK.
-        return util.simpleResponse('ok');
     });
 };

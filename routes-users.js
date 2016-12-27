@@ -1,22 +1,52 @@
-exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
-    var http = require('ringo/utils/http');
-
-    app.post("/api/register", function (req) {
+exports.initialize = function (app, mongoUsers, mongoTenants, util, settings, mailer, auth) {
+    var {request} = require('ringo/httpclient');
+    app.post('/api/loginSocial', function (req) {
         util.log_request(req);
-        var res = mongoUsers.createUser(req.params);
-        if (res.id) {
-            res = mailer.html(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
+        var exchange = request({
+            method: 'POST',
+            url: 'https://schedulogy.eu.auth0.com/tokeninfo',
+            //headers: {
+            //    'Content-Type': 'application/x-www-form-urlencoded'
+            //},
+            contentType: 'application/x-www-form-urlencoded',
+            data: 'id_token=' + req.params.authOToken,
+        });
+        if (exchange.status === 200) {
+            var user = mongoUsers.getUserByEmail(JSON.parse(exchange.content).email);
+            // If this is a new user, create.
+            if (typeof user !== 'object')
+                user = mongoUsers.createUser({email: JSON.parse(exchange.content).email, timeZone: req.params.timeZone});
+            // If we do not have user even after possible creation, something is wrong
+            if (typeof user !== 'object')
+                return util.simpleResponse(user, 400);
+            else {
+                if (user.newUser) {
+                    console.log('asfdsadfsadf');
+                    user.newUser = false;
+                    mongoUsers.updateUser(user);
+                    user.runIntro = true;
+                }
+                else
+                    user.runIntro = false;
+                var headerToReturn = settings.defaultHeaderJson;
+                headerToReturn['Set-Cookie'] = 'schedulogyAppAccessed=1; Domain=.schedulogy.com; Path=/; Max-Age=' + 7 * 86400 + ';';
+                return {
+                    body: ['{"token":"' + auth.generateToken(user) + '", "runIntro":' + user.runIntro + '}'],
+                    headers: headerToReturn,
+                    status: 200
+                };
+            }
         }
-        return util.simpleResponse(res);
+        else
+            return util.simpleResponse(exchange.message, exchange.status);
     });
-
     app.post("/api/user", function (req) {
         util.log_request(req);
         if (!req.params.tenant)
             req.params.tenant = req.session.data.tenantId;
         if (req.params._id) {
-            var res = mongoUsers.updateUser(req.params);
-            if (res === 'ok')
+            var result = mongoUsers.updateUser(req.params);
+            if (result === 'ok')
                 return {
                     body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
                     headers: settings.defaultHeaderJson,
@@ -26,94 +56,38 @@ exports.initialize = function (app, mongoUsers, util, settings, mailer, auth) {
                 return util.simpleResponse(res);
         }
         else {
-            var res = mongoUsers.createUser(req.params);
-            if (res.id) {
-                var res_mail = mailer.html(res.data.email, settings.mailSetupSubject, settings.mailSetupText(res.data._id, res.data.passwordResetHash));
-                if (res_mail !== 'ok')
-                    mongoUsers.removeUser(res.id);
-
-                var bodyToReturn = [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}), res_mail !== 'ok' ? ('"error":"' + res_mail + '"') : null)];
-
-                return {
-                    body: bodyToReturn,
-                    headers: settings.defaultHeaderJson,
-                    status: (res_mail === 'ok') ? 200 : 400
-                };
-            }
-            return util.simpleResponse(res);
+            return util.simpleResponse('Invalid operation - update User without id', 400);
         }
     });
-
     app.del('/api/user/:userId', function (req, userId) {
         util.log_request(req);
-        var res = mongoUsers.removeUser(userId);
-        if (res === 'ok')
+        var result = mongoUsers.resetUser(userId);
+        if (result === 'ok')
             return {
                 body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
                 headers: settings.defaultHeaderJson,
                 status: 200
             };
         else
-            return util.simpleResponse(res);
+            return util.simpleResponse(result);
     });
-
     app.get('/api/user', function (req) {
         util.log_request(req);
-
+        var tenant = mongoTenants.getTenantById(req.session.data.tenantId);
+        var originalTenant = mongoTenants.getTenantById(req.session.data.originalTenantId);
         return {
-            body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}))],
+            body: [mongoUsers.wrapReturnArrayInJson(mongoUsers.getUsers({tenant: req.session.data.tenantId}), {tenantCode: tenant.code, originalTenantCode: originalTenant.code})],
             headers: settings.defaultHeaderJson,
             status: 200
         };
     });
-
     app.get('/api/user/:userId', function (req, userId) {
         util.log_request(req);
-
         var user = mongoUsers.getUserById(userId);
         return {
             body: [user],
             headers: settings.defaultHeaderJson,
             status: 200
         };
-    });
-
-    app.post('/api/user/set-username', function (req) {
-        util.log_request(req);
-        var res = mongoUsers.setUsername(req.session.data.userId, req.params.username);
-        if (typeof res === 'object') {
-            return {
-                body: ['{"token":"' + auth.generateToken(res) + '"}'],
-                headers: settings.defaultHeaderJson,
-                status: 200
-            };
-        }
-        else
-            return util.simpleResponse(res);
-    });
-
-    app.post('/api/user/set-password', function (req) {
-        util.log_request(req);
-        var res = mongoUsers.setPassword(req.session.data.userId, req.params.password);
-        return util.simpleResponse(res);
-    });
-
-    app.post('/api/password-reset-check', function (req) {
-        var res = mongoUsers.verifyPasswordResetLink(req.params.userId, req.params.passwordResetHash);
-        return util.simpleResponse(res);
-    });
-
-    app.post('/api/activate', function (req) {
-        util.log_request(req);
-        var res = mongoUsers.activateUser(req.params.password, req.params.userId, req.params.passwordResetHash);
-        if (typeof res === 'object') {
-            return {
-                body: [JSON.stringify(res)],
-                headers: settings.defaultHeaderJson,
-                status: 200
-            };
-        }
-        else
-            return util.simpleResponse(res);
     });
 };

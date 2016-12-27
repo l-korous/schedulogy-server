@@ -2,6 +2,28 @@ exports.initialize = function (util, mongoTasks, db, notifications) {
     var tasks = db.getCollection('task');
     var resources = db.getCollection('resource');
 
+    exports.getResourceById = function (resourceId) {
+        var resource = resources.findOne(new Packages.org.bson.types.ObjectId(resourceId));
+        if (resource)
+            return resource.data;
+        else {
+            var msg = 'Resource with id "' + resourceId + '" does not exist';
+            util.log.warn(msg);
+            return msg;
+        }
+    };
+
+    exports.getResourceByUserId = function (userId) {
+        var resource = resources.findOne({user: userId, type: 'user'});
+        if (resource)
+            return resource.data;
+        else {
+            var msg = 'Resource with userId "' + userId + '" does not exist';
+            util.log.warn(msg);
+            return msg;
+        }
+    };
+
     exports.getSingleResource = function (object) {
         return resources.findOne(object).toJSON();
     };
@@ -48,44 +70,42 @@ exports.initialize = function (util, mongoTasks, db, notifications) {
         return dirtiedTasks;
     };
 
-    exports.markResourceTasksAsDirtyOrDelete = function (btime, resourceId, replacementResourceId) {
-        util.log.debug('markResourceTasksAsDirtyOrDelete starts with resource = ' + resourceId + ', replacementResourceId = ' + replacementResourceId + '.');
+    exports.handleResourceRemovalInTasks = function (btime, resourceId, replacementResourceId) {
+        util.log.debug('handleResourceRemovalInTasks starts with resource = ' + resourceId + ', replacementResourceId = ' + replacementResourceId + '.');
 
         if (!replacementResourceId) {
             tasks.remove({type: {$in: ['event', 'reminder']}, resource: resourceId});
-            util.log.debug('markResourceTasksAsDirtyOrDelete deleted all events & reminders.');
+            util.log.debug('handleResourceRemovalInTasks deleted all events & reminders.');
+            // This deletes only such tasks where the ONLY admissible resource was the deleted one.
             tasks.remove({type: 'task', admissibleResources: [resourceId]});
-            util.log.debug('markResourceTasksAsDirtyOrDelete deleted all tasks.');
+            util.log.debug('handleResourceRemovalInTasks deleted all tasks.');
             return;
         }
 
         var dirtiedTasks = 0;
 
         var floatingDirtyUtilArray = [];
-        tasks.find({type: 'event', resource: resourceId}).forEach(function (task) {
-            util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
-            if (task.data.start > btime) {
-                task.data.dirty = true;
-                mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
-                mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
-            }
+        tasks.find({type: 'event', start: {$gte: btime - 1}, resource: resourceId}).forEach(function (task) {
+            util.log.debug('handleResourceRemovalInTasks found a task: ' + task.data.title + '.');
+            task.data.dirty = true;
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray, btime);
+            mongoTasks.markFloatingDirtyViaOverlap(task.data.start, util.getUnixEnd(task.data), resourceId);
             task.data.resource = replacementResourceId;
             tasks.update({_id: new Packages.org.bson.types.ObjectId(task.data._id)}, task.data);
             dirtiedTasks++;
         });
 
-        tasks.find({type: 'task', admissibleResources: resourceId}).forEach(function (task) {
-            util.log.debug('markResourceTasksAsDirtyOrDelete found a task: ' + task.data.title + '.');
-            if (task.data.start > btime) {
-                task.data.dirty = true;
-                mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
-            }
+        tasks.find({type: 'task', start: {$gte: btime - 1}, admissibleResources: resourceId}).forEach(function (task) {
+            util.log.debug('handleResourceRemovalInTasks found a task: ' + task.data.title + '.');
+            task.data.dirty = true;
+            mongoTasks.markFloatingDirtyViaDependence(task.data, floatingDirtyUtilArray);
 
-            util.log.debug('markResourceTasksAsDirtyOrDelete - about to look for the old resource in admissibleResources: ' + resourceId);
+            util.log.debug('handleResourceRemovalInTasks - about to look for the old resource in admissibleResources: ' + resourceId);
+            // This index is always there - see the find() condition
             var index = task.data.admissibleResources.findIndex(function (dep) {
                 return dep === resourceId;
             });
-            util.log.debug('markResourceTasksAsDirtyOrDelete - found index: ' + index);
+            util.log.debug('handleResourceRemovalInTasks - found index: ' + index);
             task.data.admissibleResources.splice(index, 1);
             task.data.admissibleResources.push(replacementResourceId);
 
@@ -93,7 +113,7 @@ exports.initialize = function (util, mongoTasks, db, notifications) {
             dirtiedTasks++;
         });
 
-        util.log.debug('markResourceTasksAsDirtyOrDelete ends with dirtiedTasks = ' + dirtiedTasks + '.');
+        util.log.debug('handleResourceRemovalInTasks ends with dirtiedTasks = ' + dirtiedTasks + '.');
         return dirtiedTasks;
     };
 
@@ -127,7 +147,7 @@ exports.initialize = function (util, mongoTasks, db, notifications) {
     };
 
     exports.removeResource = function (btime, resourceId, replacementResourceId) {
-        exports.markResourceTasksAsDirtyOrDelete(btime, resourceId, replacementResourceId);
+        exports.handleResourceRemovalInTasks(btime, resourceId, replacementResourceId);
         resources.remove({_id: new Packages.org.bson.types.ObjectId(resourceId)});
         return 'ok';
     };

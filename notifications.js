@@ -7,13 +7,13 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
     var addToResourceToData = function (task) {
         var toReturn = {};
-        var res = resources.findOne({_id: new Packages.org.bson.types.ObjectId(task.resource)});
-        if (res) {
-            toReturn.timeZone = res.data.timeZone;
-            if (res.data.type === 'user') {
-                var user = users.findOne({_id: new Packages.org.bson.types.ObjectId(res.data.user)});
+        var resource = resources.findOne({_id: new Packages.org.bson.types.ObjectId(task.resource)});
+        if (resource) {
+            toReturn.timeZone = resource.data.timeZone;
+            if (resource.data.type === 'user') {
+                var user = users.findOne({_id: new Packages.org.bson.types.ObjectId(resource.data.user)});
                 if (user) {
-                    toReturn.email = user.data.email;
+                    toReturn.email = user.email;
                     resourceToData[task.resource] = toReturn;
                     return toReturn;
                 }
@@ -21,13 +21,13 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                     util.log.error('User for a resource ' + task.resource + ' not found.');
             }
             else {
-                if (res.data.email) {
-                    toReturn.email = res.data.email;
+                if (resource.data.email) {
+                    toReturn.email = resource.data.email;
                     resourceToData[task.resource] = toReturn;
                     return toReturn;
                 }
                 else
-                    util.log.error('Resource ' + res._id.toString() + ' does not have e-mail.');
+                    util.log.error('Resource ' + resource._id.toString() + ' does not have e-mail.');
             }
         }
         util.log.error('Resource ' + task.resource + ' not found.');
@@ -39,7 +39,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
             exports.reinit(task.data);
         });
         tasks.find({type: 'reminder'}).forEach(function (task) {
-            if(!task.data.done)
+            if (!task.data.done)
                 exports.reinit(task.data);
         });
         scheduler.logState();
@@ -91,7 +91,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                 }
                 else
                     cronTimestamps = util.unixToCron(notificationTimestamps);
-                
+
                 var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
                     scheduler.addTask(task._id.toString() + (counter.toString()), {
@@ -113,5 +113,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
             scheduler.removeTask(taskId + counter.toString());
     };
 
-    init();
+    var initializer = module.singleton('initializer', function () {
+        init();
+    });
 };

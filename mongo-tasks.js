@@ -130,7 +130,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             resData['id'] = resource.id;
             resData['name'] = resource.data.user ? resource.data.user.toString() : resource.data.name;
             resData['tp'] = timePreferences;
-            
+
             toReturn.push(resData);
         });
 
@@ -356,7 +356,12 @@ exports.initialize = function (settings, util, db, notifications, moment) {
     };
 
     exports.getTasks = function (object) {
-        return tasks.find(object);
+        var _tasks = tasks.find(object);
+        var toReturn = [];
+        _tasks.forEach(function (task) {
+            toReturn.push(task.data);
+        });
+        return toReturn;
     };
 
     exports.markFloatingDirtyViaDependence = function (task, floatingDirtyUtilArray, btime) {
@@ -455,7 +460,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         // New task
         else {
             task.dirty = (task.type !== 'reminder');
-            if(task.type === 'reminder' && (!task.done))
+            if (task.type === 'reminder' && (!task.done))
                 task.done = false;
         }
 
@@ -496,6 +501,28 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             notifications.remove(task._id.toString());
         else if (task.type !== 'task')
             notifications.reinit(task);
+    };
+
+    exports.saveTaskFast = function (task) {
+        try {
+            if (!task._id)
+                util.log.error('Missing task._id in saveTaskFast');
+            else {
+                task._id = new Packages.org.bson.types.ObjectId(task._id);
+                var oldTask = tasks.findOne(task._id).data;
+                for (var key in oldTask) {
+                    if ((!task[key]) && task[key] !== false) {
+                        task[key] = oldTask[key];
+                    }
+                }
+            }
+            tasks.save(task);
+            return 'ok';
+        }
+        catch (e) {
+            util.log.error('saveTaskFast:' + e);
+            return 'fail';
+        }
     };
 
     exports.removeTask = function (taskId) {

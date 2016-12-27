@@ -71,21 +71,21 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
 
     app.post('/api/ical', function (req) {
         util.log_request(req);
-        var res = 'ok';
+        var result = 'ok';
         var file = http.parseFileUpload(req).file;
         if (!file) {
-            res = 'Invalid file';
+            result = 'Invalid file';
         }
         else {
             if (file.value.length > (settings.maxICalSize * 1024 * 1024))
-                res = 'File too large, maximum size is ' + settings.maxICalSize + 'MB.';
+                result = 'File too large, maximum size is ' + settings.maxICalSize + 'MB.';
             else {
-                res = mongoIcal.processIcalFile(file.value, req.session.data.tenantId, req.session.data.userId, req.headers.btime);
-                if (res === 'ok')
+                result = mongoIcal.processIcalFile(file.value, req.session.data.tenantId, req.session.data.userId, req.headers.btime);
+                if (result === 'ok')
                     return returnSchedule(req.headers.btime, req.session.data.tenantId);
             }
         }
 
-        return util.simpleResponse(res);
+        return util.simpleResponse(result);
     });
 };
