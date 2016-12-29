@@ -97,6 +97,9 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                     scheduler.addTask(task._id.toString() + (counter.toString()), {
                         schedule: cronTimestamp,
                         run: function () {
+                            // Do not send reminders for tasks that are for the future
+                            if(task.type === 'reminder' && task.start > moment().unix())
+                                return;
                             mailer.mail(resourceData.email, createTitle(task, resourceData.timeZone), createBody(task));
                             scheduler.removeTask(task._id.toString() + (counter.toString()));
                         }

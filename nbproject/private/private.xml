@@ -8,12 +8,14 @@
             <file>file:/C:/www/schedulogy-server/routes-resources.js</file>
             <file>file:/C:/www/schedulogy-server/mongo-users.js</file>
             <file>file:/C:/www/schedulogy-server/notifications.js</file>
+            <file>file:/C:/www/schedulogy-server/routes-tasks.js</file>
             <file>file:/C:/www/schedulogy-server/routes-users.js</file>
             <file>file:/C:/www/schedulogy-server/auth.js</file>
             <file>file:/C:/www/schedulogy-server/settings.js</file>
             <file>file:/C:/www/schedulogy-server/mailer.js</file>
             <file>file:/C:/www/schedulogy-server/settings-prod.js</file>
             <file>file:/C:/www/schedulogy-server/lib/scheduler/scheduler.js</file>
+            <file>file:/C:/www/schedulogy-server/mongo-tenants.js</file>
             <file>file:/C:/www/schedulogy-server/routes-util.js</file>
             <file>file:/C:/www/schedulogy-server/mongo-ical.js</file>
             <file>file:/C:/www/schedulogy-server/server.js</file>

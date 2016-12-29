@@ -423,39 +423,92 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         });
     };
 
+    function isDirty(task, oldTask) {
+        if (oldTask.type !== task.type)
+            return true;
+        if (oldTask.allDay !== task.allDay)
+            return true;
+        else if (oldTask.type === 'task') {
+            if (oldTask.due !== task.due)
+                return true;
+            else if (oldTask.dur !== task.dur)
+                return true;
+            else if (JSON.stringify(oldTask.admissibleResources) !== JSON.stringify(task.admissibleResources))
+                return true;
+            else if (JSON.stringify(oldTask.needs) !== JSON.stringify(task.needs))
+                return true;
+            else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
+                return true;
+        }
+        else {
+            if (oldTask.start !== task.start)
+                return true;
+            else if (oldTask.dur !== task.dur)
+                return true;
+            else if (JSON.stringify(oldTask.resource) !== JSON.stringify(task.resource))
+                return true;
+            else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
+                return true;
+        }
+        return false;
+    }
+
+    function isDirtyRepetition(task, oldTask) {
+        if (!oldTask)
+            return (task.repetition && !task.repetition._id);
+        if (oldTask.repetition && !task.repetition)
+            return true;
+        if (!oldTask.repetition && task.repetition)
+            return true;
+        if (JSON.stringify(oldTask.repetition) !== JSON.stringify(task.repetition))
+            return true;
+        return false;
+    }
+
+    function processRepetition(task, oldTask, tenantId, userId, btime) {
+        if (oldTask && oldTask.repetition)
+            exports.removeTasks({'repetition._id': oldTask.repetition._id, _id: {$ne: task._id}});
+        
+        if (task.repetition) {
+            if (task.repetition.frequency === 'Daily') {
+                var nextDay = task.start + 86400;
+                while (nextDay <= task.repetition.end) {
+                    task.start = nextDay;
+                    task._id = null;
+                    exports.storeTask(task, tenantId, userId, btime);
+                    nextDay = task.start + 86400;
+                }
+            }
+            
+            if (task.repetition.frequency === 'Weekly') {
+                var nextWeek = task.start + (86400 * 7);
+                while (nextWeek <= task.repetition.end) {
+                    task.start = nextWeek;
+                    task._id = null;
+                    exports.storeTask(task, tenantId, userId, btime);
+                    nextWeek = task.start + (86400 * 7);
+                }
+            }
+            
+            if (task.repetition.frequency === 'Monthly') {
+                var nextMonth = moment.unix(task.start).add(1, 'month');
+                while (nextMonth <= task.repetition.end) {
+                    task.start = nextMonth;
+                    task._id = null;
+                    exports.storeTask(task, tenantId, userId, btime);
+                    nextMonth = moment.unix(task.start).add(1, 'month');
+                }
+            }
+        }
+    }
+
     exports.storeTask = function (task, tenantId, userId, btime) {
+        var oldTask = null;
         // Update
         if (task._id) {
             task._id = new Packages.org.bson.types.ObjectId(task._id);
-            var oldTask = tasks.findOne(task._id).data;
-
-            task.dirty = false;
-            if (oldTask.type !== task.type)
-                task.dirty = true;
-            if (oldTask.allDay !== task.allDay)
-                task.dirty = true;
-            else if (oldTask.type === 'task') {
-                if (oldTask.due !== task.due)
-                    task.dirty = true;
-                else if (oldTask.dur !== task.dur)
-                    task.dirty = true;
-                else if (JSON.stringify(oldTask.admissibleResources) !== JSON.stringify(task.admissibleResources))
-                    task.dirty = true;
-                else if (JSON.stringify(oldTask.needs) !== JSON.stringify(task.needs))
-                    task.dirty = true;
-                else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
-                    task.dirty = true;
-            }
-            else {
-                if (oldTask.start !== task.start)
-                    task.dirty = true;
-                else if (oldTask.dur !== task.dur)
-                    task.dirty = true;
-                else if (JSON.stringify(oldTask.resource) !== JSON.stringify(task.resource))
-                    task.dirty = true;
-                else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
-                    task.dirty = true;
-            }
+            oldTask = tasks.findOne(task._id).data;
+            task.dirty = isDirty(task, oldTask);
         }
         // New task
         else {
@@ -473,6 +526,14 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             task.admissibleResources.push(resources.findOne({type: 'user', user: task.user}).id);
         }
 
+        // Figuring out if we have a dirty repetition needs to come before setting the repetition._id to something as
+        // we use it for deduction: (!oldTask && task.repetition._id => not dirty), which corresponds to new tasks that are created in processRepetition.
+        var dirtyRepetition = isDirtyRepetition(task, oldTask);
+        console.log('dirtyRepetition: ' + dirtyRepetition);
+        // This needs to be done here, so that we already then save the task with correct repetition id.
+        if (task.repetition && !task.repetition._id)
+            task.repetition._id = new Packages.org.bson.types.ObjectId().toString();
+        
         tasks.save(task);
 
         // TODO - this replicates some work done by the next block, nothing dramatic, but could be improved.
@@ -482,7 +543,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             exports.markFloatingDirtyViaDependence(task, floatingDirtyUtilArray, btime);
             if (task.type !== 'task')
                 exports.markFloatingDirtyViaOverlap(task.start, util.getUnixEnd(task), task.resource);
-
         }
 
         task.blocks && task.blocks.forEach(function (dependentTaskId) {
@@ -501,6 +561,10 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             notifications.remove(task._id.toString());
         else if (task.type !== 'task')
             notifications.reinit(task);
+
+        // The processing needs to come after, because we will be modifying the task.
+        if(dirtyRepetition)
+            processRepetition(task, oldTask, tenantId, userId, btime);
     };
 
     exports.saveTaskFast = function (task) {
@@ -584,16 +648,17 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 task.data.blocks.push(dependentTask.id);
             });
 
-            if (!resourceNames[task.data.resource]) {
-                var resource = resources.findOne(new Packages.org.bson.types.ObjectId(task.data.resource));
-                // Resource might have been deleted, in that case, either resourceName has been stored directly for the task, or it is empty.
-                if (resource)
-                    resourceNames[task.data.resource] = resource.data.name;
+            if (task.data.resource) {
+                if (!resourceNames[task.data.resource]) {
+                    var resource = resources.findOne(new Packages.org.bson.types.ObjectId(task.data.resource));
+                    // Resource might have been deleted, in that case, either resourceName has been stored directly for the task, or it is empty.
+                    if (resource)
+                        resourceNames[task.data.resource] = resource.data.name;
+                }
+
+                if (resourceNames[task.data.resource])
+                    task.data.resourceName = resourceNames[task.data.resource];
             }
-
-            if (task.data.resource && resourceNames[task.data.resource])
-                task.data.resourceName = resourceNames[task.data.resource];
-
             dirtyTasks.push(task);
         });
 
