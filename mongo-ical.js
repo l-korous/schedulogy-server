@@ -83,7 +83,7 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                 var allDay = internalData.allDay ? internalData.allDay : (taskEnd.hour() === 0 && taskStart.hour() === 0);
                 var duration = internalData.dur ? internalData.dur : (allDay ? taskEnd.diff(taskStart, 'd') : Math.ceil(taskEnd.diff(taskStart, 'm') / settings.minuteGranularity));
 
-                function storeTask(taskStartUnix, taskEndUnix) {
+                function saveTask(taskStartUnix, taskEndUnix) {
                     // Create a JSON with the task to be inserted.
                     var taskToStore = {
                         iCalUid: uid,
@@ -124,12 +124,12 @@ exports.initialize = function (app, settings, util, moment, mongoTasks, mongoRes
                         util.log.debug('saveImportedTask - ' + date);
                         util.log.debug('saveImportedTask - ' + occurenceStart);
                         util.log.debug('saveImportedTask - ' + occurenceEnd);
-                        storeTask(occurenceStart.unix(), occurenceEnd.unix());
+                        saveTask(occurenceStart.unix(), occurenceEnd.unix());
                     });
                 }
                 else {
                     util.log.debug('saveImportedTask - Storing single start-end: ' + taskStart + ' - ' + taskEnd);
-                    storeTask(taskStart.unix(), taskEnd.unix());
+                    saveTask(taskStart.unix(), taskEnd.unix());
                 }
             }
         }

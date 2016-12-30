@@ -39,6 +39,12 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
         return returnSchedule(req.params.btime, req.session.data.tenantId);
     });
 
+    app.del('/api/task/removeAllInRepetition', function (req) {
+        util.log_request(req);
+        mongoTasks.removeTasks({'repetition._id': req.params.repetitionId}, req.session.data.tenantId);
+        return returnSchedule(req.params.btime, req.session.data.tenantId);
+    });
+
     app.del('/api/task', function (req) {
         util.log_request(req);
         mongoTasks.removeTasks({}, req.session.data.tenantId);
@@ -48,7 +54,7 @@ exports.initialize = function (app, mongoTasks, solver, util, settings, mailer, 
     app.post('/api/task', function (req) {
         util.log_request(req);
         var task = req.postParams;
-        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId, req.params.btime);
+        mongoTasks.storeTask(task, req.session.data.tenantId, req.session.data.userId, req.params.btime, req.params.updateAllOccurences);
         return returnSchedule(req.params.btime, req.session.data.tenantId);
     });
 

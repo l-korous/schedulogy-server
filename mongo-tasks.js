@@ -424,6 +424,8 @@ exports.initialize = function (settings, util, db, notifications, moment) {
     };
 
     function isDirty(task, oldTask) {
+        if (task.type === 'reminder')
+            return false;
         if (oldTask.type !== task.type)
             return true;
         if (oldTask.allDay !== task.allDay)
@@ -468,7 +470,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
     function processRepetition(task, oldTask, tenantId, userId, btime) {
         if (oldTask && oldTask.repetition)
             exports.removeTasks({'repetition._id': oldTask.repetition._id, _id: {$ne: task._id}});
-        
+
         if (task.repetition) {
             if (task.repetition.frequency === 'Daily') {
                 var nextDay = task.start + 86400;
@@ -479,7 +481,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                     nextDay = task.start + 86400;
                 }
             }
-            
+
             if (task.repetition.frequency === 'Weekly') {
                 var nextWeek = task.start + (86400 * 7);
                 while (nextWeek <= task.repetition.end) {
@@ -489,20 +491,37 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                     nextWeek = task.start + (86400 * 7);
                 }
             }
-            
+
             if (task.repetition.frequency === 'Monthly') {
-                var nextMonth = moment.unix(task.start).add(1, 'month');
+                var initialDate = moment.unix(task.start);
+                var monthsAdded = 1;
+                var nextMonth = initialDate.clone().add(monthsAdded, 'month').unix();
+                monthsAdded++;
                 while (nextMonth <= task.repetition.end) {
                     task.start = nextMonth;
                     task._id = null;
                     exports.storeTask(task, tenantId, userId, btime);
-                    nextMonth = moment.unix(task.start).add(1, 'month');
+                    nextMonth = initialDate.clone().add(monthsAdded, 'month').unix();
+                    monthsAdded++;
                 }
             }
         }
     }
 
-    exports.storeTask = function (task, tenantId, userId, btime) {
+    function updateOtherRepetitionOccurences(task) {
+        var _tasks = tasks.find({'repetition._id': task.repetition._id, _id: {$ne: task._id}});
+
+        _tasks.forEach(function (otherTask) {
+            for (var key in task) {
+                if (task[key] !== false && key !== '_id' && key !== 'start') {
+                    otherTask.data[key] = task[key];
+                }
+            }
+            exports.saveTaskFast(otherTask.data);
+        });
+    }
+
+    exports.storeTask = function (task, tenantId, userId, btime, updateAllRepetitionOccurences) {
         var oldTask = null;
         // Update
         if (task._id) {
@@ -526,14 +545,13 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             task.admissibleResources.push(resources.findOne({type: 'user', user: task.user}).id);
         }
 
-        // Figuring out if we have a dirty repetition needs to come before setting the repetition._id to something as
+        // Figuring out if we have a dirty repetition needs to come before setting the repetition._id to something as   
         // we use it for deduction: (!oldTask && task.repetition._id => not dirty), which corresponds to new tasks that are created in processRepetition.
         var dirtyRepetition = isDirtyRepetition(task, oldTask);
-        console.log('dirtyRepetition: ' + dirtyRepetition);
         // This needs to be done here, so that we already then save the task with correct repetition id.
         if (task.repetition && !task.repetition._id)
             task.repetition._id = new Packages.org.bson.types.ObjectId().toString();
-        
+
         tasks.save(task);
 
         // TODO - this replicates some work done by the next block, nothing dramatic, but could be improved.
@@ -563,8 +581,11 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             notifications.reinit(task);
 
         // The processing needs to come after, because we will be modifying the task.
-        if(dirtyRepetition)
+        if (dirtyRepetition)
             processRepetition(task, oldTask, tenantId, userId, btime);
+
+        if (task.repetition && !dirtyRepetition && parseInt(updateAllRepetitionOccurences))
+            updateOtherRepetitionOccurences(task);
     };
 
     exports.saveTaskFast = function (task) {
