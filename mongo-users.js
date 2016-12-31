@@ -26,7 +26,7 @@ exports.initialize = function (settings, util, mongoResources, db) {
 
     exports.getUserByEmail = function (email) {
         var result = getUserByEmailInternal(email);
-        if (typeof result === 'object')
+        if (typeof result === 'object' && result !== null)
             return filterUser(result);
         else
             return result;
@@ -45,7 +45,7 @@ exports.initialize = function (settings, util, mongoResources, db) {
 
     exports.getUserById = function (userId) {
         var result = getUserByIdInternal(userId);
-        if (typeof result === 'object')
+        if (typeof result === 'object' && result !== null)
             return filterUser(result);
         else
             return result;
@@ -82,7 +82,7 @@ exports.initialize = function (settings, util, mongoResources, db) {
 
     exports.getUser = function (object) {
         var result = users.findOne(object);
-        if (typeof result === 'object')
+        if (typeof result === 'object' && result !== null)
             return filterUser(result.data);
         else
             return result;
