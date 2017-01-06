@@ -13,7 +13,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
             if (resource.data.type === 'user') {
                 var user = users.findOne({_id: new Packages.org.bson.types.ObjectId(resource.data.user)});
                 if (user) {
-                    toReturn.email = user.email;
+                    toReturn.email = user.data.email;
                     resourceToData[task.resource] = toReturn;
                     return toReturn;
                 }
