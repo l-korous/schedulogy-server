@@ -16,17 +16,14 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                     toReturn.email = user.data.email;
                     resourceToData[task.resource] = toReturn;
                     return toReturn;
-                }
-                else
+                } else
                     util.log.error('User for a resource ' + task.resource + ' not found.');
-            }
-            else {
+            } else {
                 if (resource.data.email) {
                     toReturn.email = resource.data.email;
                     resourceToData[task.resource] = toReturn;
                     return toReturn;
-                }
-                else
+                } else
                     util.log.error('Resource ' + resource._id.toString() + ' does not have e-mail.');
             }
         }
@@ -63,6 +60,23 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
         return toReturn;
     };
 
+    var getTimestampsFromNotificationsAttribute = function (task) {
+        var toReturn = [];
+        task.notifications.forEach(function (notification) {
+            switch (notification.timeUnit) {
+                case 'minutes':
+                    toReturn.push(task.start - (notification.amount * 60));
+                    break;
+                case 'hours':
+                    toReturn.push(task.start - (notification.amount * 60 * 60));
+                    break;
+                case 'days':
+                    toReturn.push(task.start - (notification.amount * 60 * 60 * 24));
+                    break;
+            }
+        });
+    };
+
     // This always try to remove the scheduler task, which might not be present - in which case the attempt to remove does not fail, but does nothing.
     exports.reinit = function (task) {
         // Find the notification setup
@@ -88,8 +102,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                     var currentDt = moment();
                     var utcOffset = moment.tz.zone(resourceData.timeZone).offset(currentDt);
                     cronTimestamps = settings.reminderCronTimestamps(task, utcOffset);
-                }
-                else
+                } else
                     cronTimestamps = util.unixToCron(notificationTimestamps);
 
                 var counter = 1;
@@ -98,7 +111,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
                         schedule: cronTimestamp,
                         run: function () {
                             // Do not send reminders for tasks that are for the future
-                            if(task.type === 'reminder' && task.start > moment().unix())
+                            if (task.type === 'reminder' && task.start > moment().unix())
                                 return;
                             mailer.mail(resourceData.email, createTitle(task, resourceData.timeZone), createBody(task));
                             scheduler.removeTask(task._id.toString() + (counter.toString()));
