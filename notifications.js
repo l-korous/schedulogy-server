@@ -62,30 +62,35 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
     var getTimestampsFromNotificationsAttribute = function (task) {
         var toReturn = [];
-        task.notifications.forEach(function (notification) {
-            switch (notification.timeUnit) {
-                case 'minutes':
-                    toReturn.push(task.start - (notification.amount * 60));
-                    break;
-                case 'hours':
-                    toReturn.push(task.start - (notification.amount * 60 * 60));
-                    break;
-                case 'days':
-                    toReturn.push(task.start - (notification.amount * 60 * 60 * 24));
-                    break;
-            }
-        });
+        if (task.notifications) {
+            task.notifications.forEach(function (notification) {
+                switch (notification.timeUnit) {
+                    case 'minutes':
+                        toReturn.push(task.start - (notification.amount * 60));
+                        break;
+                    case 'hours':
+                        toReturn.push(task.start - (notification.amount * 60 * 60));
+                        break;
+                    case 'days':
+                        toReturn.push(task.start - (notification.amount * 60 * 60 * 24));
+                        break;
+                }
+            });
+        }
+        return toReturn;
     };
 
     // This always try to remove the scheduler task, which might not be present - in which case the attempt to remove does not fail, but does nothing.
     exports.reinit = function (task) {
         // Find the notification setup
-        var notificationTimestamps = task.notificationTimestamps ? task.notificationTimestamps : settings.defaultNotificationSetup(task);
+        var notificationTimestamps = getTimestampsFromNotificationsAttribute(task);
+        if (notificationTimestamps.length === 0)
+            notificationTimestamps = settings.defaultNotificationSetup(task);
 
         // If we will notify (indicated here that the array of notifications is non-empty
         if (notificationTimestamps.length || task.type === 'reminder') {
             // First delete an old notification (if there is any)
-            for (var counter = 1; counter <= 2; counter++)
+            for (var counter = 1; counter <= 100; counter++)
                 scheduler.removeTask(task._id.toString() + counter.toString());
 
             // Find the e-mail in the storage.
