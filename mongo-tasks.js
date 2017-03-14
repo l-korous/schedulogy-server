@@ -49,8 +49,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             });
             if (dirtyFixed && scheduledFloating)
                 toReturn = true;
-        }
-        else
+        } else
             toReturn = true;
 
         util.log.debug('mustSchedule finishes: ' + toReturn);
@@ -336,8 +335,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
 
             util.log.debug('recalculateConstraint (' + task.title + ') : [' + constraint.start + ' - ' + constraint.end + '].');
             return constraint;
-        }
-        else
+        } else
             return {
                 start: null,
                 end: null
@@ -441,8 +439,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 return true;
             else if (JSON.stringify(oldTask.blocks) !== JSON.stringify(task.blocks))
                 return true;
-        }
-        else {
+        } else {
             if (oldTask.start !== task.start)
                 return true;
             else if (oldTask.dur !== task.dur)
@@ -563,12 +560,30 @@ exports.initialize = function (settings, util, db, notifications, moment) {
                 exports.markFloatingDirtyViaOverlap(task.start, util.getUnixEnd(task), task.resource);
         }
 
-        task.blocks && task.blocks.forEach(function (dependentTaskId) {
-            var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
+        tasks.find({needs: task._id.toString()}).forEach(function (dependentTask) {
             var index = dependentTask.data.needs.findIndex(function (dep) {
-                return dep === task._id;
+                return dep === task._id.toString();
             });
             dependentTask.data.needs.splice(index, 1);
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTask.id)}, dependentTask.data);
+        });
+
+        tasks.find({blocks: task._id.toString()}).forEach(function (prerequisiteTask) {
+            var index = prerequisiteTask.data.blocks.findIndex(function (dep) {
+                return dep === task._id.toString();
+            });
+            prerequisiteTask.data.blocks.splice(index, 1);
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTask.id)}, prerequisiteTask.data);
+        });
+
+        task.needs && task.needs.forEach(function (prerequisiteTaskId) {
+            var prerequisiteTask = tasks.findOne(new Packages.org.bson.types.ObjectId(prerequisiteTaskId));
+            prerequisiteTask.data.blocks.push(task._id.toString());
+            tasks.update({_id: new Packages.org.bson.types.ObjectId(prerequisiteTaskId)}, prerequisiteTask.data);
+        });
+
+        task.blocks && task.blocks.forEach(function (dependentTaskId) {
+            var dependentTask = tasks.findOne(new Packages.org.bson.types.ObjectId(dependentTaskId));
             dependentTask.data.needs.push(task._id.toString());
             tasks.update({_id: new Packages.org.bson.types.ObjectId(dependentTaskId)}, dependentTask.data);
         });
@@ -603,8 +618,7 @@ exports.initialize = function (settings, util, db, notifications, moment) {
             }
             tasks.save(task);
             return 'ok';
-        }
-        catch (e) {
+        } catch (e) {
             util.log.error('saveTaskFast:' + e);
             return 'fail';
         }
@@ -645,11 +659,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         var resourceNames = {};
 
         tasks.find({tenant: tenantId, dirty: false}).forEach(function (task) {
-            task.data.blocks = [];
-            tasks.find({needs: task.id}).forEach(function (dependentTask) {
-                task.data.blocks.push(dependentTask.id);
-            });
-
             if (!resourceNames[task.data.resource]) {
                 var resource = resources.findOne(new Packages.org.bson.types.ObjectId(task.data.resource));
                 // Resource might have been deleted, in that case, either resourceName has been stored directly for the task, or it is empty.
@@ -664,11 +673,6 @@ exports.initialize = function (settings, util, db, notifications, moment) {
         });
 
         tasks.find({tenant: tenantId, type: 'task', dirty: true, due: {$gte: btime - 1}}).forEach(function (task) {
-            task.data.blocks = [];
-            tasks.find({needs: task.id}).forEach(function (dependentTask) {
-                task.data.blocks.push(dependentTask.id);
-            });
-
             if (task.data.resource) {
                 if (!resourceNames[task.data.resource]) {
                     var resource = resources.findOne(new Packages.org.bson.types.ObjectId(task.data.resource));

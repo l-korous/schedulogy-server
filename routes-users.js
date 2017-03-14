@@ -21,7 +21,6 @@ exports.initialize = function (app, mongoUsers, mongoTenants, util, settings, ma
                 return util.simpleResponse(user, 400);
             else {
                 if (user.newUser) {
-                    console.log('asfdsadfsadf');
                     user.newUser = false;
                     mongoUsers.updateUser(user);
                     user.runIntro = true;
