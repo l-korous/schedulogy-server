@@ -56,7 +56,8 @@ exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
             if (['/api/loginSocial', '/api/simplemail'].indexOf(req.pathInfo) > -1) {
                 var toReturn = next(req);
                 // Log the response.
-                util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
+                util.log.info(req.pathInfo + ' : ' + toReturn.status);
+                util.log.debug(req.pathInfo + ' : ' + toReturn.body);
                 return toReturn;
             }
             if (!req.headers.authorization || !req.headers.xuser)
@@ -68,7 +69,8 @@ exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
                     req.session.data.tenantId = auth_res.tenantId;
                     req.session.data.originalTenantId = auth_res.originalTenantId;
                     var toReturn = next(req);
-                    util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
+                    util.log.info(req.pathInfo + ' : ' + toReturn.status);
+                    util.log.debug(req.pathInfo + ' : ' + toReturn.body);
                     return toReturn;
                 }
                 else {
@@ -78,7 +80,8 @@ exports.initialize = function (settings, secrets, util, moment, mongoUsers) {
             }
             else {
                 var toReturn = next(req);
-                util.log.info(req.pathInfo + ' : ' + toReturn.status + ' : ' + toReturn.body);
+                util.log.info(req.pathInfo + ' : ' + toReturn.status);
+                util.log.debug(req.pathInfo + ' : ' + toReturn.body);
                 return toReturn;
             }
         };
