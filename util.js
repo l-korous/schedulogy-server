@@ -25,7 +25,7 @@ exports.initialize = function (settings, moment) {
         if (req.postParams)
             entry += ', postParams: ' + JSON.stringify(req.postParams);
         entry += '}';
-        log.info(entry);
+        log.debug(entry);
     };
 
     // This is only for comparison !!! As this calculates slots since the beginning of the day.
