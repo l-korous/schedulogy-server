@@ -88,7 +88,7 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
             notificationTimestamps = settings.defaultNotificationSetup(task);
 
         // If we will notify (indicated here that the array of notifications is non-empty
-        if (notificationTimestamps.length || task.type === 'reminder') {
+        if (notificationTimestamps.length) {
             // First delete an old notification (if there is any)
             for (var counter = 1; counter <= 100; counter++)
                 scheduler.removeTask(task._id.toString() + counter.toString());
@@ -102,22 +102,12 @@ exports.initialize = function (settings, scheduler, mailer, db, util, moment) {
 
             // Now we should have email, but if the above call failed, we do not have it (but the error is logged).
             if (resourceData) {
-                var cronTimestamps;
-                if (task.type === 'reminder') {
-                    var currentDt = moment();
-                    var utcOffset = moment.tz.zone(resourceData.timeZone).offset(currentDt);
-                    cronTimestamps = settings.reminderCronTimestamps(task, utcOffset);
-                } else
-                    cronTimestamps = util.unixToCron(notificationTimestamps);
-
+                var cronTimestamps = util.unixToCron(notificationTimestamps);
                 var counter = 1;
                 cronTimestamps.forEach(function (cronTimestamp) {
                     scheduler.addTask(task._id.toString() + (counter.toString()), {
                         schedule: cronTimestamp,
                         run: function () {
-                            // Do not send reminders for tasks that are for the future
-                            if (task.type === 'reminder' && task.start > moment().unix())
-                                return;
                             mailer.mail(resourceData.email, createTitle(task, resourceData.timeZone), createBody(task));
                             scheduler.removeTask(task._id.toString() + (counter.toString()));
                         }

@@ -43,11 +43,19 @@ exports.settings = {
         return text;
     },
     defaultNotificationSetup: function (task) {
-        if (task.allDay)
-            return [task.start - (24 * 60 * 60), task.start];
-        // 15-min ahead notification + right there at the start (in the case that a task gets scheduled to (almost) right now.
-        else
-            return [task.start - (15 * 60), task.start];
+        if (task.type === 'reminder') {
+            if (task.allDay)
+                return [task.start];
+            else
+                return [task.start];
+        }
+        else {
+            if (task.allDay)
+                return [task.start - (24 * 60 * 60), task.start];
+            // 15-min ahead notification + right there at the start (in the case that a task gets scheduled to (almost) right now.
+            else
+                return [task.start - (15 * 60), task.start];
+        }
     },
     reminderCronTimestamps: function (task, utcOffset) {
         return task.done ? [] : ['* * * ' + String((24 + (utcOffset / 60)) % 24) + ' 0 0'];
