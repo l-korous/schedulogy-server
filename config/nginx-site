@@ -2,8 +2,8 @@ server {
 	listen 80;
 	listen 443 ssl;
 
-	ssl_certificate  /etc/ssl/private/schedulogy.crt;
-	ssl_certificate_key /etc/ssl/private/schedulogy.key;
+	ssl_certificate  /etc/ssl/private/fullchain.pem;
+	ssl_certificate_key /etc/ssl/private/privkey.pem;
 
 	server_name schedulogy.com;
 	rewrite ^(.*) https://www.schedulogy.com$1 permanent;
@@ -21,8 +21,8 @@ server {
 	listen [::]:443;
 	server_name www.schedulogy.com;
 
-	ssl_certificate  /etc/ssl/private/www-schedulogy.crt;
-	ssl_certificate_key /etc/ssl/private/www-schedulogy.key;
+	ssl_certificate  /etc/ssl/private/fullchain.pem;
+	ssl_certificate_key /etc/ssl/private/privkey.pem;
 
 	location / {
 		if ($http_cookie ~ 'schedulogyAppAccessed=1') {
