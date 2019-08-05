@@ -5,9 +5,6 @@ exports.initialize = function (app, mongoUsers, mongoTenants, util, settings, ma
         var exchange = request({
             method: 'POST',
             url: 'https://schedulogy.eu.auth0.com/tokeninfo',
-            //headers: {
-            //    'Content-Type': 'application/x-www-form-urlencoded'
-            //},
             contentType: 'application/x-www-form-urlencoded',
             data: 'id_token=' + req.params.authOToken,
         });

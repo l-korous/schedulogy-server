@@ -15,7 +15,7 @@ exports.settings = {
     tenantCodeLength: 10,
     // TODO - Are these correct?
     defaultHeaderJson: {
-        'Access-Control-Allow-Origin': "http://localhost:8100",
+        'Access-Control-Allow-Origin': clientUrl,
         'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
         'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime',
@@ -30,7 +30,7 @@ exports.settings = {
     optionAllowedResponse: {
         body: [],
         headers: {
-            'Access-Control-Allow-Origin': "http://localhost:8100",
+            'Access-Control-Allow-Origin': clientUrl,
             'Access-Control-Allow-Methods': 'OPTIONS,GET,PUT,POST,DELETE',
             'Access-Control-Allow-Credentials': 'true',
             'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization, Xuser, btime'
@@ -43,11 +43,19 @@ exports.settings = {
         return text;
     },
     defaultNotificationSetup: function (task) {
-        if (task.allDay)
-            return [task.start - (24 * 60 * 60), task.start];
-        // 15-min ahead notification + right there at the start (in the case that a task gets scheduled to (almost) right now.
-        else
-            return [task.start - (15 * 60), task.start];
+        if (task.type === 'reminder') {
+            if (task.allDay)
+                return [task.start];
+            else
+                return [task.start];
+        }
+        else {
+            if (task.allDay)
+                return [task.start - (24 * 60 * 60), task.start];
+            // 15-min ahead notification + right there at the start (in the case that a task gets scheduled to (almost) right now.
+            else
+                return [task.start - (15 * 60), task.start];
+        }
     },
     reminderCronTimestamps: function (task, utcOffset) {
         return task.done ? [] : ['* * * ' + String((24 + (utcOffset / 60)) % 24) + ' 0 0'];

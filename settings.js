@@ -1,4 +1,4 @@
-var clientUrl = 'http://localhost:8100';
+var clientUrl = '*';
 
 exports.settings = {
     weeks: 26,
